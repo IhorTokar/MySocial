@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: social-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: social_network
+      POSTGRES_USER: social_app
+      POSTGRES_PASSWORD: frogchairuwu9AB
+    ports:
+      - "5432:5432"
+    volumes:
+      - social-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U social_app -d social_network"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: social-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - social-pgadmin-data:/var/lib/pgadmin
+
+volumes:
+  social-pg-data:
+  social-pgadmin-data:
