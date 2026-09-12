@@ -1,11 +1,12 @@
 package com.example.social.server.controller;
 
+import com.example.social.server.security.AuthenticatedUser;
 import com.example.social.server.service.PostService;
 import com.example.social.shared.dto.PostCreateDto;
-import com.example.social.shared.dto.PostResponseDto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,16 +23,18 @@ public class PostController {
     }
 
     @PostMapping
-    public ResponseEntity<?> createPost(@Valid @RequestBody PostCreateDto dto) {
+    public ResponseEntity<?> createPost(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                        @Valid @RequestBody PostCreateDto dto) {
         try {
-            return ResponseEntity.status(HttpStatus.CREATED).body(postService.createPost(dto));
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(postService.createPost(currentUser.getUserId(), dto));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
         }
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<?> getPost(@PathVariable Long postId) {
+    public ResponseEntity<?> getPost(@PathVariable("postId") Long postId) {
         try {
             return ResponseEntity.ok(postService.getPost(postId));
         } catch (IllegalArgumentException e) {
@@ -40,7 +43,7 @@ public class PostController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getPostsByUser(@PathVariable Long userId) {
+    public ResponseEntity<?> getPostsByUser(@PathVariable("userId") Long userId) {
         try {
             return ResponseEntity.ok(postService.getPostsByUser(userId));
         } catch (IllegalArgumentException e) {
@@ -49,8 +52,13 @@ public class PostController {
     }
 
     @DeleteMapping("/{postId}")
-    public ResponseEntity<?> deletePost(@PathVariable Long postId) {
+    public ResponseEntity<?> deletePost(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                        @PathVariable("postId") Long postId) {
         try {
+            if (!postService.isOwner(postId, currentUser.getUserId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "You can only delete your own posts"));
+            }
             postService.deletePost(postId);
             return ResponseEntity.noContent().build();
         } catch (IllegalArgumentException e) {

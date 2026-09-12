@@ -32,9 +32,9 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponseDto createPost(PostCreateDto dto) {
-        User user = userRepository.findById(dto.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + dto.getUserId()));
+    public PostResponseDto createPost(Long userId, PostCreateDto dto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
         Post post = new Post();
         post.setUser(user);
@@ -49,6 +49,7 @@ public class PostService {
         Post saved = postRepository.save(post);
         return toDto(saved);
     }
+
 
     @Transactional(readOnly = true)
     public PostResponseDto getPost(Long postId) {
@@ -74,6 +75,14 @@ public class PostService {
         }
         postRepository.deleteById(postId);
     }
+
+    @Transactional(readOnly = true)
+    public boolean isOwner(Long postId, Long userId) {
+        return postRepository.findById(postId)
+                .map(post -> post.getUser().getUserId().equals(userId))
+                .orElse(false);
+    }
+
 
     private Set<Tag> resolveTags(List<String> tagNames) {
         Set<Tag> tags = new HashSet<>();
