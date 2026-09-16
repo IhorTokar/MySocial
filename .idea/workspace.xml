@@ -4,11 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 1.4&#10;feat: add Neo4j integration — driver config, graph sync service, stats endpoint, verified visually in Neo4j Browser">
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/GraphEmbeddingService.java" afterDir="false" />
+    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 1.5">
+      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/TestDataController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/TestDataService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/GraphController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/GraphController.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -127,7 +126,8 @@
     <MESSAGE value="update 1.3" />
     <MESSAGE value="update 1.4" />
     <MESSAGE value="update 1.4&#10;feat: add Neo4j integration — driver config, graph sync service, stats endpoint, verified visually in Neo4j Browser" />
-    <option name="LAST_COMMIT_MESSAGE" value="update 1.4&#10;feat: add Neo4j integration — driver config, graph sync service, stats endpoint, verified visually in Neo4j Browser" />
+    <MESSAGE value="update 1.5" />
+    <option name="LAST_COMMIT_MESSAGE" value="update 1.5" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
