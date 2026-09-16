@@ -1,5 +1,6 @@
 package com.example.social.server.controller;
 
+import com.example.social.server.service.GraphEmbeddingService;
 import com.example.social.server.service.GraphSyncService;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
@@ -15,10 +16,14 @@ public class GraphController {
 
     private final Driver neo4jDriver;
     private final GraphSyncService graphSyncService;
+    private final GraphEmbeddingService graphEmbeddingService;
 
-    public GraphController(Driver neo4jDriver, GraphSyncService graphSyncService) {
+    public GraphController(Driver neo4jDriver,
+                           GraphSyncService graphSyncService,
+                           GraphEmbeddingService graphEmbeddingService) {
         this.neo4jDriver = neo4jDriver;
         this.graphSyncService = graphSyncService;
+        this.graphEmbeddingService = graphEmbeddingService;
     }
 
     @GetMapping("/health")
@@ -49,6 +54,26 @@ public class GraphController {
     public ResponseEntity<?> stats() {
         try {
             return ResponseEntity.ok(graphSyncService.getGraphStats());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/embeddings")
+    public ResponseEntity<?> generateEmbeddings(@RequestParam(value = "dimension", defaultValue = "16") int dimension) {
+        try {
+            return ResponseEntity.ok(graphEmbeddingService.generateEmbeddings(dimension));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/embeddings")
+    public ResponseEntity<?> getEmbeddings() {
+        try {
+            return ResponseEntity.ok(graphEmbeddingService.getEmbeddings());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
                     .body(Map.of("error", e.getMessage()));
