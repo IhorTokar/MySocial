@@ -32,6 +32,27 @@ services:
     volumes:
       - social-pgadmin-data:/var/lib/pgadmin
 
+  neo4j:
+    image: neo4j:5.23-community
+    container_name: social-neo4j
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: neo4j/neo4jpassword123
+      NEO4J_server_memory_pagecache_size: 256m
+      NEO4J_server_memory_heap_initial__size: 256m
+      NEO4J_server_memory_heap_max__size: 512m
+    ports:
+      - "7474:7474"   # веб-інтерфейс Neo4j Browser
+      - "7687:7687"   # Bolt-протокол, яким користується neo4j-java-driver
+    volumes:
+      - social-neo4j-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:7474 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
 volumes:
   social-pg-data:
   social-pgadmin-data:
+  social-neo4j-data:
