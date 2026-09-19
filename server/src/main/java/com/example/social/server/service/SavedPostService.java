@@ -48,6 +48,15 @@ public class SavedPostService {
         savedPostRepository.save(savedPost);
     }
 
+    @Transactional(readOnly = true)
+    public boolean isSavedByUser(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("Post not found: " + postId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        return savedPostRepository.existsByUserAndPost(user, post);
+    }
+
     @Transactional
     public void unsave(Long postId, Long userId) {
         Post post = postRepository.findById(postId)

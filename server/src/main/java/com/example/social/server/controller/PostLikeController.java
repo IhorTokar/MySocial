@@ -30,6 +30,18 @@ public class PostLikeController {
         }
     }
 
+    @GetMapping("/status")
+    public ResponseEntity<?> getStatus(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                       @PathVariable("postId") Long postId) {
+        try {
+            boolean liked = postLikeService.isLikedByUser(postId, currentUser.getUserId());
+            long count = postLikeService.getLikesCount(postId);
+            return ResponseEntity.ok(Map.of("liked", liked, "likesCount", count));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @DeleteMapping
     public ResponseEntity<?> unlike(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                     @PathVariable("postId") Long postId) {

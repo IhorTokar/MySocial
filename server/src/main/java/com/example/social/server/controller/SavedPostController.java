@@ -29,6 +29,17 @@ public class SavedPostController {
         }
     }
 
+    @GetMapping("/api/posts/{postId}/save/status")
+    public ResponseEntity<?> getStatus(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                       @PathVariable("postId") Long postId) {
+        try {
+            boolean saved = savedPostService.isSavedByUser(postId, currentUser.getUserId());
+            return ResponseEntity.ok(Map.of("saved", saved));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/api/posts/{postId}/save")
     public ResponseEntity<?> unsave(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                     @PathVariable("postId") Long postId) {

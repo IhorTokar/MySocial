@@ -41,6 +41,15 @@ public class PostLikeService {
         postLikeRepository.save(like);
     }
 
+    @Transactional(readOnly = true)
+    public boolean isLikedByUser(Long postId, Long userId) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("Post not found: " + postId));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+        return postLikeRepository.existsByUserAndPost(user, post);
+    }
+
     @Transactional
     public void unlike(Long postId, Long userId) {
         Post post = postRepository.findById(postId)
