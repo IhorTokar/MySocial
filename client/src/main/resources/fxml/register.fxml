@@ -9,18 +9,23 @@
 
 <VBox alignment="CENTER" spacing="12.0" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.example.social.client.controller.LoginController">
+      fx:controller="com.example.social.client.controller.RegisterController">
     <padding>
         <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
     </padding>
 
-    <Label text="Вхід у соціальну мережу" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
+    <Label text="Реєстрація" style="-fx-font-size: 20px; -fx-font-weight: bold;" />
 
     <TextField fx:id="usernameField" promptText="Ім'я користувача" maxWidth="300.0" />
+    <TextField fx:id="emailField" promptText="Email" maxWidth="300.0" />
     <PasswordField fx:id="passwordField" promptText="Пароль" maxWidth="300.0" />
+    <PasswordField fx:id="confirmPasswordField" promptText="Повторіть пароль" maxWidth="300.0" />
 
     <Label fx:id="errorLabel" style="-fx-text-fill: red;" wrapText="true" maxWidth="300.0" />
+    <Label fx:id="successLabel" style="-fx-text-fill: green;" wrapText="true" maxWidth="300.0" />
 
-    <Button fx:id="loginButton" text="Увійти" defaultButton="true" onAction="#handleLogin" maxWidth="300.0" />
-    <Button fx:id="registerButton" text="Створити акаунт" onAction="#handleGoToRegister" maxWidth="300.0" />
+    <Button fx:id="registerButton" text="Зареєструватись" defaultButton="true"
+            onAction="#handleRegister" maxWidth="300.0" />
+    <Button fx:id="backToLoginButton" text="Вже є акаунт? Увійти"
+            onAction="#handleBackToLogin" maxWidth="300.0" />
 </VBox>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="10.0" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.example.social.client.controller.CreatePostController">
+    <padding>
+        <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
+    </padding>
+
+    <Label text="Новий пост" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+
+    <TextField fx:id="labelField" promptText="Заголовок (необов'язково)" />
+    <TextArea fx:id="textArea" promptText="Про що ваш пост?" prefRowCount="6" wrapText="true" />
+    <TextField fx:id="tagsField" promptText="#тег1 #тег2 #тег3" />
+
+    <Label fx:id="statusLabel" wrapText="true" />
+
+    <Button fx:id="submitButton" text="Опублікувати" onAction="#handleSubmit" />
+    <Button fx:id="cancelButton" text="Скасувати" onAction="#handleCancel" />
+</VBox>

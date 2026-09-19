@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.social.client.controller.ProfileController">
+
+    <top>
+        <VBox spacing="8.0" style="-fx-background-color: #f0f0f0;">
+            <padding>
+                <Insets bottom="12.0" left="16.0" right="16.0" top="12.0" />
+            </padding>
+
+            <HBox spacing="12.0" alignment="CENTER_LEFT">
+                <Label fx:id="usernameLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                <Label fx:id="followersCountLabel" style="-fx-text-fill: gray;" />
+                <Button fx:id="backButton" text="← Назад до стрічки" onAction="#handleBack" />
+            </HBox>
+
+            <HBox spacing="8.0">
+                <Button fx:id="followButton" text="Підписатись" onAction="#handleFollow" />
+                <Button fx:id="unfollowButton" text="Відписатись" onAction="#handleUnfollow" />
+            </HBox>
+
+            <Label fx:id="statusLabel" style="-fx-text-fill: red;" />
+        </VBox>
+    </top>
+
+    <center>
+        <ListView fx:id="postsListView" />
+    </center>
+
+</BorderPane>
