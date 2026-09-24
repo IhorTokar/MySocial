@@ -84,14 +84,14 @@ public class LoginController {
 
     private void goToFeed() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/feed.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main_shell.fxml"));
             Parent root = loader.load();
 
             Stage stage = (Stage) loginButton.getScene().getWindow();
-            stage.setScene(new Scene(root, 900, 600));
-            stage.setTitle("Стрічка");
+            stage.setScene(new Scene(root, 1000, 650));
+            stage.setTitle("Соціальна мережа");
         } catch (IOException e) {
-            errorLabel.setText("Помилка завантаження стрічки: " + e.getMessage());
+            errorLabel.setText("Помилка завантаження: " + e.getMessage());
         }
     }
 }

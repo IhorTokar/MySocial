@@ -33,10 +33,16 @@ public class ProfileController {
     @FXML
     private Button backButton;
 
+    private MainShellController shell;
+
     private final PostApiService postApiService = new PostApiService(new ApiClient());
     private final FollowApiService followApiService = new FollowApiService(new ApiClient());
 
     private Long profileUserId;
+
+    public void setShell(com.example.social.client.controller.MainShellController shell) {
+        this.shell = shell;
+    }
 
     public void setUserId(Long userId) {
         this.profileUserId = userId;
@@ -107,15 +113,6 @@ public class ProfileController {
 
     @FXML
     private void handleBack() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/feed.fxml"));
-            Parent root = loader.load();
-
-            Stage stage = (Stage) backButton.getScene().getWindow();
-            stage.setScene(new Scene(root, 900, 600));
-            stage.setTitle("Стрічка");
-        } catch (IOException e) {
-            statusLabel.setText("Помилка переходу: " + e.getMessage());
-        }
+        shell.showFeed();
     }
 }

@@ -1,0 +1,215 @@
+/* Дизайн-система, перенесена з React-проєкту (App.css) у JavaFX CSS */
+
+.root {
+    -fx-primary-bg: #F9F9F9;
+    -fx-secondary-bg: #FFFFFF;
+    -fx-card-border: #EFF3F4;
+    -fx-primary-text: #0F1419;
+    -fx-secondary-text: #536471;
+    -fx-accent: #1D9BF0;
+    -fx-accent-hover: #1A8CD8;
+    -fx-button-primary-bg: #0F1419;
+    -fx-button-primary-text: #FFFFFF;
+    -fx-error-text: #D93025;
+    -fx-like-color: #F91880;
+    -fx-save-color: #1D9BF0;
+    -fx-share-color: #00BA7C;
+
+    -fx-font-family: "Segoe UI", "Noto Sans", sans-serif;
+    -fx-background-color: -fx-primary-bg;
+}
+
+/* ===== Загальний текст ===== */
+
+.title-label {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-primary-text;
+}
+
+.error-label {
+    -fx-text-fill: -fx-error-text;
+    -fx-font-size: 13px;
+}
+
+.success-label {
+    -fx-text-fill: #1D9BF0;
+    -fx-font-size: 13px;
+}
+
+.secondary-label {
+    -fx-text-fill: -fx-secondary-text;
+    -fx-font-size: 12px;
+}
+
+/* ===== Поля вводу ===== */
+
+.text-field, .password-field, .text-area {
+    -fx-background-color: #F7F9F9;
+    -fx-border-color: #CFD9DE;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-padding: 10px 12px;
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-primary-text;
+}
+
+.text-field:focused, .password-field:focused, .text-area:focused {
+    -fx-border-color: -fx-accent;
+    -fx-background-color: -fx-secondary-bg;
+}
+
+/* ===== Кнопки ===== */
+
+.button {
+    -fx-background-radius: 20px;
+    -fx-padding: 10px 20px;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.button-primary {
+    -fx-background-color: -fx-button-primary-bg;
+    -fx-text-fill: -fx-button-primary-text;
+}
+
+.button-primary:hover {
+    -fx-background-color: #272C30;
+}
+
+.button-secondary {
+    -fx-background-color: #EFF3F4;
+    -fx-text-fill: -fx-primary-text;
+}
+
+.button-secondary:hover {
+    -fx-background-color: #E7E7E8;
+}
+
+.link-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-accent;
+    -fx-font-weight: normal;
+    -fx-underline: false;
+}
+
+.link-button:hover {
+    -fx-underline: true;
+}
+
+/* ===== Header (верхня панель) ===== */
+
+.app-header {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-border-color: transparent transparent -fx-card-border transparent;
+    -fx-border-width: 0 0 1px 0;
+    -fx-padding: 12px 20px;
+}
+
+.app-header .title-label {
+    -fx-font-size: 18px;
+}
+
+/* ===== Картка поста (аналог .postCard з React) ===== */
+
+.post-card {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-background-radius: 12px;
+    -fx-border-color: -fx-card-border;
+    -fx-border-radius: 12px;
+    -fx-border-width: 1px;
+    -fx-padding: 16px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 4, 0, 0, 1);
+}
+
+.post-author-name {
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-primary-text;
+}
+
+.post-date {
+    -fx-text-fill: -fx-secondary-text;
+    -fx-font-size: 11px;
+}
+
+.post-text {
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-primary-text;
+    -fx-wrap-text: true;
+}
+
+/* ===== Кнопки дій під постом (лайк / зберегти / коментарі) ===== */
+
+.action-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 20px;
+    -fx-text-fill: -fx-secondary-text;
+    -fx-font-size: 12px;
+    -fx-font-weight: normal;
+    -fx-padding: 6px 12px;
+}
+
+.action-button:hover {
+    -fx-background-color: derive(-fx-accent, 90%);
+}
+
+.action-button.like-active {
+    -fx-text-fill: -fx-like-color;
+}
+
+.action-button.save-active {
+    -fx-text-fill: -fx-save-color;
+}
+
+/* ===== ListView без стандартних рамок клітинок ===== */
+
+.list-view {
+    -fx-background-color: -fx-primary-bg;
+    -fx-border-color: transparent;
+}
+
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 6px 12px;
+}
+
+.list-cell:filled:selected, .list-cell:filled:hover {
+    -fx-background-color: transparent;
+}
+
+/* ===== Бічна навігація (аналог NavBar з React) ===== */
+
+.nav-sidebar {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-border-color: transparent -fx-card-border transparent transparent;
+    -fx-border-width: 0 1px 0 0;
+    -fx-padding: 20px 15px;
+    -fx-pref-width: 220px;
+}
+
+.nav-link {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-primary-text;
+    -fx-background-radius: 25px;
+    -fx-padding: 10px 15px;
+    -fx-alignment: CENTER_LEFT;
+    -fx-font-size: 14px;
+    -fx-font-weight: normal;
+    -fx-cursor: hand;
+    -fx-max-width: Infinity;
+}
+
+.nav-link:hover {
+    -fx-background-color: -fx-primary-bg;
+}
+
+.nav-link-active {
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-accent;
+}
+
+.post-image {
+    -fx-background-radius: 12px;
+}

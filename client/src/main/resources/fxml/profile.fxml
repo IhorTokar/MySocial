@@ -8,28 +8,33 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="com.example.social.client.controller.ProfileController">
+<BorderPane xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.social.client.controller.ProfileController">
 
     <top>
-        <VBox spacing="8.0" style="-fx-background-color: #f0f0f0;">
+        <VBox prefHeight="155.0" prefWidth="248.0" spacing="8.0" style="-fx-background-color: #f0f0f0;">
             <padding>
                 <Insets bottom="12.0" left="16.0" right="16.0" top="12.0" />
             </padding>
 
-            <HBox spacing="12.0" alignment="CENTER_LEFT">
+            <HBox alignment="CENTER_LEFT" spacing="12.0">
                 <Label fx:id="usernameLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
                 <Label fx:id="followersCountLabel" style="-fx-text-fill: gray;" />
-                <Button fx:id="backButton" text="← Назад до стрічки" onAction="#handleBack" />
+                <Button fx:id="backButton" onAction="#handleBack" text="← " />
             </HBox>
 
             <HBox spacing="8.0">
-                <Button fx:id="followButton" text="Підписатись" onAction="#handleFollow" />
-                <Button fx:id="unfollowButton" text="Відписатись" onAction="#handleUnfollow" />
+                <Button fx:id="followButton" onAction="#handleFollow" text="Підписатись" />
+                <Button fx:id="unfollowButton" onAction="#handleUnfollow" text="Відписатись" />
             </HBox>
 
             <Label fx:id="statusLabel" style="-fx-text-fill: red;" />
+         <HBox prefHeight="100.0" prefWidth="200.0">
+            <children>
+               <Label text="UserName" />
+               <Label text="UserID" />
+            </children>
+         </HBox>
+         <Label text="About User" />
         </VBox>
     </top>
 

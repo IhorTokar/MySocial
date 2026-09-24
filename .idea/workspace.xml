@@ -4,18 +4,21 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 1.7&#10;Added UI">
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/CommentsWindow.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/CommentApiService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/LikeApiService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/SavePostApiService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/UserSimilarityService.java" afterDir="false" />
+    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 1.7&#10;Updated Logic">
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/MainShellController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/SavedController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/main_shell.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/saved.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/PostListCell.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/PostListCell.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/PostLikeController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/PostLikeController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/SavedPostController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/SavedPostController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/PostLikeService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/PostLikeService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/SavedPostService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/SavedPostService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/CreatePostController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/CreatePostController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/FeedController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/FeedController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/LoginController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ProfileController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/SavePostApiService.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/SavePostApiService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/feed.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/feed.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/login.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/login.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,6 +50,9 @@
     &quot;accountId&quot;: &quot;3d0995ad-9264-4494-9565-71e442067605&quot;
   }
 }</component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="jar://$MAVEN_REPOSITORY$/org/openjfx/javafx-fxml/21.0.2/javafx-fxml-21.0.2-sources.jar!/javafx/fxml/LoadException.java" root0="SKIP_INSPECTION" />
+  </component>
   <component name="MavenRunner">
     <option name="delegateBuildToMaven" value="true" />
   </component>
@@ -81,7 +87,7 @@
     &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
     &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.projectsettings.compiler.javacompiler&quot;
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
 }</component>
   <component name="RecentsManager">
@@ -89,7 +95,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.ServerApplication">
+  <component name="RunManager" selected="Maven.Run Client (JavaFX)">
     <configuration name="ServerApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.example.social.server.ServerApplication" />
       <module name="server" />
@@ -205,7 +211,8 @@
     <MESSAGE value="update 1.5" />
     <MESSAGE value="update 1.6" />
     <MESSAGE value="update 1.7&#10;Added UI" />
-    <option name="LAST_COMMIT_MESSAGE" value="update 1.7&#10;Added UI" />
+    <MESSAGE value="update 1.7&#10;Updated Logic" />
+    <option name="LAST_COMMIT_MESSAGE" value="update 1.7&#10;Updated Logic" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

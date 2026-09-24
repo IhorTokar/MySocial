@@ -3,20 +3,14 @@ package com.example.social.client.controller;
 import com.example.social.client.component.PostListCell;
 import com.example.social.client.service.ApiClient;
 import com.example.social.client.service.PostApiService;
-import com.example.social.client.util.SessionManager;
+import com.example.social.client.service.SavePostApiService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.stage.Stage;
 
-import java.io.IOException;
-
-public class FeedController {
+public class SavedController {
 
     @FXML
     private ListView<PostApiService.PostItem> postsListView;
@@ -24,63 +18,41 @@ public class FeedController {
     @FXML
     private Label statusLabel;
 
-
-    @FXML
-    private javafx.scene.control.TextField profileUserIdField;
-
     @FXML
     private Button refreshButton;
 
-    private final PostApiService postApiService = new PostApiService(new ApiClient());
+    private final SavePostApiService savePostApiService = new SavePostApiService(new ApiClient());
     private MainShellController shell;
 
-    @FXML
-    private void initialize() {
-        postsListView.setCellFactory(list -> new PostListCell());
-        loadFeed();
-    }
-
-
-
-    public void setShell(com.example.social.client.controller.MainShellController shell) {
+    public void setShell(MainShellController shell) {
         this.shell = shell;
     }
 
     @FXML
-    private void handleRefresh() {
-        loadFeed();
+    private void initialize() {
+        postsListView.setCellFactory(list -> new PostListCell());
+        loadSaved();
     }
-
 
     @FXML
-    private void handleViewProfile() {
-        String idText = profileUserIdField.getText().trim();
-        if (idText.isEmpty()) {
-            statusLabel.setText("Введіть ID користувача");
-            return;
-        }
-        try {
-            Long userId = Long.parseLong(idText);
-            shell.showProfile(userId);
-        } catch (NumberFormatException e) {
-            statusLabel.setText("ID має бути числом");
-        }
+    private void handleRefresh() {
+        loadSaved();
     }
 
-    private void loadFeed() {
+    private void loadSaved() {
         refreshButton.setDisable(true);
         statusLabel.setText("Завантаження...");
 
         Thread.ofVirtual().start(() -> {
             try {
-                PostApiService.FeedResult result = postApiService.getFeed();
+                SavePostApiService.FetchResult result = savePostApiService.getSavedPosts();
 
                 Platform.runLater(() -> {
                     refreshButton.setDisable(false);
 
                     if (result.success()) {
                         postsListView.getItems().setAll(result.posts());
-                        statusLabel.setText("Постів у стрічці: " + result.posts().size());
+                        statusLabel.setText("Збережених постів: " + result.posts().size());
                     } else {
                         statusLabel.setText(result.errorMessage());
                     }
@@ -93,6 +65,4 @@ public class FeedController {
             }
         });
     }
-
-
 }

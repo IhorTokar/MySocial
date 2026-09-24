@@ -36,6 +36,11 @@ public class CreatePostController {
     private Button submitButton;
 
     private final PostApiService postApiService = new PostApiService(new ApiClient());
+    private Runnable onPublished;
+
+    public void setOnPublished(Runnable onPublished) {
+        this.onPublished = onPublished;
+    }
 
     @FXML
     private void handleSubmit() {
@@ -68,9 +73,11 @@ public class CreatePostController {
 
                 Platform.runLater(() -> {
                     submitButton.setDisable(false);
-
                     if (result.success()) {
-                        goToFeed();
+                        if (onPublished != null) {
+                            onPublished.run();
+                        }
+                        ((Stage) submitButton.getScene().getWindow()).close();
                     } else {
                         statusLabel.setStyle("-fx-text-fill: red;");
                         statusLabel.setText(result.errorMessage());
@@ -112,7 +119,7 @@ public class CreatePostController {
 
     @FXML
     private void handleCancel() {
-        goToFeed();
+        ((Stage) submitButton.getScene().getWindow()).close();
     }
 
     private void goToFeed() {
