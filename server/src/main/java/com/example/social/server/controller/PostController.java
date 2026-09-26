@@ -3,6 +3,7 @@ package com.example.social.server.controller;
 import com.example.social.server.security.AuthenticatedUser;
 import com.example.social.server.service.FileStorageService;
 import com.example.social.server.service.PostService;
+import com.example.social.server.service.RecommendationService;
 import com.example.social.shared.dto.PostCreateDto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -19,10 +20,14 @@ import java.util.Map;
 public class PostController {
 
     private final PostService postService;
+    private final RecommendationService recommendationService;
     private final FileStorageService fileStorageService;
 
-    public PostController(PostService postService, FileStorageService fileStorageService) {
+    public PostController(PostService postService,
+                          RecommendationService recommendationService,
+                          FileStorageService fileStorageService) {
         this.postService = postService;
+        this.recommendationService = recommendationService;
         this.fileStorageService = fileStorageService;
     }
 
@@ -69,6 +74,16 @@ public class PostController {
         }
     }
 
+    @GetMapping("/feed/debug")
+    public ResponseEntity<?> getFeedDebug(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                          @RequestParam(name = "limit", defaultValue = "30") int limit) {
+        try {
+            return ResponseEntity.ok(recommendationService.getHybridFeedDebug(currentUser.getUserId(), limit));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/user/{userId}")
     public ResponseEntity<?> getPostsByUser(@PathVariable("userId") Long userId) {
         try {
@@ -79,9 +94,10 @@ public class PostController {
     }
 
     @GetMapping("/feed")
-    public ResponseEntity<?> getFeed(@AuthenticationPrincipal AuthenticatedUser currentUser) {
+    public ResponseEntity<?> getFeed(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                     @RequestParam(name = "limit", defaultValue = "30") int limit) {
         try {
-            return ResponseEntity.ok(postService.getFeed(currentUser.getUserId()));
+            return ResponseEntity.ok(recommendationService.getHybridFeed(currentUser.getUserId(), limit));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }

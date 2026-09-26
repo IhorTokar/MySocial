@@ -3,15 +3,11 @@ package com.example.social.server.service;
 import com.example.social.server.entity.Post;
 import com.example.social.server.entity.Tag;
 import com.example.social.server.entity.User;
-import com.example.social.server.repository.FollowersRepository;
-import com.example.social.server.repository.PostRepository;
-import com.example.social.server.repository.TagRepository;
-import com.example.social.server.repository.UserRepository;
+import com.example.social.server.repository.*;
 import com.example.social.shared.dto.PostCreateDto;
 import com.example.social.shared.dto.PostResponseDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import com.example.social.server.repository.FollowersRepository;
 import com.example.social.server.entity.Followers;
 
 
@@ -27,17 +23,22 @@ public class PostService {
     private final UserRepository userRepository;
     private final TagRepository tagRepository;
     private final FollowersRepository followersRepository;
+    private final EmbeddingApiService embeddingApiService;
+    private final PostEmbeddingRepository postEmbeddingRepository;
 
     public PostService(PostRepository postRepository,
                        UserRepository userRepository,
                        TagRepository tagRepository,
-                       FollowersRepository followersRepository) {
+                       FollowersRepository followersRepository,
+                       EmbeddingApiService embeddingApiService,
+                       PostEmbeddingRepository postEmbeddingRepository) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.tagRepository = tagRepository;
         this.followersRepository = followersRepository;
+        this.embeddingApiService = embeddingApiService;
+        this.postEmbeddingRepository = postEmbeddingRepository;
     }
-
     @Transactional
     public PostResponseDto createPost(Long userId, PostCreateDto dto) {
         User user = userRepository.findById(userId)
@@ -54,6 +55,12 @@ public class PostService {
         }
 
         Post saved = postRepository.save(post);
+
+        List<Double> vector = embeddingApiService.embed(dto.getText());
+        if (vector != null) {
+            postEmbeddingRepository.saveEmbedding(saved.getPostId(), vector);
+        }
+
         return toDto(saved);
     }
 

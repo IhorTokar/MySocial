@@ -1,9 +1,6 @@
 package com.example.social.server.controller;
 
-import com.example.social.server.service.CommunityDetectionService;
-import com.example.social.server.service.GraphEmbeddingService;
-import com.example.social.server.service.GraphSyncService;
-import com.example.social.server.service.UserSimilarityService;
+import com.example.social.server.service.*;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
 import org.springframework.http.HttpStatus;
@@ -21,18 +18,21 @@ public class GraphController {
     private final GraphEmbeddingService graphEmbeddingService;
     private final CommunityDetectionService communityDetectionService;
     private final UserSimilarityService userSimilarityService;
+    private final CommunityAnalysisService communityAnalysisService;
 
 
     public GraphController(Driver neo4jDriver,
                            GraphSyncService graphSyncService,
                            GraphEmbeddingService graphEmbeddingService,
                            CommunityDetectionService communityDetectionService,
-                           UserSimilarityService userSimilarityService) {
+                           UserSimilarityService userSimilarityService,
+                           CommunityAnalysisService communityAnalysisService) {
         this.neo4jDriver = neo4jDriver;
         this.graphSyncService = graphSyncService;
         this.graphEmbeddingService = graphEmbeddingService;
         this.communityDetectionService = communityDetectionService;
         this.userSimilarityService = userSimilarityService;
+        this.communityAnalysisService = communityAnalysisService;
     }
 
     @GetMapping("/health")
@@ -126,6 +126,18 @@ public class GraphController {
             return ResponseEntity.ok(graphEmbeddingService.getEmbeddings());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/communities/analysis")
+    public ResponseEntity<?> analyzeCommunities() {
+        try {
+            return ResponseEntity.ok(communityAnalysisService.analyzeCommunities());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));
         }
     }

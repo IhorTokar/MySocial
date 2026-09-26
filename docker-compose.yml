@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16
+    image: pgvector/pgvector:pg16
     container_name: social-pg
     restart: unless-stopped
     environment:
@@ -45,8 +45,8 @@ services:
       NEO4J_dbms_security_procedures_unrestricted: gds.*
       NEO4J_dbms_security_procedures_allowlist: gds.*
     ports:
-      - "7474:7474"   # веб-інтерфейс Neo4j Browser
-      - "7687:7687"   # Bolt-протокол, яким користується neo4j-java-driver
+      - "7474:7474"
+      - "7687:7687"
     volumes:
       - social-neo4j-data:/data
     healthcheck:
@@ -54,6 +54,20 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+
+  nlp:
+    build:
+      context: ./nlp-service
+    container_name: social-nlp
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
+      start_period: 60s
 
 volumes:
   social-pg-data:
