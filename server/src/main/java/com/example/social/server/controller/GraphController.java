@@ -131,11 +131,61 @@ public class GraphController {
     }
 
     @GetMapping("/communities/analysis")
-    public ResponseEntity<?> analyzeCommunities() {
+    public ResponseEntity<?> analyzeCommunities(@RequestParam(defaultValue = "false") boolean leiden) {
         try {
-            return ResponseEntity.ok(communityAnalysisService.analyzeCommunities());
+            return ResponseEntity.ok(communityAnalysisService.analyzeCommunities(leiden));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PostMapping("/communities/leiden")
+    public ResponseEntity<?> detectCommunitiesLeiden() {
+        try {
+            return ResponseEntity.ok(communityDetectionService.detectCommunitiesLeiden());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/communities/leiden")
+    public ResponseEntity<?> getCommunitiesLeiden() {
+        try {
+            return ResponseEntity.ok(communityDetectionService.getCommunitiesLeiden());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/communities/leiden/summary")
+    public ResponseEntity<?> getCommunitySummaryLeiden() {
+        try {
+            return ResponseEntity.ok(communityDetectionService.getCommunitySummaryLeiden());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/communities/connectivity")
+    public ResponseEntity<?> checkConnectivityLouvain() {
+        try {
+            return ResponseEntity.ok(communityDetectionService.checkConnectivityLouvain());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/communities/leiden/connectivity")
+    public ResponseEntity<?> checkConnectivityLeiden() {
+        try {
+            return ResponseEntity.ok(communityDetectionService.checkConnectivityLeiden());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("error", e.getMessage()));

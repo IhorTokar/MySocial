@@ -5,25 +5,39 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 1.8&#10;Updated">
-      <change afterPath="$PROJECT_DIR$/nlp-service/Dockerfile" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/nlp-service/main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/nlp-service/requirements.txt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/PostEmbeddingRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/EmbeddingApiService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/SentimentService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/resources/db/migration/migration/V3__add_post_embeddings.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/EditProfileController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/UserApiService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/edit_profile.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/SentimentApiService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/UpdateProfileDto.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/PostController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/PostController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/TestDataController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/TestDataController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/CommentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/CommentRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/PostLikeRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/PostLikeRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/FriendsController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ProfileController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/ApiClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/ApiClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/create_post.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/create_post.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/feed.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/feed.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/login.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/login.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/main_shell.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/main_shell.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/profile.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/profile.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/register.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/register.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/saved.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/saved.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/FriendController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/GraphController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/GraphController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/Friendship.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/FollowersRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/FollowersRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/FriendshipRepository.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/PostRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/PostRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/PostService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/PostService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/RecommendationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/RecommendationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/TestDataService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/TestDataService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/RecommendationDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/RecommendationDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/CommunityAnalysisService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/CommunityAnalysisService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/CommunityDetectionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/CommunityDetectionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/FriendService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/GraphSyncService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/GraphSyncService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/SentimentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/SentimentService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/FriendRequestDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/UserDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/UserDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/enums/FriendStatus.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,35 +87,35 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.ServerApplication.executor": "Run",
-    "Maven.ClientApplication.executor": "Run",
-    "Maven.Run Client (JavaFX).executor": "Run",
-    "Maven.ServerApplication.executor": "Run",
-    "Maven.social-network [clean,install,--projects...].executor": "Run",
-    "Maven.social-network [install,--projects...].executor": "Run",
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "master",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/medoko/IdeaProjects/MySocial",
-    "onboarding.tips.debug.path": "/home/medoko/IdeaProjects/MySocial/server/src/main/java/com/example/social/Main.java",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.0",
-    "project.structure.side.proportion": "0.2",
-    "python.packages.toolwindow.project.migrated.to.right.top.v2": "true",
-    "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.ServerApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Maven.ClientApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Maven.Run Client (JavaFX).executor&quot;: &quot;Run&quot;,
+    &quot;Maven.ServerApplication.executor&quot;: &quot;Run&quot;,
+    &quot;Maven.social-network [clean,install,--projects...].executor&quot;: &quot;Run&quot;,
+    &quot;Maven.social-network [install,--projects...].executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/home/medoko/IdeaProjects/MySocial&quot;,
+    &quot;onboarding.tips.debug.path&quot;: &quot;/home/medoko/IdeaProjects/MySocial/server/src/main/java/com/example/social/Main.java&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;python.packages.toolwindow.project.migrated.to.right.top.v2&quot;: &quot;true&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.ServerApplication">
+  <component name="RunManager" selected="Maven.Run Client (JavaFX)">
     <configuration name="ServerApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.example.social.server.ServerApplication" />
       <module name="server" />

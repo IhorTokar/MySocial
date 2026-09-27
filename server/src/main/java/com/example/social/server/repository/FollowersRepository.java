@@ -11,4 +11,6 @@ public interface FollowersRepository extends JpaRepository<Followers, Long> {
     List<Followers> findByFollowing(User following);
     Optional<Followers> findByFollowerAndFollowing(User follower, User following);
     long countByFollowing(User following);
+    long countByFollower(User follower);
+    boolean existsByFollowerAndFollowing(User follower, User following);
 }

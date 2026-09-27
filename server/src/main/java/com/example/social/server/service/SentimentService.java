@@ -1,5 +1,7 @@
 package com.example.social.server.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -8,9 +10,9 @@ import java.util.regex.Pattern;
 @Service
 public class SentimentService {
 
-    // Невеликі ілюстративні лексикони — для навчального проєкту цього достатньо;
-    // для продакшн-точності варто замінити на словник типу Tone Dictionary
-    // чи ML-класифікатор через NLP-сервіс
+    private static final Logger log = LoggerFactory.getLogger(SentimentService.class);
+
+    // Fallback-лексикон на випадок недоступності ML-сервісу — груба, але швидка оцінка
     private static final Set<String> POSITIVE_WORDS = Set.of(
             "любл", "чудов", "прекрасн", "щаст", "радіс", "супер", "круто",
             "класн", "дякую", "вдяч", "натхнен", "надихає", "обожню", "гарн",
@@ -25,13 +27,28 @@ public class SentimentService {
 
     private static final Pattern WORD_SPLIT = Pattern.compile("[^а-щьюяіїєґ']+", Pattern.CASE_INSENSITIVE);
 
+    private final SentimentApiService sentimentApiService;
+
+    public SentimentService(SentimentApiService sentimentApiService) {
+        this.sentimentApiService = sentimentApiService;
+    }
+
     /**
-     * Груба оцінка тональності тексту в діапазоні [-1, 1]:
-     * -1 — суцільно негативний, 0 — нейтральний, 1 — суцільно позитивний.
-     * Основана на підрахунку коренів слів з двох невеликих лексиконів,
-     * не враховує заперечення, сарказм тощо — свідоме спрощення.
+     * Тональність тексту в [-1, 1]. Основний шлях — ML-модель через NLP-сервіс
+     * (мультимовний DistilBERT); якщо сервіс недоступний — деградує до простого
+     * лексиконного підрахунку, щоб аналіз спільнот не падав повністю.
      */
     public double analyze(String text) {
+        Double mlResult = sentimentApiService.analyze(text);
+        if (mlResult != null) {
+            return mlResult;
+        }
+
+        log.debug("Falling back to lexicon-based sentiment for text");
+        return analyzeLexicon(text);
+    }
+
+    private double analyzeLexicon(String text) {
         if (text == null || text.isBlank()) {
             return 0.0;
         }

@@ -18,7 +18,7 @@
         <VBox styleClass="app-header">
             <HBox alignment="CENTER_LEFT" spacing="12.0">
                 <Label text="Стрічка" styleClass="title-label" />
-                <Button fx:id="refreshButton" text="Оновити" onAction="#handleRefresh" styleClass="button-secondary" />
+                <Button fx:id="refreshButton" text="Оновити" onAction="#handleRefresh" styleClass="button, button-secondary" />
             </HBox>
             <HBox alignment="CENTER_LEFT" spacing="8.0">
                 <padding>
@@ -26,7 +26,7 @@
                 </padding>
                 <TextField fx:id="profileUserIdField" promptText="ID користувача" maxWidth="120.0" />
                 <Button fx:id="viewProfileButton" text="Переглянути профіль" onAction="#handleViewProfile"
-                        styleClass="button-secondary" />
+                        styleClass="button, button-secondary" />
             </HBox>
         </VBox>
     </top>

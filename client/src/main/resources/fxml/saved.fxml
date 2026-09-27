@@ -15,7 +15,7 @@
     <top>
         <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="app-header">
             <Label text="Збережені пости" styleClass="title-label" />
-            <Button fx:id="refreshButton" text="Оновити" onAction="#handleRefresh" styleClass="button-secondary" />
+            <Button fx:id="refreshButton" text="Оновити" onAction="#handleRefresh" styleClass="button, button-secondary" />
         </HBox>
     </top>
 

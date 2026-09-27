@@ -4,42 +4,64 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Circle?>
 
-<BorderPane xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.social.client.controller.ProfileController">
+<BorderPane xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="com.example.social.client.controller.ProfileController"
+            stylesheets="@../css/styles.css">
 
     <top>
-        <VBox prefHeight="155.0" prefWidth="248.0" spacing="8.0" style="-fx-background-color: #f0f0f0;">
+        <VBox styleClass="post-card" spacing="12.0">
             <padding>
-                <Insets bottom="12.0" left="16.0" right="16.0" top="12.0" />
+                <Insets top="16.0" right="20.0" bottom="16.0" left="20.0" />
             </padding>
 
             <HBox alignment="CENTER_LEFT" spacing="12.0">
-                <Label fx:id="usernameLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
-                <Label fx:id="followersCountLabel" style="-fx-text-fill: gray;" />
-                <Button fx:id="backButton" onAction="#handleBack" text="← " />
+                <Button fx:id="backButton" text="←" styleClass="button, button-secondary" onAction="#handleBack" />
+                <Region HBox.hgrow="ALWAYS" />
             </HBox>
 
-            <HBox spacing="8.0">
-                <Button fx:id="followButton" onAction="#handleFollow" text="Підписатись" />
-                <Button fx:id="unfollowButton" onAction="#handleUnfollow" text="Відписатись" />
+            <HBox alignment="CENTER_LEFT" spacing="16.0">
+                <StackPane>
+                    <ImageView fx:id="avatarImageView" fitWidth="72.0" fitHeight="72.0"
+                               preserveRatio="false">
+                        <clip>
+                            <Circle radius="36.0" centerX="36.0" centerY="36.0" />
+                        </clip>
+                    </ImageView>
+                </StackPane>
+
+                <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+                    <Label fx:id="displayNameLabel" styleClass="title-label" />
+                    <Label fx:id="usernameHandleLabel" styleClass="secondary-label" />
+                </VBox>
+
+                <Button fx:id="followButton" text="Підписатись" styleClass="button, button-primary"
+                        onAction="#handleFollowToggle" />
+                <Button fx:id="editProfileButton" text="Редагувати профіль" styleClass="button, button-secondary"
+                        onAction="#handleEditProfile" visible="false" managed="false" />
             </HBox>
 
-            <Label fx:id="statusLabel" style="-fx-text-fill: red;" />
-         <HBox prefHeight="100.0" prefWidth="200.0">
-            <children>
-               <Label text="UserName" />
-               <Label text="UserID" />
-            </children>
-         </HBox>
-         <Label text="About User" />
+            <Label fx:id="aboutMeLabel" styleClass="post-text" wrapText="true" />
+
+            <HBox spacing="20.0">
+                <Label fx:id="postsCountLabel" styleClass="secondary-label" />
+                <Label fx:id="followersCountLabel" styleClass="secondary-label" />
+                <Label fx:id="followingCountLabel" styleClass="secondary-label" />
+            </HBox>
+
+            <Label fx:id="statusLabel" />
         </VBox>
     </top>
 
     <center>
-        <ListView fx:id="postsListView" />
+        <ListView fx:id="postsListView" styleClass="list-view" />
     </center>
 
 </BorderPane>

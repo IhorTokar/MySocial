@@ -37,6 +37,10 @@ public class ApiClient {
         return send("POST", path, body, false);
     }
 
+    public ApiResponse patch(String path, Object body) throws IOException, InterruptedException {
+        return send("PATCH", path, body, true);
+    }
+
     public ApiResponse get(String path) throws IOException, InterruptedException {
         return send("GET", path, null, true);
     }
@@ -61,6 +65,7 @@ public class ApiClient {
 
         switch (method) {
             case "POST" -> builder.POST(HttpRequest.BodyPublishers.ofString(json));
+            case "PATCH" -> builder.method("PATCH", HttpRequest.BodyPublishers.ofString(json));
             case "DELETE" -> builder.DELETE();
             default -> builder.GET();
         }

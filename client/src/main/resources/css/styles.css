@@ -213,3 +213,7 @@
 .post-image {
     -fx-background-radius: 12px;
 }
+
+.title-label {
+    -fx-font-size: 18px;
+}

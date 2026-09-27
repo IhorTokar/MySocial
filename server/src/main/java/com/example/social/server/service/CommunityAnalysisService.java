@@ -46,8 +46,10 @@ public class CommunityAnalysisService {
     }
 
     @Transactional(readOnly = true)
-    public List<CommunityAnalysisDto> analyzeCommunities() {
-        List<Map<String, Object>> communityRows = communityDetectionService.getCommunities();
+    public List<CommunityAnalysisDto> analyzeCommunities(boolean useLeiden) {
+        List<Map<String, Object>> communityRows = useLeiden
+                ? communityDetectionService.getCommunitiesLeiden()
+                : communityDetectionService.getCommunities();
         if (communityRows.isEmpty()) {
             throw new IllegalStateException("Спільноти ще не визначені — спершу викличте /api/graph/communities");
         }

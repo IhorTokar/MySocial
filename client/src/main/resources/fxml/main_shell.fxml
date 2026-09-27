@@ -21,16 +21,16 @@
             <Button fx:id="navFeedButton" onAction="#handleShowFeed" styleClass="nav-link" text="🏠  Стрічка" />
             <Button fx:id="navProfileButton" onAction="#handleShowMyProfile" styleClass="nav-link" text="👤  Мій профіль" />
             <Button fx:id="navSavedButton" onAction="#handleShowSaved" styleClass="nav-link" text="🔖  Збережені" />
-         <Button mnemonicParsing="false" prefHeight="40.0" prefWidth="144.0" styleClass="nav-link" text="🔖  Повідомлення" textAlignment="RIGHT" />
+            <Button mnemonicParsing="false" prefHeight="40.0" prefWidth="144.0" styleClass="nav-link" text="🔖  Повідомлення" textAlignment="RIGHT" />
 
             <VBox VBox.vgrow="ALWAYS" />
 
-            <Button fx:id="newPostButton" onAction="#handleNewPost" styleClass="button-primary" text="＋  Новий пост">
+            <Button fx:id="newPostButton" onAction="#handleNewPost" styleClass="button, button-primary" text="＋  Новий пост">
                 <VBox.margin>
                     <Insets bottom="8.0" top="12.0" />
                 </VBox.margin>
             </Button>
-            <Button fx:id="logoutButton" onAction="#handleLogout" styleClass="button-secondary" text="Вийти" />
+            <Button fx:id="logoutButton" onAction="#handleLogout" styleClass="button, button-secondary" text="Вийти" />
         </VBox>
     </left>
 

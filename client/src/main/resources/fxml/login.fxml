@@ -23,7 +23,7 @@
     <Label fx:id="errorLabel" styleClass="error-label" wrapText="true" maxWidth="300.0" />
 
     <Button fx:id="loginButton" text="Увійти" defaultButton="true" onAction="#handleLogin"
-            styleClass="button-primary" maxWidth="300.0" />
+            styleClass="button, button-primary" maxWidth="300.0" />
     <Button fx:id="registerButton" text="Створити акаунт" onAction="#handleGoToRegister"
-            styleClass="link-button" maxWidth="300.0" />
+            styleClass="button, link-button" maxWidth="300.0" />
 </VBox>

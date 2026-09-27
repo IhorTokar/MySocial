@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="12.0" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      stylesheets="@../css/styles.css"
+      fx:controller="com.example.social.client.controller.EditProfileController">
+    <padding>
+        <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
+    </padding>
+
+    <Label text="Редагувати профіль" styleClass="title-label" />
+
+    <TextField fx:id="displayNameField" promptText="Відображуване ім'я" styleClass="text-field" />
+    <TextArea fx:id="aboutMeArea" prefRowCount="4" promptText="Про себе" wrapText="true" styleClass="text-area" />
+
+    <Label fx:id="statusLabel" wrapText="true" />
+
+    <HBox spacing="10.0">
+        <Button fx:id="saveButton" onAction="#handleSave" text="Зберегти" styleClass="button, button-primary" />
+        <Button fx:id="cancelButton" onAction="#handleCancel" text="Скасувати" styleClass="button, button-secondary" />
+    </HBox>
+</VBox>
