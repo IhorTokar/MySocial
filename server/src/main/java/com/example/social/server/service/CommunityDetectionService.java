@@ -229,4 +229,17 @@ public class CommunityDetectionService {
         return checkConnectivity("communityLeiden");
     }
 
+    /** Community id користувача за вказаною властивістю, або null, якщо ще не визначено. */
+    public Long findUserCommunity(String propertyName, Long userId) {
+        try (Session session = neo4jDriver.session()) {
+            return session.executeRead(tx -> {
+                var res = tx.run(
+                        "MATCH (u:User {userId: $userId}) WHERE u." + propertyName + " IS NOT NULL " +
+                                "RETURN u." + propertyName + " AS community",
+                        Map.of("userId", userId)
+                );
+                return res.hasNext() ? res.single().get("community").asLong() : null;
+            });
+        }
+    }
 }

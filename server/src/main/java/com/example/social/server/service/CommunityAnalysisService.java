@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.Optional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -81,7 +82,7 @@ public class CommunityAnalysisService {
         return results;
     }
 
-    private CommunityAnalysisDto analyzeSingleCommunity(Long community, List<Long> userIds) {
+    public CommunityAnalysisDto analyzeSingleCommunity(Long community, List<Long> userIds) {
         List<User> users = userRepository.findAllById(userIds);
         List<Post> posts = postRepository.findByUserInOrderByCreatedDateDesc(users);
 
@@ -131,6 +132,37 @@ public class CommunityAnalysisService {
                 topicHomogeneity, semanticCohesion, avgSentiment,
                 sentimentHomogeneity, echoChamberScore
         );
+    }
+
+    /** Ехо-спільнота конкретного користувача, або Optional.empty(), якщо ще не визначена чи закоротка. */
+    @Transactional(readOnly = true)
+    public Optional<CommunityAnalysisDto> getCommunityForUser(Long userId, boolean useLeiden) {
+        List<Map<String, Object>> communityRows = useLeiden
+                ? communityDetectionService.getCommunitiesLeiden()
+                : communityDetectionService.getCommunities();
+
+        Map<Long, List<Long>> userIdsByCommunity = new HashMap<>();
+        Long myCommunity = null;
+
+        for (Map<String, Object> row : communityRows) {
+            Long community = (Long) row.get("community");
+            Long rowUserId = (Long) row.get("userId");
+            userIdsByCommunity.computeIfAbsent(community, k -> new ArrayList<>()).add(rowUserId);
+            if (rowUserId.equals(userId)) {
+                myCommunity = community;
+            }
+        }
+
+        if (myCommunity == null) {
+            return Optional.empty();
+        }
+
+        List<Long> members = userIdsByCommunity.get(myCommunity);
+        if (members.size() < MIN_COMMUNITY_SIZE) {
+            return Optional.empty();
+        }
+
+        return Optional.of(analyzeSingleCommunity(myCommunity, members));
     }
 
     /**

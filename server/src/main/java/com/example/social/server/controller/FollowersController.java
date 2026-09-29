@@ -67,4 +67,26 @@ public class FollowersController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
     }
+
+    @GetMapping("/{userId}/following/summary")
+    public ResponseEntity<?> getFollowingSummary(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                                 @PathVariable("userId") Long userId) {
+        try {
+            Long currentUserId = currentUser != null ? currentUser.getUserId() : null;
+            return ResponseEntity.ok(followersService.getFollowingSummary(userId, currentUserId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{userId}/summary")
+    public ResponseEntity<?> getFollowersSummary(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                                 @PathVariable("userId") Long userId) {
+        try {
+            Long currentUserId = currentUser != null ? currentUser.getUserId() : null;
+            return ResponseEntity.ok(followersService.getFollowersSummary(userId, currentUserId));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
 }

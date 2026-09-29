@@ -31,6 +31,15 @@ public class ProfileController {
     @FXML private ListView<PostApiService.PostItem> postsListView;
     @FXML private Button backButton;
     @FXML private Button messageButton;
+    @FXML private javafx.scene.control.Button toggleCreatePostButton;
+    @FXML private javafx.scene.layout.VBox createPost;
+    @FXML private CreatePostController createPostController;
+    @FXML private javafx.scene.layout.VBox communityCard;
+    @FXML private Label communityInfoLabel;
+
+    private final com.example.social.client.service.GraphApiService graphApiService =
+            new com.example.social.client.service.GraphApiService(new ApiClient());
+    private boolean createPostExpanded;
 
     private MainShellController shell;
 
@@ -54,6 +63,11 @@ public class ProfileController {
         });
         loadProfile();
         loadPosts();
+        createPostController.setOnPublished(() -> {
+            collapseCreatePost();
+            loadPosts();
+        });
+        createPostController.setOnCancelled(this::collapseCreatePost);
     }
 
     private void openEditForm(PostApiService.PostItem post) {
@@ -110,8 +124,14 @@ public class ProfileController {
                 ? profile.aboutMe() : "Опис профілю відсутній");
 
         postsCountLabel.setText(profile.postsCount() + " " + pluralPosts(profile.postsCount()));
+
         followersCountLabel.setText(profile.followersCount() + " " + pluralFollowers(profile.followersCount()));
+        followersCountLabel.setCursor(javafx.scene.Cursor.HAND);
+        followersCountLabel.setOnMouseClicked(e -> shell.showFollows(profileUserId, "followers"));
+
         followingCountLabel.setText(profile.followingCount() + " відстежує");
+        followingCountLabel.setCursor(javafx.scene.Cursor.HAND);
+        followingCountLabel.setOnMouseClicked(e -> shell.showFollows(profileUserId, "following"));
 
         currentProfile = profile;
         avatarContainer.getChildren().setAll(
@@ -126,6 +146,8 @@ public class ProfileController {
             editProfileButton.setManaged(true);
             messageButton.setVisible(false);
             messageButton.setManaged(false);
+            toggleCreatePostButton.setVisible(true);
+            toggleCreatePostButton.setManaged(true);
         } else {
             editProfileButton.setVisible(false);
             editProfileButton.setManaged(false);
@@ -133,8 +155,12 @@ public class ProfileController {
             followButton.setManaged(true);
             messageButton.setVisible(true);
             messageButton.setManaged(true);
+            toggleCreatePostButton.setVisible(false);
+            toggleCreatePostButton.setManaged(false);
+            collapseCreatePost();
             updateFollowButtonState();
         }
+        loadCommunityInfo();
     }
 
     private void updateFollowButtonState() {
@@ -252,5 +278,52 @@ public class ProfileController {
         if (shell != null) {
             shell.showProfile(userId);
         }
+    }
+
+    @FXML
+    private void handleToggleCreatePost() {
+        if (createPostExpanded) {
+            collapseCreatePost();
+        } else {
+            createPostExpanded = true;
+            createPost.setVisible(true);
+            createPost.setManaged(true);
+            toggleCreatePostButton.setText("Скасувати");
+        }
+    }
+
+    private void collapseCreatePost() {
+        createPostExpanded = false;
+        createPost.setVisible(false);
+        createPost.setManaged(false);
+        toggleCreatePostButton.setText("Створити пост");
+    }
+
+    private void loadCommunityInfo() {
+        if (communityCard == null) {
+            return;
+        }
+        communityCard.setVisible(false);
+        communityCard.setManaged(false);
+
+        Thread.ofVirtual().start(() -> {
+            try {
+                var result = graphApiService.getUserCommunity(profileUserId);
+                Platform.runLater(() -> {
+                    if (!result.found()) {
+                        return;
+                    }
+                    var info = result.info();
+                    String tags = info.topTags().isEmpty() ? "—" : String.join(", ", info.topTags());
+                    communityInfoLabel.setText(String.format(
+                            "Спільнота з %d учасників · теми: %s · показник однорідності: %.0f%%",
+                            info.memberCount(), tags, info.echoChamberScore() * 100));
+                    communityCard.setVisible(true);
+                    communityCard.setManaged(true);
+                });
+            } catch (Exception ignored) {
+                // картка просто не показується, якщо дані недоступні
+            }
+        });
     }
 }

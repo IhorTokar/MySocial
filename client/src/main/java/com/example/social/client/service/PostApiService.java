@@ -3,6 +3,7 @@ package com.example.social.client.service;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -40,7 +41,48 @@ public class PostApiService {
             return CreatePostResult.fail(error);
         }
 
-        return CreatePostResult.ok();
+        JsonNode node = apiClient.getObjectMapper().readTree(response.body());
+        return CreatePostResult.ok(node.get("postId").asLong());
+    }
+
+    public CreatePostResult updatePost(Long postId, String label, String text, List<String> tags)
+            throws IOException, InterruptedException {
+
+        Map<String, Object> body = Map.of(
+                "label", label == null ? "" : label,
+                "text", text,
+                "tags", tags
+        );
+
+        ApiClient.ApiResponse response = apiClient.patch("/api/posts/" + postId, body);
+
+        if (!response.isSuccess()) {
+            JsonNode errorNode = apiClient.getObjectMapper().readTree(response.body());
+            String error = errorNode.has("error") ? errorNode.get("error").asText() : "Не вдалося оновити пост";
+            return CreatePostResult.fail(error);
+        }
+        return CreatePostResult.ok(postId);
+    }
+
+    public CreatePostResult uploadMedia(Long postId, Path file) throws IOException, InterruptedException {
+        ApiClient.ApiResponse response = apiClient.postMultipart("/api/posts/" + postId + "/media", "file", file);
+
+        if (!response.isSuccess()) {
+            JsonNode errorNode = apiClient.getObjectMapper().readTree(response.body());
+            String error = errorNode.has("error") ? errorNode.get("error").asText() : "Не вдалося завантажити фото";
+            return CreatePostResult.fail(error);
+        }
+        return CreatePostResult.ok(postId);
+    }
+
+    public ActionResult deletePost(Long postId) throws IOException, InterruptedException {
+        ApiClient.ApiResponse response = apiClient.delete("/api/posts/" + postId);
+        if (response.isSuccess()) {
+            return ActionResult.ok();
+        }
+        JsonNode errorNode = apiClient.getObjectMapper().readTree(response.body());
+        String error = errorNode.has("error") ? errorNode.get("error").asText() : "Не вдалося видалити пост";
+        return ActionResult.fail(error);
     }
 
     private FeedResult fetchList(String path) throws IOException, InterruptedException {
@@ -124,43 +166,14 @@ public class PostApiService {
         }
     }
 
-    public record CreatePostResult(boolean success, String errorMessage) {
-        public static CreatePostResult ok() {
-            return new CreatePostResult(true, null);
+    public record CreatePostResult(boolean success, Long postId, String errorMessage) {
+        public static CreatePostResult ok(Long postId) {
+            return new CreatePostResult(true, postId, null);
         }
 
         public static CreatePostResult fail(String errorMessage) {
-            return new CreatePostResult(false, errorMessage);
+            return new CreatePostResult(false, null, errorMessage);
         }
-    }
-
-    public CreatePostResult updatePost(Long postId, String label, String text, List<String> tags)
-            throws IOException, InterruptedException {
-
-        Map<String, Object> body = Map.of(
-                "label", label == null ? "" : label,
-                "text", text,
-                "tags", tags
-        );
-
-        ApiClient.ApiResponse response = apiClient.patch("/api/posts/" + postId, body);
-
-        if (!response.isSuccess()) {
-            JsonNode errorNode = apiClient.getObjectMapper().readTree(response.body());
-            String error = errorNode.has("error") ? errorNode.get("error").asText() : "Не вдалося оновити пост";
-            return CreatePostResult.fail(error);
-        }
-        return CreatePostResult.ok();
-    }
-
-    public ActionResult deletePost(Long postId) throws IOException, InterruptedException {
-        ApiClient.ApiResponse response = apiClient.delete("/api/posts/" + postId);
-        if (response.isSuccess()) {
-            return ActionResult.ok();
-        }
-        JsonNode errorNode = apiClient.getObjectMapper().readTree(response.body());
-        String error = errorNode.has("error") ? errorNode.get("error").asText() : "Не вдалося видалити пост";
-        return ActionResult.fail(error);
     }
 
     public record ActionResult(boolean success, String errorMessage) {
@@ -171,6 +184,4 @@ public class PostApiService {
             return new ActionResult(false, errorMessage);
         }
     }
-
-
 }

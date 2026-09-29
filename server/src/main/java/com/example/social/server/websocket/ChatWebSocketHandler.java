@@ -51,22 +51,60 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
         try {
             JsonNode node = objectMapper.readTree(message.getPayload());
-            if (!node.hasNonNull("toUserId") || !node.hasNonNull("text")) {
-                throw new IllegalArgumentException("toUserId and text are required");
+            String type = node.path("type").asText("send");
+
+            switch (type) {
+                case "send" -> handleSend(senderId, node);
+                case "edit" -> handleEdit(senderId, node);
+                case "delete" -> handleDelete(senderId, node);
+                default -> sendError(session, "Unknown message type: " + type);
             }
-
-            Long toUserId = node.get("toUserId").asLong();
-            MessageDto saved = messageService.sendMessage(senderId, toUserId, node.get("text").asText());
-
-            String payload = objectMapper.writeValueAsString(Map.of("type", "message", "message", saved));
-            registry.sendToUser(toUserId, payload);
-            registry.sendToUser(senderId, payload); // ехо відправнику: підтвердження + синхронізація його вікон
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | SecurityException e) {
             sendError(session, e.getMessage());
         } catch (Exception e) {
             log.warn("Bad chat message from user {}: {}", senderId, e.getMessage());
             sendError(session, "Некоректне повідомлення");
         }
+    }
+
+    private void handleSend(Long senderId, JsonNode node) throws Exception {
+        if (!node.hasNonNull("toUserId")) {
+            throw new IllegalArgumentException("toUserId is required");
+        }
+        Long toUserId = node.get("toUserId").asLong();
+        String text = node.hasNonNull("text") ? node.get("text").asText() : null;
+        String photoUrl = node.hasNonNull("photoUrl") ? node.get("photoUrl").asText() : null;
+        Long parentMessageId = node.hasNonNull("parentMessageId") ? node.get("parentMessageId").asLong() : null;
+
+        MessageDto saved = messageService.sendMessage(senderId, toUserId, text, photoUrl, parentMessageId);
+        broadcast("message", saved);
+    }
+
+    private void handleEdit(Long senderId, JsonNode node) throws Exception {
+        if (!node.hasNonNull("messageId") || !node.hasNonNull("text")) {
+            throw new IllegalArgumentException("messageId and text are required");
+        }
+        Long messageId = node.get("messageId").asLong();
+        String text = node.get("text").asText();
+
+        MessageDto updated = messageService.editMessage(messageId, senderId, text);
+        broadcast("message_edited", updated);
+    }
+
+    private void handleDelete(Long senderId, JsonNode node) throws Exception {
+        if (!node.hasNonNull("messageId")) {
+            throw new IllegalArgumentException("messageId is required");
+        }
+        Long messageId = node.get("messageId").asLong();
+
+        MessageDto updated = messageService.deleteMessage(messageId, senderId);
+        broadcast("message_deleted", updated);
+    }
+
+    private void broadcast(String type, MessageDto dto) throws Exception {
+        String payload = objectMapper.writeValueAsString(Map.of("type", type, "message", dto));
+        registry.sendToUser(dto.getSenderId(), payload);
+        registry.sendToUser(dto.getReceiverId(), payload);
     }
 
     @Override

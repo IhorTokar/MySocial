@@ -8,7 +8,6 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 
-<?import org.kordamp.ikonli.javafx.FontIcon?>
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             stylesheets="@../css/styles.css"
@@ -18,11 +17,7 @@
         <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="app-header">
             <Label text="Стрічка" styleClass="title-label" />
             <Region HBox.hgrow="ALWAYS" />
-            <Button fx:id="refreshButton" onAction="#handleRefresh" styleClass="action-button">
-                <graphic>
-                    <FontIcon iconLiteral="fas-sync-alt" />
-                </graphic>
-            </Button>
+            <Button fx:id="refreshButton" text="⟳" onAction="#handleRefresh" styleClass="action-button" />
         </HBox>
     </top>
 

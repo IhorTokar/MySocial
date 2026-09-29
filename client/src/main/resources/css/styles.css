@@ -349,3 +349,26 @@
 .context-menu .menu-item-danger .label {
     -fx-text-fill: -fx-error-text;
 }
+
+.message-quote {
+    -fx-background-color: derive(-fx-accent, 90%);
+    -fx-padding: 4px 8px;
+    -fx-background-radius: 8px;
+    -fx-font-size: 12px;
+    -fx-text-fill: -fx-secondary-text;
+}
+
+.bubble-text-mine {
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+}
+
+.bubble-text-theirs {
+    -fx-text-fill: -fx-primary-text;
+    -fx-font-size: 14px;
+}
+
+#emojiPane .action-button,
+#emojiButton {
+    -fx-font-size: 18px;
+}

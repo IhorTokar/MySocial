@@ -191,4 +191,18 @@ public class GraphController {
                     .body(Map.of("error", e.getMessage()));
         }
     }
+
+    @GetMapping("/community/{userId}")
+    public ResponseEntity<?> getUserCommunity(@PathVariable("userId") Long userId,
+                                              @RequestParam(defaultValue = "false") boolean leiden) {
+        try {
+            return communityAnalysisService.getCommunityForUser(userId, leiden)
+                    .<ResponseEntity<?>>map(ResponseEntity::ok)
+                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(Map.of("error", "Спільнота ще не визначена або юзер поза значущою спільнотою")));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
 }

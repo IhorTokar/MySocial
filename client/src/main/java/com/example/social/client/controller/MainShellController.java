@@ -93,26 +93,10 @@ public class MainShellController {
     private void handleShowSaved() {
         showSaved();
     }
-
     @FXML
     private void handleNewPost() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/create_post.fxml"));
-            Parent root = loader.load();
-
-            CreatePostController controller = loader.getController();
-            controller.setOnPublished(this::showFeed);
-
-            Stage modal = new Stage();
-            modal.initModality(Modality.APPLICATION_MODAL);
-            modal.setTitle("Новий пост");
-            modal.setScene(new javafx.scene.Scene(root, 500, 420));
-            modal.showAndWait();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        showMyProfile();
     }
-
     @FXML
     private void handleLogout() {
         ChatConnection chat = ChatConnection.getInstance();
@@ -156,6 +140,14 @@ public class MainShellController {
         }
     }
 
+    public void showFollows(Long userId, String initialTab) {
+        FollowsController controller = loadIntoContent("/fxml/follows.fxml");
+        if (controller != null) {
+            controller.setShell(this);
+            controller.setUserId(userId, initialTab);
+        }
+    }
+
     @FXML
     private void handleShowDialogs() {
         showDialogs();
@@ -167,6 +159,8 @@ public class MainShellController {
             controller.runSearch(query);
         }
     }
+
+
 
     @FXML
     private void handleSearch() {

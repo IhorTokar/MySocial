@@ -29,6 +29,8 @@ public class ChatConnection {
     /** Колбеки викликаються в JavaFX-потоці. */
     public interface Listener {
         default void onMessage(MessageApiService.MessageItem message) {}
+        default void onMessageEdited(MessageApiService.MessageItem message) {}
+        default void onMessageDeleted(MessageApiService.MessageItem message) {}
         default void onError(String error) {}
     }
 
@@ -61,7 +63,7 @@ public class ChatConnection {
         if (current != null) {
             ReadyState state = current.getReadyState();
             if (state == ReadyState.OPEN || state == ReadyState.NOT_YET_CONNECTED) {
-                return; // вже з'єднані або з'єднуємось
+                return;
             }
         }
         openNewClient();
@@ -81,16 +83,34 @@ public class ChatConnection {
         return current != null && current.isOpen();
     }
 
-    public boolean send(Long toUserId, String text) {
+    public boolean sendMessage(Long toUserId, String text, String photoUrl, Long parentMessageId) {
+        Map<String, Object> payload = new HashMap<>();
+        payload.put("type", "send");
+        payload.put("toUserId", toUserId);
+        if (text != null) payload.put("text", text);
+        if (photoUrl != null) payload.put("photoUrl", photoUrl);
+        if (parentMessageId != null) payload.put("parentMessageId", parentMessageId);
+        return sendRaw(payload);
+    }
+
+    public boolean editMessage(Long messageId, String text) {
+        return sendRaw(Map.of("type", "edit", "messageId", messageId, "text", text));
+    }
+
+    public boolean deleteMessage(Long messageId) {
+        return sendRaw(Map.of("type", "delete", "messageId", messageId));
+    }
+
+    private boolean sendRaw(Map<String, Object> payload) {
         WebSocketClient current = client;
         if (current == null || !current.isOpen()) {
             return false;
         }
         try {
-            current.send(mapper.writeValueAsString(Map.of("toUserId", toUserId, "text", text)));
+            current.send(mapper.writeValueAsString(payload));
             return true;
         } catch (Exception e) {
-            LOG.warning("Failed to send chat message: " + e.getMessage());
+            LOG.warning("Failed to send chat payload: " + e.getMessage());
             return false;
         }
     }
@@ -133,9 +153,9 @@ public class ChatConnection {
             }
         };
 
-        created.setConnectionLostTimeout(30); // ping/pong, щоб бачити обрив
+        created.setConnectionLostTimeout(30);
         client = created;
-        created.connect(); // неблокуюче
+        created.connect();
     }
 
     private void scheduleReconnect(WebSocketClient closed) {
@@ -161,12 +181,24 @@ public class ChatConnection {
             JsonNode node = mapper.readTree(raw);
             String type = node.path("type").asText();
 
-            if ("message".equals(type)) {
-                MessageApiService.MessageItem item = MessageApiService.parseMessage(node.get("message"));
-                Platform.runLater(() -> listeners.forEach(l -> l.onMessage(item)));
-            } else if ("error".equals(type)) {
-                String error = node.path("error").asText("Помилка чату");
-                Platform.runLater(() -> listeners.forEach(l -> l.onError(error)));
+            switch (type) {
+                case "message" -> {
+                    MessageApiService.MessageItem item = MessageApiService.parseMessage(node.get("message"));
+                    Platform.runLater(() -> listeners.forEach(l -> l.onMessage(item)));
+                }
+                case "message_edited" -> {
+                    MessageApiService.MessageItem item = MessageApiService.parseMessage(node.get("message"));
+                    Platform.runLater(() -> listeners.forEach(l -> l.onMessageEdited(item)));
+                }
+                case "message_deleted" -> {
+                    MessageApiService.MessageItem item = MessageApiService.parseMessage(node.get("message"));
+                    Platform.runLater(() -> listeners.forEach(l -> l.onMessageDeleted(item)));
+                }
+                case "error" -> {
+                    String error = node.path("error").asText("Помилка чату");
+                    Platform.runLater(() -> listeners.forEach(l -> l.onError(error)));
+                }
+                default -> LOG.warning("Unknown chat payload type: " + type);
             }
         } catch (Exception e) {
             LOG.warning("Failed to parse chat payload: " + e.getMessage());

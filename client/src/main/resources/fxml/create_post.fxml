@@ -5,23 +5,38 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="10.0" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
+<VBox spacing="10.0" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
       stylesheets="@../css/styles.css"
+      styleClass="post-card"
       fx:controller="com.example.social.client.controller.CreatePostController">
     <padding>
-        <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
+        <Insets bottom="20.0" left="20.0" right="20.0" top="16.0" />
     </padding>
 
     <Label fx:id="titleLabel" styleClass="title-label" text="Новий пост" />
 
     <TextField fx:id="labelField" promptText="Заголовок (необов'язково)" styleClass="text-field" />
-    <TextArea fx:id="textArea" prefRowCount="6" promptText="Про що ваш пост?" wrapText="true" styleClass="text-area" />
+    <TextArea fx:id="textArea" prefRowCount="4" promptText="Про що ваш пост?" wrapText="true" styleClass="text-area" />
     <TextField fx:id="tagsField" promptText="#тег1 #тег2 #тег3" styleClass="text-field" />
 
-    <Label fx:id="statusLabel" styleClass="error-label" wrapText="true" />
+    <ImageView fx:id="imagePreview" fitWidth="360.0" preserveRatio="true" visible="false" managed="false" />
 
-    <Button fx:id="submitButton" onAction="#handleSubmit" styleClass="button, button-primary" text="Опублікувати" />
-    <Button fx:id="cancelButton" onAction="#handleCancel" styleClass="button, button-secondary" text="Скасувати" />
+    <HBox spacing="10.0">
+        <Button fx:id="chooseImageButton" onAction="#handleChooseImage" text="Додати фото"
+                styleClass="button, button-secondary" />
+        <Button fx:id="removeImageButton" onAction="#handleRemoveImage" text="Прибрати фото"
+                styleClass="button, button-secondary" visible="false" managed="false" />
+    </HBox>
+
+    <Label fx:id="statusLabel" wrapText="true" />
+
+    <HBox spacing="10.0">
+        <Button fx:id="submitButton" onAction="#handleSubmit" styleClass="button, button-primary" text="Опублікувати" />
+        <Button fx:id="cancelButton" onAction="#handleCancel" styleClass="button, button-secondary" text="Скасувати" />
+    </HBox>
 </VBox>

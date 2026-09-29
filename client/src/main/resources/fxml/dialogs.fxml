@@ -5,7 +5,9 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
@@ -39,8 +41,22 @@
 
             <bottom>
                 <VBox styleClass="chat-input-bar" spacing="6.0">
+                    <Label fx:id="contextBannerLabel" styleClass="secondary-label"
+                           visible="false" managed="false" onMouseClicked="#handleCancelContext" />
+
+                    <HBox fx:id="photoPreviewBox" spacing="8.0" alignment="CENTER_LEFT"
+                          visible="false" managed="false">
+                        <ImageView fx:id="photoPreviewView" fitHeight="80.0" preserveRatio="true" />
+                        <Button text="✕" onAction="#handleRemovePhoto" styleClass="action-button" />
+                    </HBox>
+
+                    <FlowPane fx:id="emojiPane" hgap="4.0" vgap="4.0" visible="false" managed="false" />
+
                     <Label fx:id="statusLabel" wrapText="true" />
-                    <HBox spacing="8.0">
+
+                    <HBox spacing="8.0" alignment="CENTER">
+                        <Button fx:id="emojiButton" text="😊" onAction="#handleToggleEmoji" styleClass="action-button" />
+                        <Button fx:id="photoButton" text="📎" onAction="#handleChoosePhoto" styleClass="action-button" />
                         <TextField fx:id="messageField" promptText="Напишіть повідомлення..."
                                    onAction="#handleSend" HBox.hgrow="ALWAYS" />
                         <Button fx:id="sendButton" text="Надіслати" onAction="#handleSend"

@@ -51,7 +51,17 @@
                 <Label fx:id="followingCountLabel" styleClass="secondary-label" />
             </HBox>
 
+            <VBox fx:id="communityCard" styleClass="post-card" spacing="4.0" visible="false" managed="false">
+                <Label text="Ехо-спільнота" styleClass="post-author-name" />
+                <Label fx:id="communityInfoLabel" styleClass="secondary-label" wrapText="true" />
+            </VBox>
             <Label fx:id="statusLabel" />
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+                <Button fx:id="toggleCreatePostButton" text="Створити пост" onAction="#handleToggleCreatePost"
+                        styleClass="button, button-primary" visible="false" managed="false" />
+            </HBox>
+
+            <fx:include fx:id="createPost" source="create_post.fxml" visible="false" managed="false" />
         </VBox>
     </top>
 

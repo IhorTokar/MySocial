@@ -32,6 +32,16 @@ public class Message {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt = LocalDateTime.now();
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_message_id")
+    private Message parentMessage;
+
+    @Column(nullable = false)
+    private Boolean edited = false;
+
+    @Column(nullable = false)
+    private Boolean deleted = false;
+
     // ===== Геттери / сеттери =====
 
     public Long getMessageId() {
@@ -88,5 +98,29 @@ public class Message {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Message getParentMessage() {
+        return parentMessage;
+    }
+
+    public void setParentMessage(Message parentMessage) {
+        this.parentMessage = parentMessage;
+    }
+
+    public Boolean getEdited() {
+        return edited;
+    }
+
+    public void setEdited(Boolean edited) {
+        this.edited = edited;
+    }
+
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
     }
 }
