@@ -217,3 +217,135 @@
 .title-label {
     -fx-font-size: 18px;
 }
+
+
+/* ===== Діалоги ===== */
+
+.dialogs-sidebar {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-border-color: transparent -fx-card-border transparent transparent;
+    -fx-border-width: 0 1px 0 0;
+    -fx-pref-width: 280px;
+    -fx-min-width: 280px;
+}
+
+.conversation-box {
+    -fx-padding: 8px 10px;
+    -fx-background-radius: 8px;
+}
+
+.conversation-active {
+    -fx-background-color: #E8F5FE;
+}
+
+.unread-badge {
+    -fx-background-color: -fx-accent;
+    -fx-text-fill: white;
+    -fx-background-radius: 10px;
+    -fx-padding: 1px 7px;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.bubble-mine {
+    -fx-background-color: -fx-accent;
+    -fx-text-fill: white;
+    -fx-background-radius: 16px;
+    -fx-padding: 8px 12px;
+    -fx-font-size: 14px;
+}
+
+.bubble-theirs {
+    -fx-background-color: #EFF3F4;
+    -fx-text-fill: -fx-primary-text;
+    -fx-background-radius: 16px;
+    -fx-padding: 8px 12px;
+    -fx-font-size: 14px;
+}
+
+.chat-input-bar {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-border-color: -fx-card-border transparent transparent transparent;
+    -fx-border-width: 1px 0 0 0;
+    -fx-padding: 12px 16px;
+}
+
+
+/* ===== Картка поста ===== */
+
+.post-handle {
+    -fx-text-fill: -fx-secondary-text;
+    -fx-font-size: 13px;
+}
+
+.post-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-primary-text;
+}
+
+.post-tag {
+    -fx-text-fill: -fx-accent;
+    -fx-font-size: 13px;
+}
+
+.post-actions {
+    -fx-border-color: -fx-card-border transparent transparent transparent;
+    -fx-border-width: 1px 0 0 0;
+    -fx-padding: 8px 0 0 0;
+}
+
+
+.action-button .ikonli-font-icon {
+    -fx-icon-color: -fx-secondary-text;
+    -fx-icon-size: 16px;
+}
+
+.action-button.like-active .ikonli-font-icon {
+    -fx-icon-color: -fx-like-color;
+}
+
+.action-button.save-active .ikonli-font-icon {
+    -fx-icon-color: -fx-save-color;
+}
+
+.comment-thread {
+    -fx-border-color: -fx-card-border transparent transparent transparent;
+    -fx-border-width: 1px 0 0 0;
+    -fx-padding: 10px 0 0 0;
+}
+
+.action-button:has-text("⋯") {
+    -fx-font-weight: bold;
+}
+
+/* ===== Меню поста (⋯) ===== */
+
+.context-menu {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-background-radius: 10px;
+    -fx-border-color: -fx-card-border;
+    -fx-border-radius: 10px;
+    -fx-border-width: 1px;
+    -fx-padding: 4px;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 2);
+}
+
+.context-menu .menu-item {
+    -fx-background-radius: 6px;
+    -fx-padding: 8px 12px;
+}
+
+.context-menu .menu-item .label {
+    -fx-text-fill: -fx-primary-text;
+    -fx-font-size: 14px;
+}
+
+.context-menu .menu-item:hover,
+.context-menu .menu-item:focused {
+    -fx-background-color: -fx-primary-bg;
+}
+
+.context-menu .menu-item-danger .label {
+    -fx-text-fill: -fx-error-text;
+}

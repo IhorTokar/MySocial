@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.stream.Collectors;
 
 import java.util.*;
 
@@ -30,6 +31,18 @@ public class TestDataService {
             "про", "такі", "речі", "в", "нашому", "житті", "адже", "вони", "формують",
             "досвід", "кожного", "дня", "і", "надихають", "на", "нові", "звершення",
             "цей", "момент", "запамятався", "мені", "надовго", "раджу", "всім"
+    };
+
+    private static final String[] NICK_ADJECTIVES = {
+            "Тихий", "Швидкий", "Хитрий", "Сонний", "Веселий", "Дикий", "Спокійний",
+            "Гострий", "Яскравий", "Тінистий", "Мудрий", "Сміливий", "Похмурий",
+            "Легкий", "Гучний", "Північний", "Південний", "Холодний", "Теплий", "Зоряний"
+    };
+
+    private static final String[] NICK_NOUNS = {
+            "Вовк", "Лис", "Сокіл", "Ведмідь", "Тигр", "Орел", "Змій", "Кіт",
+            "Яструб", "Барс", "Крук", "Олень", "Рись", "Койот", "Шакал",
+            "Дракон", "Фенікс", "Грифон", "Тінь", "Шторм"
     };
 
     private final UserService userService;
@@ -220,5 +233,43 @@ public class TestDataService {
 
         log.info("Backfill complete: {} embedded, {} failed", processed, failed);
         return Map.of("processed", processed, "failed", failed, "total", postsWithoutEmbedding.size());
+    }
+
+    /**
+     * Замінює технічні seed_user_... нікнейми на випадкові читабельні,
+     * не чіпаючи реальні тестові акаунти (test_user, second_user тощо).
+     */
+    @Transactional
+    public Map<String, Object> randomizeSeedUsernames() {
+        List<User> users = userRepository.findAll().stream()
+                .filter(u -> u.getUsername() != null && u.getUsername().startsWith("seed_user_"))
+                .collect(Collectors.toList());
+
+        Random random = new Random();
+        int renamed = 0;
+
+        for (User user : users) {
+            String newUsername = null;
+            for (int attempt = 0; attempt < 20; attempt++) {
+                String candidate = NICK_ADJECTIVES[random.nextInt(NICK_ADJECTIVES.length)]
+                        + NICK_NOUNS[random.nextInt(NICK_NOUNS.length)]
+                        + random.nextInt(1000);
+                if (!userRepository.existsByUsername(candidate)) {
+                    newUsername = candidate;
+                    break;
+                }
+            }
+            if (newUsername == null) {
+                log.warn("Could not find free nickname for user {}", user.getUserId());
+                continue;
+            }
+
+            user.setUsername(newUsername);
+            userRepository.save(user);
+            renamed++;
+        }
+
+        log.info("Renamed {} seed usernames", renamed);
+        return Map.of("usersRenamed", renamed, "totalCandidates", users.size());
     }
 }

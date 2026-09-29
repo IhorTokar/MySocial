@@ -4,21 +4,19 @@ import com.example.social.client.service.ApiClient;
 import com.example.social.client.service.PostApiService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class CreatePostController {
+
+    @FXML
+    private Label titleLabel;
 
     @FXML
     private TextField labelField;
@@ -38,8 +36,26 @@ public class CreatePostController {
     private final PostApiService postApiService = new PostApiService(new ApiClient());
     private Runnable onPublished;
 
+    private Long editingPostId; // null = створення нового поста, інакше — редагування
+
     public void setOnPublished(Runnable onPublished) {
         this.onPublished = onPublished;
+    }
+
+    /** Перемикає форму в режим редагування наявного поста, заповнюючи поля його даними. */
+    public void setEditMode(PostApiService.PostItem post) {
+        this.editingPostId = post.postId();
+        labelField.setText(post.label() != null ? post.label() : "");
+        textArea.setText(post.text());
+        tagsField.setText(post.tags().stream()
+                .map(t -> "#" + t)
+                .reduce((a, b) -> a + " " + b)
+                .orElse(""));
+
+        if (titleLabel != null) {
+            titleLabel.setText("Редагувати пост");
+        }
+        submitButton.setText("Зберегти зміни");
     }
 
     @FXML
@@ -47,7 +63,7 @@ public class CreatePostController {
         String text = textArea.getText().trim();
 
         if (text.isEmpty()) {
-            statusLabel.setStyle("-fx-text-fill: red;");
+            statusLabel.getStyleClass().setAll("error-label");
             statusLabel.setText("Текст поста не може бути порожнім");
             return;
         }
@@ -58,18 +74,20 @@ public class CreatePostController {
         try {
             tags = parseTags(tagsField.getText());
         } catch (IllegalArgumentException e) {
-            statusLabel.setStyle("-fx-text-fill: red;");
+            statusLabel.getStyleClass().setAll("error-label");
             statusLabel.setText(e.getMessage());
             return;
         }
 
         submitButton.setDisable(true);
-        statusLabel.setStyle("-fx-text-fill: black;");
-        statusLabel.setText("Публікація...");
+        statusLabel.getStyleClass().setAll("secondary-label");
+        statusLabel.setText(editingPostId != null ? "Збереження..." : "Публікація...");
 
         Thread.ofVirtual().start(() -> {
             try {
-                PostApiService.CreatePostResult result = postApiService.createPost(label, text, tags);
+                PostApiService.CreatePostResult result = editingPostId != null
+                        ? postApiService.updatePost(editingPostId, label, text, tags)
+                        : postApiService.createPost(label, text, tags);
 
                 Platform.runLater(() -> {
                     submitButton.setDisable(false);
@@ -79,14 +97,14 @@ public class CreatePostController {
                         }
                         ((Stage) submitButton.getScene().getWindow()).close();
                     } else {
-                        statusLabel.setStyle("-fx-text-fill: red;");
+                        statusLabel.getStyleClass().setAll("error-label");
                         statusLabel.setText(result.errorMessage());
                     }
                 });
             } catch (Exception e) {
                 Platform.runLater(() -> {
                     submitButton.setDisable(false);
-                    statusLabel.setStyle("-fx-text-fill: red;");
+                    statusLabel.getStyleClass().setAll("error-label");
                     statusLabel.setText("Помилка з'єднання: " + e.getMessage());
                 });
             }
@@ -120,18 +138,5 @@ public class CreatePostController {
     @FXML
     private void handleCancel() {
         ((Stage) submitButton.getScene().getWindow()).close();
-    }
-
-    private void goToFeed() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/feed.fxml"));
-            Parent root = loader.load();
-
-            Stage stage = (Stage) submitButton.getScene().getWindow();
-            stage.setScene(new Scene(root, 900, 600));
-            stage.setTitle("Стрічка");
-        } catch (IOException e) {
-            statusLabel.setText("Помилка переходу: " + e.getMessage());
-        }
     }
 }

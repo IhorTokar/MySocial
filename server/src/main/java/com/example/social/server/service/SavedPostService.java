@@ -75,8 +75,10 @@ public class SavedPostService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
-        return savedPostRepository.findByUser(user).stream()
-                .map(sp -> postService.getPost(sp.getPost().getPostId()))
+        List<Post> posts = savedPostRepository.findByUser(user).stream()
+                .map(SavedPost::getPost)
                 .collect(Collectors.toList());
+
+        return postService.toDtos(posts, userId);
     }
 }

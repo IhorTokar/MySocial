@@ -24,10 +24,6 @@ public class FeedController {
     @FXML
     private Label statusLabel;
 
-
-    @FXML
-    private javafx.scene.control.TextField profileUserIdField;
-
     @FXML
     private Button refreshButton;
 
@@ -36,11 +32,38 @@ public class FeedController {
 
     @FXML
     private void initialize() {
-        postsListView.setCellFactory(list -> new PostListCell());
+        postsListView.setCellFactory(list -> {
+            PostListCell cell = new PostListCell(this::openProfile);
+            cell.setOnEditRequested(this::openEditForm);
+            return cell;
+        });
         loadFeed();
     }
 
+    private void openEditForm(PostApiService.PostItem post) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/create_post.fxml"));
+            javafx.scene.Parent root = loader.load();
 
+            CreatePostController controller = loader.getController();
+            controller.setEditMode(post);
+            controller.setOnPublished(this::loadFeed);
+
+            javafx.stage.Stage modal = new javafx.stage.Stage();
+            modal.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            modal.setTitle("Редагувати пост");
+            modal.setScene(new javafx.scene.Scene(root, 500, 420));
+            modal.showAndWait();
+        } catch (java.io.IOException e) {
+            statusLabel.setText("Помилка відкриття редагування: " + e.getMessage());
+        }
+    }
+
+    private void openProfile(Long userId) {
+        if (shell != null) {
+            shell.showProfile(userId);
+        }
+    }
 
     public void setShell(com.example.social.client.controller.MainShellController shell) {
         this.shell = shell;
@@ -51,21 +74,6 @@ public class FeedController {
         loadFeed();
     }
 
-
-    @FXML
-    private void handleViewProfile() {
-        String idText = profileUserIdField.getText().trim();
-        if (idText.isEmpty()) {
-            statusLabel.setText("Введіть ID користувача");
-            return;
-        }
-        try {
-            Long userId = Long.parseLong(idText);
-            shell.showProfile(userId);
-        } catch (NumberFormatException e) {
-            statusLabel.setText("ID має бути числом");
-        }
-    }
 
     private void loadFeed() {
         refreshButton.setDisable(true);

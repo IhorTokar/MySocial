@@ -28,14 +28,7 @@
             </HBox>
 
             <HBox alignment="CENTER_LEFT" spacing="16.0">
-                <StackPane>
-                    <ImageView fx:id="avatarImageView" fitWidth="72.0" fitHeight="72.0"
-                               preserveRatio="false">
-                        <clip>
-                            <Circle radius="36.0" centerX="36.0" centerY="36.0" />
-                        </clip>
-                    </ImageView>
-                </StackPane>
+                <StackPane fx:id="avatarContainer" />
 
                 <VBox spacing="4.0" HBox.hgrow="ALWAYS">
                     <Label fx:id="displayNameLabel" styleClass="title-label" />
@@ -44,6 +37,8 @@
 
                 <Button fx:id="followButton" text="Підписатись" styleClass="button, button-primary"
                         onAction="#handleFollowToggle" />
+                <Button fx:id="messageButton" text="Написати" styleClass="button, button-secondary"
+                        onAction="#handleWriteMessage" visible="false" managed="false" />
                 <Button fx:id="editProfileButton" text="Редагувати профіль" styleClass="button, button-secondary"
                         onAction="#handleEditProfile" visible="false" managed="false" />
             </HBox>

@@ -2,16 +2,25 @@ package com.example.social.client.controller;
 
 import com.example.social.client.service.ApiClient;
 import com.example.social.client.service.UserApiService;
+import com.example.social.client.util.AvatarUtil;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.StackPane;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+
+import java.io.File;
 
 public class EditProfileController {
 
+    private static final long MAX_AVATAR_BYTES = 5L * 1024 * 1024;
+
+    @FXML private StackPane avatarPreview;
+    @FXML private Button changeAvatarButton;
     @FXML private TextField displayNameField;
     @FXML private TextArea aboutMeArea;
     @FXML private Label statusLabel;
@@ -20,14 +29,69 @@ public class EditProfileController {
 
     private final UserApiService userApiService = new UserApiService(new ApiClient());
     private ProfileController parentProfileController;
+    private UserApiService.UserProfile profile;
 
     public void setParentProfileController(ProfileController parent) {
         this.parentProfileController = parent;
     }
 
-    public void prefill(String displayName, String aboutMe) {
-        displayNameField.setText(displayName != null ? displayName : "");
-        aboutMeArea.setText(aboutMe != null ? aboutMe : "");
+    public void prefill(UserApiService.UserProfile profile) {
+        this.profile = profile;
+        displayNameField.setText(profile.displayName() != null ? profile.displayName() : "");
+        aboutMeArea.setText(profile.aboutMe() != null ? profile.aboutMe() : "");
+        refreshAvatarPreview();
+    }
+
+    private void refreshAvatarPreview() {
+        avatarPreview.getChildren().setAll(
+                AvatarUtil.create(profile.displayNameOrUsername(), profile.userAvatarUrl(), 72));
+    }
+
+    @FXML
+    private void handleChangeAvatar() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Оберіть фото профілю");
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
+                "Зображення", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp"));
+
+        File file = chooser.showOpenDialog(changeAvatarButton.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
+        if (file.length() > MAX_AVATAR_BYTES) {
+            showError("Файл завеликий (максимум 5 МБ)");
+            return;
+        }
+
+        changeAvatarButton.setDisable(true);
+        statusLabel.getStyleClass().setAll("secondary-label");
+        statusLabel.setText("Завантаження фото...");
+
+        Thread.ofVirtual().start(() -> {
+            try {
+                UserApiService.UserProfileResult result = userApiService.uploadAvatar(file.toPath());
+
+                Platform.runLater(() -> {
+                    changeAvatarButton.setDisable(false);
+                    if (result.success()) {
+                        profile = result.profile();
+                        refreshAvatarPreview();
+                        if (parentProfileController != null) {
+                            parentProfileController.applyProfile(result.profile());
+                        }
+                        statusLabel.getStyleClass().setAll("success-label");
+                        statusLabel.setText("Фото оновлено");
+                    } else {
+                        showError(result.errorMessage());
+                    }
+                });
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    changeAvatarButton.setDisable(false);
+                    showError("Помилка з'єднання: " + e.getMessage());
+                });
+            }
+        });
     }
 
     @FXML
@@ -51,15 +115,13 @@ public class EditProfileController {
                         }
                         closeWindow();
                     } else {
-                        statusLabel.getStyleClass().setAll("error-label");
-                        statusLabel.setText(result.errorMessage());
+                        showError(result.errorMessage());
                     }
                 });
             } catch (Exception e) {
                 Platform.runLater(() -> {
                     saveButton.setDisable(false);
-                    statusLabel.getStyleClass().setAll("error-label");
-                    statusLabel.setText("Помилка з'єднання: " + e.getMessage());
+                    showError("Помилка з'єднання: " + e.getMessage());
                 });
             }
         });
@@ -68,6 +130,11 @@ public class EditProfileController {
     @FXML
     private void handleCancel() {
         closeWindow();
+    }
+
+    private void showError(String message) {
+        statusLabel.getStyleClass().setAll("error-label");
+        statusLabel.setText(message);
     }
 
     private void closeWindow() {

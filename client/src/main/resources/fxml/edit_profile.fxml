@@ -6,6 +6,7 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox spacing="12.0" xmlns="http://javafx.com/javafx"
@@ -17,6 +18,12 @@
     </padding>
 
     <Label text="Редагувати профіль" styleClass="title-label" />
+
+    <HBox alignment="CENTER_LEFT" spacing="16.0">
+        <StackPane fx:id="avatarPreview" />
+        <Button fx:id="changeAvatarButton" text="Змінити фото" onAction="#handleChangeAvatar"
+                styleClass="button, button-secondary" />
+    </HBox>
 
     <TextField fx:id="displayNameField" promptText="Відображуване ім'я" styleClass="text-field" />
     <TextArea fx:id="aboutMeArea" prefRowCount="4" promptText="Про себе" wrapText="true" styleClass="text-area" />

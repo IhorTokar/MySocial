@@ -48,7 +48,7 @@ public class SavePostApiService {
         }
     }
 
-    public FetchResult getSavedPosts() throws java.io.IOException, InterruptedException {
+    public FetchResult getSavedPosts() throws IOException, InterruptedException {
         ApiClient.ApiResponse response = apiClient.get("/api/posts/saved");
 
         if (!response.isSuccess()) {
@@ -56,19 +56,9 @@ public class SavePostApiService {
         }
 
         java.util.List<PostApiService.PostItem> posts = new java.util.ArrayList<>();
-        com.fasterxml.jackson.databind.JsonNode arrayNode = apiClient.getObjectMapper().readTree(response.body());
-
-        for (com.fasterxml.jackson.databind.JsonNode node : arrayNode) {
-            posts.add(new PostApiService.PostItem(
-                    node.get("postId").asLong(),
-                    node.get("authorUsername").asText(),
-                    node.has("label") && !node.get("label").isNull() ? node.get("label").asText() : null,
-                    node.get("text").asText(),
-                    node.has("mediaUrl") && !node.get("mediaUrl").isNull() ? node.get("mediaUrl").asText() : null,
-                    node.get("createdDate").asText()
-            ));
+        for (JsonNode node : apiClient.getObjectMapper().readTree(response.body())) {
+            posts.add(PostApiService.parsePost(node));
         }
-
         return FetchResult.ok(posts);
     }
 

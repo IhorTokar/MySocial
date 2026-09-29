@@ -51,24 +51,67 @@ public class PostApiService {
         }
 
         List<PostItem> posts = new ArrayList<>();
-        JsonNode arrayNode = apiClient.getObjectMapper().readTree(response.body());
-
-        for (JsonNode node : arrayNode) {
-            posts.add(new PostItem(
-                    node.get("postId").asLong(),
-                    node.get("authorUsername").asText(),
-                    node.has("label") && !node.get("label").isNull() ? node.get("label").asText() : null,
-                    node.get("text").asText(),
-                    node.has("mediaUrl") && !node.get("mediaUrl").isNull() ? node.get("mediaUrl").asText() : null,
-                    node.get("createdDate").asText()
-            ));
+        for (JsonNode node : apiClient.getObjectMapper().readTree(response.body())) {
+            posts.add(parsePost(node));
         }
-
         return FeedResult.ok(posts);
     }
 
-    public record PostItem(Long postId, String authorUsername, String label,
-                           String text, String mediaUrl, String createdDate) {
+    /** Єдине місце розбору поста з JSON: використовують і стрічка, і «Збережені». */
+    public static PostItem parsePost(JsonNode node) {
+        List<String> tags = new ArrayList<>();
+        if (node.has("tags") && node.get("tags").isArray()) {
+            for (JsonNode tag : node.get("tags")) {
+                tags.add(tag.asText());
+            }
+        }
+        return new PostItem(
+                node.get("postId").asLong(),
+                node.path("authorId").asLong(),
+                node.get("authorUsername").asText(),
+                nullableText(node, "authorDisplayName"),
+                nullableText(node, "authorAvatarUrl"),
+                nullableText(node, "label"),
+                node.get("text").asText(),
+                nullableText(node, "mediaUrl"),
+                node.get("createdDate").asText(),
+                tags,
+                node.path("likesCount").asLong(),
+                node.path("commentsCount").asLong(),
+                node.path("likedByCurrentUser").asBoolean(),
+                node.path("savedByCurrentUser").asBoolean()
+        );
+    }
+
+    private static String nullableText(JsonNode node, String field) {
+        return node.hasNonNull(field) ? node.get(field).asText() : null;
+    }
+
+    public record PostItem(Long postId, Long authorId, String authorUsername, String authorDisplayName,
+                           String authorAvatarUrl, String label, String text, String mediaUrl,
+                           String createdDate, List<String> tags, long likesCount, long commentsCount,
+                           boolean likedByCurrentUser, boolean savedByCurrentUser) {
+
+        public String authorNameOrUsername() {
+            return authorDisplayName != null && !authorDisplayName.isBlank() ? authorDisplayName : authorUsername;
+        }
+
+        public PostItem withLike(boolean liked, long count) {
+            return new PostItem(postId, authorId, authorUsername, authorDisplayName, authorAvatarUrl,
+                    label, text, mediaUrl, createdDate, tags, count, commentsCount, liked, savedByCurrentUser);
+        }
+
+        public PostItem withSaved(boolean saved) {
+            return new PostItem(postId, authorId, authorUsername, authorDisplayName, authorAvatarUrl,
+                    label, text, mediaUrl, createdDate, tags, likesCount, commentsCount,
+                    likedByCurrentUser, saved);
+        }
+
+        public PostItem withCommentsCount(long count) {
+            return new PostItem(postId, authorId, authorUsername, authorDisplayName, authorAvatarUrl,
+                    label, text, mediaUrl, createdDate, tags, likesCount, count,
+                    likedByCurrentUser, savedByCurrentUser);
+        }
     }
 
     public record FeedResult(boolean success, List<PostItem> posts, String errorMessage) {
@@ -90,4 +133,44 @@ public class PostApiService {
             return new CreatePostResult(false, errorMessage);
         }
     }
+
+    public CreatePostResult updatePost(Long postId, String label, String text, List<String> tags)
+            throws IOException, InterruptedException {
+
+        Map<String, Object> body = Map.of(
+                "label", label == null ? "" : label,
+                "text", text,
+                "tags", tags
+        );
+
+        ApiClient.ApiResponse response = apiClient.patch("/api/posts/" + postId, body);
+
+        if (!response.isSuccess()) {
+            JsonNode errorNode = apiClient.getObjectMapper().readTree(response.body());
+            String error = errorNode.has("error") ? errorNode.get("error").asText() : "Не вдалося оновити пост";
+            return CreatePostResult.fail(error);
+        }
+        return CreatePostResult.ok();
+    }
+
+    public ActionResult deletePost(Long postId) throws IOException, InterruptedException {
+        ApiClient.ApiResponse response = apiClient.delete("/api/posts/" + postId);
+        if (response.isSuccess()) {
+            return ActionResult.ok();
+        }
+        JsonNode errorNode = apiClient.getObjectMapper().readTree(response.body());
+        String error = errorNode.has("error") ? errorNode.get("error").asText() : "Не вдалося видалити пост";
+        return ActionResult.fail(error);
+    }
+
+    public record ActionResult(boolean success, String errorMessage) {
+        public static ActionResult ok() {
+            return new ActionResult(true, null);
+        }
+        public static ActionResult fail(String errorMessage) {
+            return new ActionResult(false, errorMessage);
+        }
+    }
+
+
 }

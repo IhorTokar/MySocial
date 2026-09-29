@@ -18,6 +18,11 @@ public class ClientApplication extends Application {
         stage.show();
     }
 
+    @Override
+    public void stop() {
+        com.example.social.client.service.ChatConnection.getInstance().disconnect();
+    }
+
     public static void main(String[] args) {
         launch(args);
     }

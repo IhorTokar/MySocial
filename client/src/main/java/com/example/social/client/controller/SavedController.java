@@ -30,8 +30,31 @@ public class SavedController {
 
     @FXML
     private void initialize() {
-        postsListView.setCellFactory(list -> new PostListCell());
+        postsListView.setCellFactory(list -> {
+            PostListCell cell = new PostListCell(this::openProfile);
+            cell.setOnEditRequested(this::openEditForm);
+            return cell;
+        });
         loadSaved();
+    }
+
+    private void openEditForm(PostApiService.PostItem post) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/create_post.fxml"));
+            javafx.scene.Parent root = loader.load();
+
+            CreatePostController controller = loader.getController();
+            controller.setEditMode(post);
+            controller.setOnPublished(this::loadSaved);
+
+            javafx.stage.Stage modal = new javafx.stage.Stage();
+            modal.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            modal.setTitle("Редагувати пост");
+            modal.setScene(new javafx.scene.Scene(root, 500, 420));
+            modal.showAndWait();
+        } catch (java.io.IOException e) {
+            statusLabel.setText("Помилка відкриття редагування: " + e.getMessage());
+        }
     }
 
     @FXML
@@ -64,5 +87,11 @@ public class SavedController {
                 });
             }
         });
+    }
+
+    private void openProfile(Long userId) {
+        if (shell != null) {
+            shell.showProfile(userId);
+        }
     }
 }

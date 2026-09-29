@@ -14,7 +14,7 @@
         <Insets bottom="24.0" left="24.0" right="24.0" top="24.0" />
     </padding>
 
-    <Label styleClass="title-label" text="Новий пост" />
+    <Label fx:id="titleLabel" styleClass="title-label" text="Новий пост" />
 
     <TextField fx:id="labelField" promptText="Заголовок (необов'язково)" styleClass="text-field" />
     <TextArea fx:id="textArea" prefRowCount="6" promptText="Про що ваш пост?" wrapText="true" styleClass="text-area" />

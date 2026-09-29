@@ -5,6 +5,7 @@ import com.example.social.client.service.ApiClient;
 import com.example.social.client.service.FollowApiService;
 import com.example.social.client.service.PostApiService;
 import com.example.social.client.service.UserApiService;
+import com.example.social.client.util.AvatarUtil;
 import com.example.social.client.util.SessionManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -12,11 +13,12 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.layout.StackPane;
 
 public class ProfileController {
 
-    @FXML private ImageView avatarImageView;
+    @FXML private StackPane avatarContainer;
+    private UserApiService.UserProfile currentProfile;
     @FXML private Label displayNameLabel;
     @FXML private Label usernameHandleLabel;
     @FXML private Label aboutMeLabel;
@@ -28,6 +30,7 @@ public class ProfileController {
     @FXML private Label statusLabel;
     @FXML private ListView<PostApiService.PostItem> postsListView;
     @FXML private Button backButton;
+    @FXML private Button messageButton;
 
     private MainShellController shell;
 
@@ -44,9 +47,33 @@ public class ProfileController {
 
     public void setUserId(Long userId) {
         this.profileUserId = userId;
-        postsListView.setCellFactory(list -> new PostListCell());
+        postsListView.setCellFactory(list -> {
+            PostListCell cell = new PostListCell(this::openProfile);
+            cell.setOnEditRequested(this::openEditForm);
+            return cell;
+        });
         loadProfile();
         loadPosts();
+    }
+
+    private void openEditForm(PostApiService.PostItem post) {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/create_post.fxml"));
+            javafx.scene.Parent root = loader.load();
+
+            CreatePostController controller = loader.getController();
+            controller.setEditMode(post);
+            controller.setOnPublished(this::loadPosts);
+
+            javafx.stage.Stage modal = new javafx.stage.Stage();
+            modal.initModality(javafx.stage.Modality.APPLICATION_MODAL);
+            modal.setTitle("Редагувати пост");
+            modal.setScene(new javafx.scene.Scene(root, 500, 420));
+            modal.showAndWait();
+        } catch (java.io.IOException e) {
+            statusLabel.getStyleClass().setAll("error-label");
+            statusLabel.setText("Помилка відкриття редагування: " + e.getMessage());
+        }
     }
 
     private boolean isOwnProfile() {
@@ -86,13 +113,9 @@ public class ProfileController {
         followersCountLabel.setText(profile.followersCount() + " " + pluralFollowers(profile.followersCount()));
         followingCountLabel.setText(profile.followingCount() + " відстежує");
 
-        if (profile.userAvatarUrl() != null && !profile.userAvatarUrl().isBlank()) {
-            try {
-                avatarImageView.setImage(new Image(ApiClient.BASE_URL + profile.userAvatarUrl(), true));
-            } catch (Exception ignored) {
-                // лишаємо плейсхолдер, якщо аватар не вдалось завантажити
-            }
-        }
+        currentProfile = profile;
+        avatarContainer.getChildren().setAll(
+                AvatarUtil.create(profile.displayNameOrUsername(), profile.userAvatarUrl(), 72));
 
         isFollowing = profile.followedByCurrentUser();
 
@@ -101,11 +124,15 @@ public class ProfileController {
             followButton.setManaged(false);
             editProfileButton.setVisible(true);
             editProfileButton.setManaged(true);
+            messageButton.setVisible(false);
+            messageButton.setManaged(false);
         } else {
             editProfileButton.setVisible(false);
             editProfileButton.setManaged(false);
             followButton.setVisible(true);
             followButton.setManaged(true);
+            messageButton.setVisible(true);
+            messageButton.setManaged(true);
             updateFollowButtonState();
         }
     }
@@ -174,18 +201,20 @@ public class ProfileController {
 
     @FXML
     private void handleEditProfile() {
+        if (currentProfile == null) {
+            return;
+        }
         try {
             javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/edit_profile.fxml"));
             javafx.scene.Parent root = loader.load();
 
             EditProfileController controller = loader.getController();
             controller.setParentProfileController(this);
-            controller.prefill(displayNameLabel.getText(),
-                    aboutMeLabel.getText().equals("Опис профілю відсутній") ? "" : aboutMeLabel.getText());
+            controller.prefill(currentProfile);
 
             javafx.stage.Stage editStage = new javafx.stage.Stage();
             editStage.setTitle("Редагувати профіль");
-            editStage.setScene(new javafx.scene.Scene(root, 400, 350));
+            editStage.setScene(new javafx.scene.Scene(root, 400, 450));
             editStage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
             editStage.initOwner(editProfileButton.getScene().getWindow());
             editStage.showAndWait();
@@ -212,5 +241,16 @@ public class ProfileController {
         if (mod10 == 1 && mod100 != 11) return "підписник";
         if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return "підписники";
         return "підписників";
+    }
+
+    @FXML
+    private void handleWriteMessage() {
+        shell.showDialogsWith(profileUserId, displayNameLabel.getText());
+    }
+
+    private void openProfile(Long userId) {
+        if (shell != null) {
+            shell.showProfile(userId);
+        }
     }
 }

@@ -65,29 +65,11 @@ public class PostController {
         }
     }
 
-    @GetMapping("/{postId}")
-    public ResponseEntity<?> getPost(@PathVariable("postId") Long postId) {
-        try {
-            return ResponseEntity.ok(postService.getPost(postId));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
-    }
-
     @GetMapping("/feed/debug")
     public ResponseEntity<?> getFeedDebug(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                           @RequestParam(name = "limit", defaultValue = "30") int limit) {
         try {
             return ResponseEntity.ok(recommendationService.getHybridFeedDebug(currentUser.getUserId(), limit));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
-    }
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<?> getPostsByUser(@PathVariable("userId") Long userId) {
-        try {
-            return ResponseEntity.ok(postService.getPostsByUser(userId));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
@@ -113,6 +95,39 @@ public class PostController {
             }
             postService.deletePost(postId);
             return ResponseEntity.noContent().build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{postId}")
+    public ResponseEntity<?> getPost(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                     @PathVariable("postId") Long postId) {
+        try {
+            return ResponseEntity.ok(postService.getPost(postId, currentUser.getUserId()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> getPostsByUser(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                            @PathVariable("userId") Long userId) {
+        try {
+            return ResponseEntity.ok(postService.getPostsByUser(userId, currentUser.getUserId()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PatchMapping("/{postId}")
+    public ResponseEntity<?> updatePost(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                        @PathVariable("postId") Long postId,
+                                        @Valid @RequestBody PostCreateDto dto) {
+        try {
+            return ResponseEntity.ok(postService.updatePost(postId, currentUser.getUserId(), dto));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }

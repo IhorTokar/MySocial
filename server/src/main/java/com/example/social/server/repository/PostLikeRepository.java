@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +20,14 @@ public interface PostLikeRepository extends JpaRepository<PostLike, Long> {
     @Query("SELECT pl.post.postId AS postId, COUNT(pl) AS cnt " +
             "FROM PostLike pl WHERE pl.likedAt >= :since GROUP BY pl.post.postId")
     List<Object[]> countLikesSince(@Param("since") LocalDateTime since);
+
+    @Query("SELECT pl.post.postId, COUNT(pl) FROM PostLike pl " +
+            "WHERE pl.post.postId IN :postIds GROUP BY pl.post.postId")
+    List<Object[]> countByPostIds(@Param("postIds") Collection<Long> postIds);
+
+    @Query("SELECT pl.post.postId FROM PostLike pl " +
+            "WHERE pl.user.userId = :userId AND pl.post.postId IN :postIds")
+    List<Long> findLikedPostIds(@Param("userId") Long userId, @Param("postIds") Collection<Long> postIds);
 
     List<PostLike> findByUserIn(List<User> users);
     List<PostLike> findByUser(User user);

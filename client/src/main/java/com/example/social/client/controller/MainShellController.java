@@ -7,6 +7,11 @@ import javafx.scene.Parent;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import com.example.social.client.service.ChatConnection;
+import com.example.social.client.service.MessageApiService;
+import com.example.social.client.service.UnreadCounter;
+import javafx.beans.binding.Bindings;
+import javafx.scene.control.Label;
 
 import java.io.IOException;
 
@@ -14,9 +19,37 @@ public class MainShellController {
 
     @FXML
     private StackPane contentArea;
+    @FXML
+    private Label unreadBadge;
+    @FXML
+    private javafx.scene.control.TextField searchField;
+
+    private ChatConnection.Listener badgeListener;
 
     @FXML
     private void initialize() {
+        ChatConnection chat = ChatConnection.getInstance();
+        chat.connect();
+
+        UnreadCounter counter = UnreadCounter.getInstance();
+
+        unreadBadge.visibleProperty().bind(counter.countProperty().greaterThan(0));
+        unreadBadge.textProperty().bind(Bindings.createStringBinding(
+                () -> counter.countProperty().get() > 99 ? "99+" : String.valueOf(counter.countProperty().get()),
+                counter.countProperty()));
+
+        badgeListener = new ChatConnection.Listener() {
+            @Override
+            public void onMessage(MessageApiService.MessageItem message) {
+                // власні повідомлення (ехо від сервера) лічильник не змінюють
+                if (!message.senderId().equals(SessionManager.getInstance().getUserId())) {
+                    counter.refresh();
+                }
+            }
+        };
+        chat.addListener(badgeListener);
+
+        counter.refresh();
         showFeed();
     }
 
@@ -82,7 +115,10 @@ public class MainShellController {
 
     @FXML
     private void handleLogout() {
-        SessionManager.getInstance().clear();
+        ChatConnection chat = ChatConnection.getInstance();
+        chat.removeListener(badgeListener);
+        chat.disconnect();
+        UnreadCounter.getInstance().reset();
 
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
@@ -108,4 +144,36 @@ public class MainShellController {
             return null;
         }
     }
+
+    public void showDialogs() {
+        loadIntoContent("/fxml/dialogs.fxml");
+    }
+
+    public void showDialogsWith(Long userId, String displayName) {
+        DialogsController controller = loadIntoContent("/fxml/dialogs.fxml");
+        if (controller != null) {
+            controller.openWith(userId, displayName);
+        }
+    }
+
+    @FXML
+    private void handleShowDialogs() {
+        showDialogs();
+    }
+    public void showSearch(String query) {
+        SearchController controller = loadIntoContent("/fxml/search.fxml");
+        if (controller != null) {
+            controller.setShell(this);
+            controller.runSearch(query);
+        }
+    }
+
+    @FXML
+    private void handleSearch() {
+        String query = searchField.getText().trim();
+        if (!query.isEmpty()) {
+            showSearch(query);
+        }
+    }
+
 }

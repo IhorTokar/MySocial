@@ -78,10 +78,14 @@ public class CommentService {
         Long parentId = comment.getParentComment() != null
                 ? comment.getParentComment().getCommentId()
                 : null;
+        User author = comment.getUser();
 
         return new CommentResponseDto(
                 comment.getCommentId(),
-                comment.getUser().getUsername(),
+                author.getUserId(),
+                author.getUsername(),
+                author.getDisplayName(),
+                author.getUserAvatarUrl(),
                 comment.getText(),
                 comment.getCreatedAt(),
                 parentId

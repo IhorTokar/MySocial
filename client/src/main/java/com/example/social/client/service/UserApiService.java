@@ -74,4 +74,24 @@ public class UserApiService {
         return UserProfileResult.ok(parseProfile(response.body()));
     }
 
+    public UserProfileResult uploadAvatar(java.nio.file.Path file) throws IOException, InterruptedException {
+        ApiClient.ApiResponse response = apiClient.postMultipart("/api/users/me/avatar", "file", file);
+        if (!response.isSuccess()) {
+            return UserProfileResult.fail(extractError(response, "Не вдалося завантажити фото"));
+        }
+        return UserProfileResult.ok(parseProfile(response.body()));
+    }
+
+    private String extractError(ApiClient.ApiResponse response, String fallback) {
+        try {
+            JsonNode node = apiClient.getObjectMapper().readTree(response.body());
+            if (node.has("error")) {
+                return node.get("error").asText();
+            }
+        } catch (Exception ignored) {
+            // тіло не JSON
+        }
+        return fallback + " (код " + response.statusCode() + ")";
+    }
+
 }

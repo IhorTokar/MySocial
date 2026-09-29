@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            stylesheets="@../css/styles.css"
+            fx:controller="com.example.social.client.controller.DialogsController">
+
+    <left>
+        <VBox styleClass="dialogs-sidebar">
+            <Label text="Повідомлення" styleClass="title-label">
+                <padding>
+                    <Insets top="16.0" right="16.0" bottom="12.0" left="16.0" />
+                </padding>
+            </Label>
+            <ListView fx:id="conversationsListView" styleClass="list-view" VBox.vgrow="ALWAYS" />
+        </VBox>
+    </left>
+
+    <center>
+        <BorderPane>
+            <top>
+                <HBox alignment="CENTER_LEFT" styleClass="app-header">
+                    <Label fx:id="chatTitleLabel" text="Оберіть діалог" styleClass="title-label" />
+                </HBox>
+            </top>
+
+            <center>
+                <ListView fx:id="messagesListView" styleClass="list-view" />
+            </center>
+
+            <bottom>
+                <VBox styleClass="chat-input-bar" spacing="6.0">
+                    <Label fx:id="statusLabel" wrapText="true" />
+                    <HBox spacing="8.0">
+                        <TextField fx:id="messageField" promptText="Напишіть повідомлення..."
+                                   onAction="#handleSend" HBox.hgrow="ALWAYS" />
+                        <Button fx:id="sendButton" text="Надіслати" onAction="#handleSend"
+                                styleClass="button, button-primary" />
+                    </HBox>
+                </VBox>
+            </bottom>
+        </BorderPane>
+    </center>
+
+</BorderPane>

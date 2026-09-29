@@ -50,6 +50,7 @@ public class RecommendationService {
     private final UserRepository userRepository;
     private final UserSimilarityService userSimilarityService;
     private final PostEmbeddingRepository postEmbeddingRepository;
+    private final PostService postService;
 
     public RecommendationService(PostRepository postRepository,
                                  PostLikeRepository postLikeRepository,
@@ -57,7 +58,8 @@ public class RecommendationService {
                                  FollowersRepository followersRepository,
                                  UserRepository userRepository,
                                  UserSimilarityService userSimilarityService,
-                                 PostEmbeddingRepository postEmbeddingRepository) {
+                                 PostEmbeddingRepository postEmbeddingRepository,
+                                 PostService postService) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
         this.commentRepository = commentRepository;
@@ -65,13 +67,15 @@ public class RecommendationService {
         this.userRepository = userRepository;
         this.userSimilarityService = userSimilarityService;
         this.postEmbeddingRepository = postEmbeddingRepository;
+        this.postService = postService;
     }
 
     @Transactional(readOnly = true)
     public List<PostResponseDto> getHybridFeed(Long currentUserId, int limit) {
-        return computeScoredFeed(currentUserId, limit).stream()
-                .map(sp -> toDto(sp.post()))
+        List<Post> posts = computeScoredFeed(currentUserId, limit).stream()
+                .map(ScoredPost::post)
                 .collect(Collectors.toList());
+        return postService.toDtos(posts, currentUserId);
     }
 
     @Transactional(readOnly = true)
@@ -292,17 +296,6 @@ public class RecommendationService {
         return candidateScore;
     }
 
-    private PostResponseDto toDto(Post post) {
-        return new PostResponseDto(
-                post.getPostId(),
-                post.getUser().getUsername(),
-                post.getLabel(),
-                post.getText(),
-                post.getMediaUrl(),
-                post.getCreatedDate(),
-                tagNames(post)
-        );
-    }
 
     private RecommendationDto toDebugDto(ScoredPost sp) {
         Post post = sp.post();
