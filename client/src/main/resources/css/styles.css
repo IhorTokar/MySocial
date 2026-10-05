@@ -1,22 +1,9 @@
 /* Дизайн-система, перенесена з React-проєкту (App.css) у JavaFX CSS */
 
 .root {
-    -fx-primary-bg: #F9F9F9;
-    -fx-secondary-bg: #FFFFFF;
-    -fx-card-border: #EFF3F4;
-    -fx-primary-text: #0F1419;
-    -fx-secondary-text: #536471;
-    -fx-accent: #1D9BF0;
-    -fx-accent-hover: #1A8CD8;
-    -fx-button-primary-bg: #0F1419;
-    -fx-button-primary-text: #FFFFFF;
-    -fx-error-text: #D93025;
-    -fx-like-color: #F91880;
-    -fx-save-color: #1D9BF0;
-    -fx-share-color: #00BA7C;
-
     -fx-font-family: "Segoe UI", "Noto Sans", sans-serif;
     -fx-background-color: -fx-primary-bg;
+    -fx-text-fill: -fx-primary-text;
 }
 
 /* ===== Загальний текст ===== */
@@ -45,13 +32,25 @@
 /* ===== Поля вводу ===== */
 
 .text-field, .password-field, .text-area {
-    -fx-background-color: #F7F9F9;
-    -fx-border-color: #CFD9DE;
+    -fx-background-color: -fx-input-bg;
+    -fx-border-color: -fx-input-border;
     -fx-border-radius: 8px;
     -fx-background-radius: 8px;
     -fx-padding: 10px 12px;
     -fx-font-size: 14px;
     -fx-text-fill: -fx-primary-text;
+}
+.text-area .content {
+    -fx-background-color: -fx-input-bg;
+    -fx-background-radius: 8px;
+}
+
+.text-area .scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.text-area .scroll-pane .viewport {
+    -fx-background-color: transparent;
 }
 
 .text-field:focused, .password-field:focused, .text-area:focused {
@@ -75,16 +74,16 @@
 }
 
 .button-primary:hover {
-    -fx-background-color: #272C30;
+    -fx-background-color: -fx-button-primary-hover-bg;
 }
 
 .button-secondary {
-    -fx-background-color: #EFF3F4;
+    -fx-background-color: -fx-button-secondary-bg;
     -fx-text-fill: -fx-primary-text;
 }
 
 .button-secondary:hover {
-    -fx-background-color: #E7E7E8;
+    -fx-background-color: -fx-button-secondary-hover-bg;
 }
 
 .link-button {
@@ -235,7 +234,7 @@
 }
 
 .conversation-active {
-    -fx-background-color: #E8F5FE;
+    -fx-background-color: -fx-selection-bg;
 }
 
 .unread-badge {
@@ -256,7 +255,7 @@
 }
 
 .bubble-theirs {
-    -fx-background-color: #EFF3F4;
+    -fx-background-color: -fx-bubble-theirs-bg;
     -fx-text-fill: -fx-primary-text;
     -fx-background-radius: 16px;
     -fx-padding: 8px 12px;
@@ -371,4 +370,29 @@
 #emojiPane .action-button,
 #emojiButton {
     -fx-font-size: 18px;
+}
+.settings-scroll {
+    -fx-background-color: transparent;
+}
+
+.settings-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.nav-link .ikonli-font-icon {
+    -fx-icon-color: -fx-primary-text;
+    -fx-icon-size: 18px;
+}
+
+.radio-button, .check-box {
+    -fx-text-fill: -fx-primary-text;
+}
+
+.radio-button > .radio, .check-box > .box {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-border-color: -fx-input-border;
+}
+
+.radio-button:selected > .radio > .dot {
+    -fx-background-color: -fx-accent;
 }

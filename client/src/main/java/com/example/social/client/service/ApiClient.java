@@ -129,4 +129,21 @@ public class ApiClient {
         HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
         return new ApiResponse(response.statusCode(), response.body());
     }
+
+    public ApiResponse deleteWithBody(String path, Object body) throws IOException, InterruptedException {
+        String json = body != null ? objectMapper.writeValueAsString(body) : "";
+
+        HttpRequest.Builder builder = HttpRequest.newBuilder()
+                .uri(URI.create(BASE_URL + path))
+                .header("Content-Type", "application/json")
+                .timeout(Duration.ofSeconds(15))
+                .method("DELETE", HttpRequest.BodyPublishers.ofString(json));
+
+        if (SessionManager.getInstance().isLoggedIn()) {
+            builder.header("Authorization", "Bearer " + SessionManager.getInstance().getToken());
+        }
+
+        HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        return new ApiResponse(response.statusCode(), response.body());
+    }
 }

@@ -14,7 +14,7 @@
 
 <BorderPane xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.example.social.client.controller.ProfileController"
-            stylesheets="@../css/styles.css">
+>
 
     <top>
         <VBox styleClass="post-card" spacing="12.0">

@@ -2,6 +2,7 @@ package com.example.social.client.controller;
 
 import com.example.social.client.service.ApiClient;
 import com.example.social.client.service.AuthApiService;
+import com.example.social.client.util.SceneUtil;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -118,7 +119,7 @@ public class RegisterController {
             Parent root = loader.load();
 
             Stage stage = (Stage) registerButton.getScene().getWindow();
-            stage.setScene(new Scene(root, 400, 400));
+            stage.setScene(SceneUtil.create(root, 400, 400));
             stage.setTitle("Соціальна мережа");
         } catch (IOException e) {
             errorLabel.setText("Помилка переходу: " + e.getMessage());

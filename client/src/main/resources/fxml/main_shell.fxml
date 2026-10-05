@@ -10,7 +10,11 @@
 
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.control.TextField?>
-<BorderPane stylesheets="@../css/styles.css" xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.social.client.controller.MainShellController">
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+<BorderPane
+        xmlns="http://javafx.com/javafx/26"
+        xmlns:fx="http://javafx.com/fxml/1"
+        fx:controller="com.example.social.client.controller.MainShellController">
 
     <top>
             <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="app-header">
@@ -24,22 +28,56 @@
 
     <left>
         <VBox prefHeight="623.0" spacing="6.0" styleClass="nav-sidebar">
-            <Button fx:id="navFeedButton" onAction="#handleShowFeed" styleClass="nav-link" text="🏠  Стрічка" />
-            <Button fx:id="navProfileButton" onAction="#handleShowMyProfile" styleClass="nav-link" text="👤  Мій профіль" />
-            <Button fx:id="navSavedButton" onAction="#handleShowSaved" styleClass="nav-link" text="🔖  Збережені" />
-            <Button fx:id="navMessagesButton" onAction="#handleShowDialogs" styleClass="nav-link"
-                    text="💬  Повідомлення" contentDisplay="RIGHT" graphicTextGap="10.0">
+            <Button fx:id="navFeedButton" onAction="#handleShowFeed" styleClass="nav-link"
+                    contentDisplay="LEFT" graphicTextGap="10.0" text="Стрічка">
                 <graphic>
-                    <Label fx:id="unreadBadge" styleClass="unread-badge" text="0" visible="false" />
+                    <FontIcon iconLiteral="fas-home" />
                 </graphic>
             </Button>
+
+            <Button fx:id="navProfileButton" onAction="#handleShowMyProfile" styleClass="nav-link"
+                    contentDisplay="LEFT" graphicTextGap="10.0" text="Мій профіль">
+                <graphic>
+                    <FontIcon iconLiteral="fas-user" />
+                </graphic>
+            </Button>
+
+            <Button fx:id="navSavedButton" onAction="#handleShowSaved" styleClass="nav-link"
+                    contentDisplay="LEFT" graphicTextGap="10.0" text="Збережені">
+                <graphic>
+                    <FontIcon iconLiteral="fas-bookmark" />
+                </graphic>
+            </Button>
+
+            <Button fx:id="navMessagesButton" onAction="#handleShowDialogs" styleClass="nav-link"
+                    text="Повідомлення" contentDisplay="LEFT" graphicTextGap="10.0">
+                <graphic>
+                    <HBox spacing="8.0" alignment="CENTER_LEFT">
+                        <FontIcon iconLiteral="fas-comment-dots" />
+                        <Label fx:id="unreadBadge" styleClass="unread-badge" text="0" visible="false" />
+                    </HBox>
+                </graphic>
+            </Button>
+
+            <Button fx:id="navSettingsButton" onAction="#handleShowSettings" styleClass="nav-link"
+                    contentDisplay="LEFT" graphicTextGap="10.0" text="Налаштування">
+                <graphic>
+                    <FontIcon iconLiteral="fas-cog" />
+                </graphic>
+            </Button>
+
             <VBox VBox.vgrow="ALWAYS" />
 
-            <Button fx:id="newPostButton" onAction="#handleNewPost" styleClass="button, button-primary" text="＋  Новий пост">
+            <Button fx:id="newPostButton" onAction="#handleNewPost" styleClass="button, button-primary"
+                    contentDisplay="LEFT" graphicTextGap="8.0" text="Новий пост">
+                <graphic>
+                    <FontIcon iconLiteral="fas-plus" />
+                </graphic>
                 <VBox.margin>
                     <Insets bottom="8.0" top="12.0" />
                 </VBox.margin>
             </Button>
+
             <Button fx:id="logoutButton" onAction="#handleLogout" styleClass="button, button-secondary" text="Вийти" />
         </VBox>
     </left>

@@ -13,6 +13,7 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     List<Post> findByUserInOrderByCreatedDateDesc(List<User> users);
     List<Post> findTop50ByOrderByCreatedDateDesc();
     long countByUser(User user);
+    List<Post> findByUser(User user);
 
     @Query(value = "SELECT * FROM posts WHERE embedding IS NULL", nativeQuery = true)
     List<Post> findByEmbeddingIsNull();

@@ -10,6 +10,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import com.example.social.shared.dto.ChangePasswordDto;
+import com.example.social.shared.dto.DeleteAccountDto;
 
 import java.util.Map;
 
@@ -71,7 +73,29 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
         }
     }
+    @PatchMapping("/me/password")
+    public ResponseEntity<?> changePassword(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                            @Valid @RequestBody ChangePasswordDto dto) {
+        try {
+            userService.changePassword(currentUser.getUserId(), dto);
+            return ResponseEntity.ok(Map.of("status", "password changed"));
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
 
-
-
+    @DeleteMapping("/me")
+    public ResponseEntity<?> deleteAccount(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                           @Valid @RequestBody DeleteAccountDto dto) {
+        try {
+            userService.deleteAccount(currentUser.getUserId(), dto.getPassword());
+            return ResponseEntity.noContent().build();
+        } catch (SecurityException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        }
+    }
 }

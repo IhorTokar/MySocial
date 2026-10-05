@@ -82,6 +82,11 @@ public class CommunityAnalysisService {
         return results;
     }
 
+    @Transactional(readOnly = true)
+    public CommunityAnalysisDto analyzeUsers(long label, List<Long> userIds) {
+        return analyzeSingleCommunity(label, userIds);
+    }
+
     public CommunityAnalysisDto analyzeSingleCommunity(Long community, List<Long> userIds) {
         List<User> users = userRepository.findAllById(userIds);
         List<Post> posts = postRepository.findByUserInOrderByCreatedDateDesc(users);
@@ -169,7 +174,7 @@ public class CommunityAnalysisService {
      * Нормалізована однорідність розподілу тегів: 1 - (ентропія Шеннона / максимальна можлива ентропія).
      * 1.0 = усі пости про одну тему (одна ідеальна ехо-камера), 0.0 = теги розподілені рівномірно.
      */
-    private double computeTopicHomogeneity(Map<String, Long> tagCounts) {
+    static double computeTopicHomogeneity(Map<String, Long> tagCounts) {
         if (tagCounts.isEmpty()) {
             return 0.0;
         }
@@ -190,7 +195,7 @@ public class CommunityAnalysisService {
         return 1.0 - normalizedEntropy;
     }
 
-    private double computeStdDev(List<Double> values, double mean) {
+    static double computeStdDev(List<Double> values, double mean) {
         if (values.size() < 2) {
             return 0.0;
         }

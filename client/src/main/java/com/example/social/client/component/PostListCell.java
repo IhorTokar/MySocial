@@ -4,6 +4,7 @@ import com.example.social.client.service.ApiClient;
 import com.example.social.client.service.LikeApiService;
 import com.example.social.client.service.PostApiService;
 import com.example.social.client.service.SavePostApiService;
+import com.example.social.client.util.AppSettings;
 import com.example.social.client.util.AvatarUtil;
 import com.example.social.client.util.SessionManager;
 import javafx.application.Platform;
@@ -101,7 +102,9 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
 
     private void buildCard() {
         card.getStyleClass().add("post-card");
-        card.prefWidthProperty().bind(Bindings.min(widthProperty().subtract(26), 640));
+        card.prefWidthProperty().bind(Bindings.min(
+                widthProperty().subtract(26),
+                AppSettings.getInstance().cardWidthProperty()));
         card.setMaxWidth(Region.USE_PREF_SIZE);
 
         cardWrapper = new HBox(card);
@@ -141,7 +144,7 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
 
         imageView.setPreserveRatio(true);
         imageView.setSmooth(true);
-        imageView.setFitHeight(520);
+        imageView.fitHeightProperty().bind(AppSettings.getInstance().imageHeightProperty());
         imageView.fitWidthProperty().bind(Bindings.min(card.widthProperty().subtract(34), 560));
         Rectangle clip = new Rectangle();
         clip.setArcWidth(24);

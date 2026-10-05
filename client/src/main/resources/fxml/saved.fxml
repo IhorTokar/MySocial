@@ -9,7 +9,6 @@
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
-            stylesheets="@../css/styles.css"
             fx:controller="com.example.social.client.controller.SavedController">
 
     <top>

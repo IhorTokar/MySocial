@@ -75,7 +75,7 @@ public class LoginController {
             Parent root = loader.load();
 
             Stage stage = (Stage) loginButton.getScene().getWindow();
-            stage.setScene(new Scene(root, 400, 500));
+            stage.setScene(com.example.social.client.util.SceneUtil.create(root, 400, 500));
             stage.setTitle("Реєстрація");
         } catch (IOException e) {
             errorLabel.setText("Помилка переходу: " + e.getMessage());
@@ -88,7 +88,7 @@ public class LoginController {
             Parent root = loader.load();
 
             Stage stage = (Stage) loginButton.getScene().getWindow();
-            stage.setScene(new Scene(root, 1000, 650));
+            stage.setScene(com.example.social.client.util.SceneUtil.create(root, 1000, 650));
             stage.setTitle("Соціальна мережа");
         } catch (IOException e) {
             errorLabel.setText("Помилка завантаження: " + e.getMessage());

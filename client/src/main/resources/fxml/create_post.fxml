@@ -11,7 +11,6 @@
 
 <VBox spacing="10.0" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      stylesheets="@../css/styles.css"
       styleClass="post-card"
       fx:controller="com.example.social.client.controller.CreatePostController">
     <padding>

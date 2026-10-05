@@ -1,9 +1,9 @@
 package com.example.social.client;
 
+import com.example.social.client.util.SceneUtil;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 public class ClientApplication extends Application {
@@ -14,7 +14,7 @@ public class ClientApplication extends Application {
         Parent root = loader.load();
 
         stage.setTitle("Соціальна мережа");
-        stage.setScene(new Scene(root, 400, 400));
+        stage.setScene(SceneUtil.create(root, 400, 400));
         stage.show();
     }
 

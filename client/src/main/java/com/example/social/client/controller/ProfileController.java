@@ -6,6 +6,7 @@ import com.example.social.client.service.FollowApiService;
 import com.example.social.client.service.PostApiService;
 import com.example.social.client.service.UserApiService;
 import com.example.social.client.util.AvatarUtil;
+import com.example.social.client.util.SceneUtil;
 import com.example.social.client.util.SessionManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -82,7 +83,7 @@ public class ProfileController {
             javafx.stage.Stage modal = new javafx.stage.Stage();
             modal.initModality(javafx.stage.Modality.APPLICATION_MODAL);
             modal.setTitle("Редагувати пост");
-            modal.setScene(new javafx.scene.Scene(root, 500, 420));
+            modal.setScene(SceneUtil.create(root, 500, 420));
             modal.showAndWait();
         } catch (java.io.IOException e) {
             statusLabel.getStyleClass().setAll("error-label");
@@ -240,7 +241,7 @@ public class ProfileController {
 
             javafx.stage.Stage editStage = new javafx.stage.Stage();
             editStage.setTitle("Редагувати профіль");
-            editStage.setScene(new javafx.scene.Scene(root, 400, 450));
+            editStage.setScene(SceneUtil.create(root, 400, 450));
             editStage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
             editStage.initOwner(editProfileButton.getScene().getWindow());
             editStage.showAndWait();

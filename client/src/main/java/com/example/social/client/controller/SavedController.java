@@ -4,6 +4,7 @@ import com.example.social.client.component.PostListCell;
 import com.example.social.client.service.ApiClient;
 import com.example.social.client.service.PostApiService;
 import com.example.social.client.service.SavePostApiService;
+import com.example.social.client.util.SceneUtil;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -50,7 +51,7 @@ public class SavedController {
             javafx.stage.Stage modal = new javafx.stage.Stage();
             modal.initModality(javafx.stage.Modality.APPLICATION_MODAL);
             modal.setTitle("Редагувати пост");
-            modal.setScene(new javafx.scene.Scene(root, 500, 420));
+            modal.setScene(SceneUtil.create(root, 500, 420));
             modal.showAndWait();
         } catch (java.io.IOException e) {
             statusLabel.setText("Помилка відкриття редагування: " + e.getMessage());

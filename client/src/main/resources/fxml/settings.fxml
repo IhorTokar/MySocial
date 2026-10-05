@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.ColorPicker?>
+<ScrollPane fitToWidth="true" styleClass="settings-scroll"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.social.client.controller.SettingsController">
+    <content>
+        <VBox spacing="24.0">
+            <padding>
+                <Insets top="20.0" right="24.0" bottom="24.0" left="24.0" />
+            </padding>
+
+            <Label text="Налаштування" styleClass="title-label" />
+
+            <VBox styleClass="post-card" spacing="10.0">
+                <Label text="Тема оформлення" styleClass="post-title" />
+
+                <fx:define>
+                    <ToggleGroup fx:id="themeToggleGroup" />
+                </fx:define>
+
+                <RadioButton fx:id="lightThemeRadio" text="Світла" toggleGroup="$themeToggleGroup" />
+                <RadioButton fx:id="darkThemeRadio" text="Темна" toggleGroup="$themeToggleGroup" />
+                <RadioButton fx:id="customThemeRadio" text="Кастомна" toggleGroup="$themeToggleGroup" />
+
+                <VBox fx:id="customColorsBox" spacing="10.0" visible="false" managed="false">
+                    <HBox spacing="16.0" alignment="CENTER_LEFT">
+                        <VBox spacing="4.0">
+                            <Label text="Фон" styleClass="secondary-label" />
+                            <ColorPicker fx:id="customBgPicker" />
+                        </VBox>
+                        <VBox spacing="4.0">
+                            <Label text="Акцент" styleClass="secondary-label" />
+                            <ColorPicker fx:id="customAccentPicker" />
+                        </VBox>
+                        <VBox spacing="4.0">
+                            <Label text="Текст" styleClass="secondary-label" />
+                            <ColorPicker fx:id="customTextPicker" />
+                        </VBox>
+                    </HBox>
+                </VBox>
+            </VBox>
+            <VBox styleClass="post-card" spacing="10.0">
+                <Label text="Зміна пароля" styleClass="post-title" />
+                <PasswordField fx:id="currentPasswordField" promptText="Поточний пароль" styleClass="password-field" />
+                <PasswordField fx:id="newPasswordField" promptText="Новий пароль" styleClass="password-field" />
+                <PasswordField fx:id="confirmPasswordField" promptText="Повторіть новий пароль" styleClass="password-field" />
+                <Label fx:id="passwordStatusLabel" wrapText="true" />
+                <Button fx:id="changePasswordButton" text="Змінити пароль" onAction="#handleChangePassword"
+                        styleClass="button, button-primary" />
+            </VBox>
+
+            <VBox styleClass="post-card" spacing="10.0">
+                <Label text="Видалення акаунту" styleClass="post-title" />
+                <Label text="Цю дію неможливо скасувати. Усі ваші пости, коментарі, підписки й повідомлення будуть видалені назавжди."
+                       wrapText="true" styleClass="secondary-label" />
+                <PasswordField fx:id="deleteConfirmPasswordField" promptText="Введіть пароль для підтвердження"
+                               styleClass="password-field" />
+                <Label fx:id="deleteStatusLabel" wrapText="true" />
+                <Button fx:id="deleteAccountButton" text="Видалити акаунт" onAction="#handleDeleteAccount"
+                        styleClass="button, button-secondary" />
+            </VBox>
+
+            <VBox styleClass="post-card" spacing="10.0">
+                <Label text="Розмір постів" styleClass="post-title" />
+                <Label text="Швидкий вибір розміру" styleClass="secondary-label" />
+                <HBox fx:id="presetButtonsBox" spacing="8.0" alignment="CENTER_LEFT" />
+
+                <Label text="Ширина картки поста" styleClass="secondary-label" />
+                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                    <Slider fx:id="cardWidthSlider" HBox.hgrow="ALWAYS" />
+                    <TextField fx:id="cardWidthField" maxWidth="70.0" styleClass="text-field" />
+                </HBox>
+
+                <Label text="Максимальна висота зображень" styleClass="secondary-label" />
+                <HBox spacing="10.0" alignment="CENTER_LEFT">
+                    <Slider fx:id="imageHeightSlider" HBox.hgrow="ALWAYS" />
+                    <TextField fx:id="imageHeightField" maxWidth="70.0" styleClass="text-field" />
+                </HBox>
+
+                <Button fx:id="resetSizesButton" text="Скинути до типових" onAction="#handleResetSizes"
+                        styleClass="button, button-secondary" />
+            </VBox>
+
+        </VBox>
+    </content>
+</ScrollPane>

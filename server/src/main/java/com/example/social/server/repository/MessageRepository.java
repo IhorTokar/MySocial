@@ -12,6 +12,8 @@ import java.util.List;
 public interface MessageRepository extends JpaRepository<Message, Long> {
     List<Message> findBySenderAndReceiverOrderByCreatedAtAsc(User sender, User receiver);
     long countByReceiverAndIsReadFalse(User receiver);
+    @Query("SELECT m FROM Message m WHERE m.sender = :user OR m.receiver = :user")
+    List<Message> findAllByUser(@Param("user") User user);
 
     // діалог в обидва боки; JOIN FETCH, щоб не було N+1 на sender/receiver
     @Query("SELECT m FROM Message m JOIN FETCH m.sender JOIN FETCH m.receiver " +

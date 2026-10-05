@@ -40,7 +40,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/followers/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
+                        .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated()
+
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

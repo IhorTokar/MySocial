@@ -1,5 +1,6 @@
 package com.example.social.client.controller;
 
+import com.example.social.client.util.SceneUtil;
 import com.example.social.client.util.SessionManager;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -34,6 +35,7 @@ public class MainShellController {
         UnreadCounter counter = UnreadCounter.getInstance();
 
         unreadBadge.visibleProperty().bind(counter.countProperty().greaterThan(0));
+        unreadBadge.managedProperty().bind(unreadBadge.visibleProperty());
         unreadBadge.textProperty().bind(Bindings.createStringBinding(
                 () -> counter.countProperty().get() > 99 ? "99+" : String.valueOf(counter.countProperty().get()),
                 counter.countProperty()));
@@ -109,7 +111,7 @@ public class MainShellController {
             Parent root = loader.load();
 
             Stage stage = (Stage) contentArea.getScene().getWindow();
-            stage.setScene(new javafx.scene.Scene(root, 400, 400));
+            stage.setScene(SceneUtil.create(root, 400, 400));
             stage.setTitle("Соціальна мережа");
         } catch (IOException e) {
             e.printStackTrace();
@@ -159,15 +161,21 @@ public class MainShellController {
             controller.runSearch(query);
         }
     }
-
-
-
     @FXML
     private void handleSearch() {
         String query = searchField.getText().trim();
         if (!query.isEmpty()) {
             showSearch(query);
         }
+    }
+
+    public void showSettings() {
+        loadIntoContent("/fxml/settings.fxml");
+    }
+
+    @FXML
+    private void handleShowSettings() {
+        showSettings();
     }
 
 }

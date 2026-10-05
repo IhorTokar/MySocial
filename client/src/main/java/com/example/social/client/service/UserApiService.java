@@ -3,6 +3,7 @@ package com.example.social.client.service;
 import com.fasterxml.jackson.databind.JsonNode;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class UserApiService {
 
@@ -94,4 +95,30 @@ public class UserApiService {
         return fallback + " (код " + response.statusCode() + ")";
     }
 
+    public ActionResult changePassword(String currentPassword, String newPassword)
+            throws IOException, InterruptedException {
+
+        Map<String, String> body = Map.of("currentPassword", currentPassword, "newPassword", newPassword);
+        ApiClient.ApiResponse response = apiClient.patch("/api/users/me/password", body);
+
+        if (!response.isSuccess()) {
+            return ActionResult.fail(extractError(response, "Не вдалося змінити пароль"));
+        }
+        return ActionResult.ok();
+    }
+
+    public ActionResult deleteAccount(String password) throws IOException, InterruptedException {
+        Map<String, String> body = Map.of("password", password);
+        ApiClient.ApiResponse response = apiClient.deleteWithBody("/api/users/me", body);
+
+        if (!response.isSuccess()) {
+            return ActionResult.fail(extractError(response, "Не вдалося видалити акаунт"));
+        }
+        return ActionResult.ok();
+    }
+
+    public record ActionResult(boolean success, String errorMessage) {
+        public static ActionResult ok() { return new ActionResult(true, null); }
+        public static ActionResult fail(String errorMessage) { return new ActionResult(false, errorMessage); }
+    }
 }

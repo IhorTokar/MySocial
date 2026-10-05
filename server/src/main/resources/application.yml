@@ -50,3 +50,12 @@ logging:
 app:
   upload:
     dir: uploads
+
+recommendation:
+  weights:
+    popularity: 0.20
+    item-cf: 0.25
+    graph-sim: 0.20
+    semantic: 0.20
+    recency: 0.15
+    followed-bonus: 0.3

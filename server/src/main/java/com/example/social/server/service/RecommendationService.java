@@ -15,6 +15,7 @@ import com.example.social.shared.dto.PostResponseDto;
 import com.example.social.shared.dto.RecommendationDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,6 +44,29 @@ public class RecommendationService {
     private static final int MAX_CO_REACTORS = 20;
     private static final int SIMILAR_USERS_TOP_N = 10;
 
+    /** Вагові коефіцієнти гібридної оцінки. */
+    public record Weights(double popularity, double itemCf, double graphSim,
+                          double semantic, double recency, double followedBonus) {
+        public static final Weights DEFAULT = new Weights(
+                POPULARITY_WEIGHT, ITEM_CF_WEIGHT, GRAPH_SIM_WEIGHT,
+                SEMANTIC_WEIGHT, RECENCY_WEIGHT, FOLLOWED_BONUS);
+    }
+
+    /** Нормалізовані оцінки компонентів для одного кандидата (до зважування). */
+    public record CandidateScores(Post post, long postId, long authorId, long likesInWindow,
+                                  double popularity, double itemCf, double graphSim,
+                                  double semantic, double recency, long postAgeHours,
+                                  boolean followed) {
+        public double total(Weights w) {
+            return w.popularity() * popularity
+                    + w.itemCf() * itemCf
+                    + w.graphSim() * graphSim
+                    + w.semantic() * semantic
+                    + w.recency() * recency
+                    + (followed ? w.followedBonus() : 0.0);
+        }
+    }
+
     private final PostRepository postRepository;
     private final PostLikeRepository postLikeRepository;
     private final CommentRepository commentRepository;
@@ -52,6 +76,8 @@ public class RecommendationService {
     private final PostEmbeddingRepository postEmbeddingRepository;
     private final PostService postService;
 
+    private final Weights weights;
+
     public RecommendationService(PostRepository postRepository,
                                  PostLikeRepository postLikeRepository,
                                  CommentRepository commentRepository,
@@ -59,7 +85,13 @@ public class RecommendationService {
                                  UserRepository userRepository,
                                  UserSimilarityService userSimilarityService,
                                  PostEmbeddingRepository postEmbeddingRepository,
-                                 PostService postService) {
+                                 PostService postService,
+                                 @Value("${recommendation.weights.popularity:0.20}") double popularityWeight,
+                                 @Value("${recommendation.weights.item-cf:0.25}") double itemCfWeight,
+                                 @Value("${recommendation.weights.graph-sim:0.20}") double graphSimWeight,
+                                 @Value("${recommendation.weights.semantic:0.20}") double semanticWeight,
+                                 @Value("${recommendation.weights.recency:0.15}") double recencyWeight,
+                                 @Value("${recommendation.weights.followed-bonus:0.3}") double followedBonus) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
         this.commentRepository = commentRepository;
@@ -68,8 +100,27 @@ public class RecommendationService {
         this.userSimilarityService = userSimilarityService;
         this.postEmbeddingRepository = postEmbeddingRepository;
         this.postService = postService;
+
+        double[] all = {popularityWeight, itemCfWeight, graphSimWeight, semanticWeight, recencyWeight, followedBonus};
+        for (double w : all) {
+            if (w < 0) {
+                throw new IllegalStateException("recommendation.weights.*: значення не можуть бути від'ємними");
+            }
+        }
+        this.weights = new Weights(popularityWeight, itemCfWeight, graphSimWeight,
+                semanticWeight, recencyWeight, followedBonus);
+
+        double sum = popularityWeight + itemCfWeight + graphSimWeight + semanticWeight + recencyWeight;
+        if (Math.abs(sum - 1.0) > 1e-6) {
+            log.warn("Сума вагових коефіцієнтів стрічки дорівнює {}, а не 1", sum);
+        }
+        log.info("Вагові коефіцієнти гібридної стрічки: {}", weights);
     }
 
+    /** Ваги, з якими працює стрічка (з конфігурації). */
+    public Weights currentWeights() {
+        return weights;
+    }
     @Transactional(readOnly = true)
     public List<PostResponseDto> getHybridFeed(Long currentUserId, int limit) {
         List<Post> posts = computeScoredFeed(currentUserId, limit).stream()
@@ -96,16 +147,60 @@ public class RecommendationService {
     }
 
     private List<ScoredPost> computeScoredFeed(Long currentUserId, int limit) {
+        Weights weights = Weights.DEFAULT;
+        List<ScoredPost> scored = new ArrayList<>();
+
+        for (CandidateScores c : computeCandidateScores(currentUserId, null)) {
+            double totalScore = c.total(weights);
+            double followedBonus = c.followed() ? weights.followedBonus() : 0.0;
+
+            ScoreBreakdown breakdown = new ScoreBreakdown(
+                    c.likesInWindow(), c.popularity(), c.itemCf(), c.graphSim(), c.semantic(),
+                    c.recency(), c.postAgeHours(), c.followed(), followedBonus, totalScore);
+
+            if (log.isDebugEnabled()) {
+                log.debug(String.format(
+                        "[feed uid=%d] post=%d author=%s likes=%d pop=%.3f itemCf=%.3f graphSim=%.3f semantic=%.3f rec=%.3f(%dh) followed=%b TOTAL=%.3f",
+                        currentUserId, c.postId(), c.post().getUser().getUsername(),
+                        c.likesInWindow(), c.popularity(), c.itemCf(), c.graphSim(), c.semantic(),
+                        c.recency(), c.postAgeHours(), c.followed(), totalScore));
+            }
+
+            scored.add(new ScoredPost(c.post(), totalScore, breakdown));
+        }
+
+        return scored.stream()
+                .sorted(Comparator.comparingDouble(ScoredPost::score).reversed())
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Обчислює нормалізовані оцінки компонентів для всіх кандидатів користувача.
+     *
+     * @param allowedPostIds якщо не null — кандидати й оцінки обмежуються цими постами
+     *                       (потрібно лише для експериментів; у стрічці передається null)
+     */
+    @Transactional(readOnly = true)
+    public List<CandidateScores> computeCandidateScores(Long currentUserId, Set<Long> allowedPostIds) {
         User currentUser = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + currentUserId));
 
         LocalDateTime since = LocalDateTime.now().minusDays(POPULARITY_WINDOW_DAYS);
 
-        Map<Long, Long> popularityByPostId = postLikeRepository.countLikesSince(since).stream()
-                .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
+        Map<Long, Long> popularityByPostId = new HashMap<>();
+        for (Object[] row : postLikeRepository.countLikesSince(since)) {
+            popularityByPostId.put((Long) row[0], (Long) row[1]);
+        }
 
-        Map<Long, Double> itemCfScoreByPostId = computeItemBasedScores(currentUser);
-        Map<Long, Double> graphSimScoreByPostId = computeGraphSimilarityScores(currentUserId, currentUser);
+        Map<Long, Double> itemCfScoreByPostId = new HashMap<>(computeItemBasedScores(currentUser));
+        Map<Long, Double> graphSimScoreByPostId = new HashMap<>(computeGraphSimilarityScores(currentUserId, currentUser));
+
+        if (allowedPostIds != null) {
+            popularityByPostId.keySet().retainAll(allowedPostIds);
+            itemCfScoreByPostId.keySet().retainAll(allowedPostIds);
+            graphSimScoreByPostId.keySet().retainAll(allowedPostIds);
+        }
 
         Set<Long> followedUserIds = followersRepository.findByFollower(currentUser).stream()
                 .map(f -> f.getFollowing().getUserId())
@@ -122,10 +217,19 @@ public class RecommendationService {
                     .forEach(p -> candidatePostIds.add(p.getPostId()));
         }
 
+        if (allowedPostIds != null) {
+            candidatePostIds.retainAll(allowedPostIds);
+        }
+
         List<Post> candidates;
-        boolean coldStart = candidatePostIds.isEmpty();
-        if (coldStart) {
+        if (candidatePostIds.isEmpty()) {
+            // холодний старт: найновіші пости
             candidates = postRepository.findTop50ByOrderByCreatedDateDesc();
+            if (allowedPostIds != null) {
+                candidates = candidates.stream()
+                        .filter(p -> allowedPostIds.contains(p.getPostId()))
+                        .collect(Collectors.toList());
+            }
         } else {
             candidates = postRepository.findAllById(candidatePostIds);
         }
@@ -137,7 +241,7 @@ public class RecommendationService {
         double maxGraphSim = graphSimScoreByPostId.values().stream().mapToDouble(Double::doubleValue).max().orElse(1.0);
         double maxSemantic = semanticScoreByPostId.values().stream().mapToDouble(Double::doubleValue).max().orElse(1.0);
 
-        List<ScoredPost> scored = new ArrayList<>();
+        List<CandidateScores> result = new ArrayList<>(candidates.size());
         LocalDateTime now = LocalDateTime.now();
 
         for (Post post : candidates) {
@@ -158,34 +262,13 @@ public class RecommendationService {
             long hoursOld = Duration.between(post.getCreatedDate(), now).toHours();
             double recencyScore = 1.0 / (1.0 + hoursOld / 24.0);
 
-            double followedBonus = isFollowed ? FOLLOWED_BONUS : 0.0;
-
-            double totalScore = POPULARITY_WEIGHT * popularityScore
-                    + ITEM_CF_WEIGHT * itemCfScore
-                    + GRAPH_SIM_WEIGHT * graphSimScore
-                    + SEMANTIC_WEIGHT * semanticScore
-                    + RECENCY_WEIGHT * recencyScore
-                    + followedBonus;
-
-            ScoreBreakdown breakdown = new ScoreBreakdown(
-                    likesInWindow, popularityScore, itemCfScore, graphSimScore, semanticScore,
-                    recencyScore, hoursOld, isFollowed, followedBonus, totalScore);
-
-            if (log.isDebugEnabled()) {
-                log.debug(String.format(
-                        "[feed uid=%d] post=%d author=%s likes=%d pop=%.3f itemCf=%.3f graphSim=%.3f semantic=%.3f rec=%.3f(%dh) followed=%b TOTAL=%.3f",
-                        currentUserId, post.getPostId(), post.getUser().getUsername(),
-                        likesInWindow, popularityScore, itemCfScore, graphSimScore, semanticScore,
-                        recencyScore, hoursOld, isFollowed, totalScore));
-            }
-
-            scored.add(new ScoredPost(post, totalScore, breakdown));
+            result.add(new CandidateScores(
+                    post, post.getPostId(), post.getUser().getUserId(), likesInWindow,
+                    popularityScore, itemCfScore, graphSimScore, semanticScore,
+                    recencyScore, hoursOld, isFollowed));
         }
 
-        return scored.stream()
-                .sorted(Comparator.comparingDouble(ScoredPost::score).reversed())
-                .limit(limit)
-                .collect(Collectors.toList());
+        return result;
     }
 
     private Map<Long, Double> computeSemanticScores(User currentUser, List<Post> candidates) {
@@ -295,7 +378,6 @@ public class RecommendationService {
 
         return candidateScore;
     }
-
 
     private RecommendationDto toDebugDto(ScoredPost sp) {
         Post post = sp.post();

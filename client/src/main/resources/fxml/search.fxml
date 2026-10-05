@@ -7,7 +7,6 @@
 
 <VBox spacing="6.0" xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
-      stylesheets="@../css/styles.css"
       fx:controller="com.example.social.client.controller.SearchController">
     <padding>
         <Insets top="16.0" right="20.0" bottom="16.0" left="20.0" />

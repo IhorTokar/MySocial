@@ -1,0 +1,22 @@
+.root {
+    -fx-primary-bg: #F9F9F9;
+    -fx-secondary-bg: #FFFFFF;
+    -fx-card-border: #EFF3F4;
+    -fx-primary-text: #0F1419;
+    -fx-secondary-text: #536471;
+    -fx-accent: #1D9BF0;
+    -fx-accent-hover: #1A8CD8;
+    -fx-button-primary-bg: #0F1419;
+    -fx-button-primary-text: #FFFFFF;
+    -fx-error-text: #D93025;
+    -fx-like-color: #F91880;
+    -fx-save-color: #1D9BF0;
+    -fx-share-color: #00BA7C;
+    -fx-selection-bg: #E8F5FE;
+    -fx-button-primary-hover-bg: #272C30;
+    -fx-button-secondary-bg: #EFF3F4;
+    -fx-button-secondary-hover-bg: #E7E7E8;
+    -fx-input-bg: #F7F9F9;
+    -fx-input-border: #CFD9DE;
+    -fx-bubble-theirs-bg: #EFF3F4;
+}
