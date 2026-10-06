@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.4&#10;Остайня обнова">
+    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.4&#10;&quot;Set recommendation weights to 0.10/0.35/0.35/0.10/0.10 per offline evaluation&quot;">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/RecommendationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/RecommendationService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -209,7 +210,8 @@
     <MESSAGE value="update 2.2&#10;закінчені повідомлення" />
     <MESSAGE value="update 2.3&#10;Добавлення тестів" />
     <MESSAGE value="update 2.4&#10;Остайня обнова" />
-    <option name="LAST_COMMIT_MESSAGE" value="update 2.4&#10;Остайня обнова" />
+    <MESSAGE value="update 2.4&#10;&quot;Set recommendation weights to 0.10/0.35/0.35/0.10/0.10 per offline evaluation&quot;" />
+    <option name="LAST_COMMIT_MESSAGE" value="update 2.4&#10;&quot;Set recommendation weights to 0.10/0.35/0.35/0.10/0.10 per offline evaluation&quot;" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

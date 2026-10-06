@@ -147,7 +147,7 @@ public class RecommendationService {
     }
 
     private List<ScoredPost> computeScoredFeed(Long currentUserId, int limit) {
-        Weights weights = Weights.DEFAULT;
+        Weights weights = this.weights;   // ваги з application.yml
         List<ScoredPost> scored = new ArrayList<>();
 
         for (CandidateScores c : computeCandidateScores(currentUserId, null)) {
