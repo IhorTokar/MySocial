@@ -206,14 +206,28 @@ public class RecommendationService {
                 .map(f -> f.getFollowing().getUserId())
                 .collect(Collectors.toSet());
 
-        Set<Long> candidatePostIds = new HashSet<>();
-        candidatePostIds.addAll(popularityByPostId.keySet());
-        candidatePostIds.addAll(itemCfScoreByPostId.keySet());
-        candidatePostIds.addAll(graphSimScoreByPostId.keySet());
+        // Персональні кандидати: поведінкові збіги, графова подібність, пости підписок
+        Set<Long> personalPostIds = new HashSet<>();
+        personalPostIds.addAll(itemCfScoreByPostId.keySet());
+        personalPostIds.addAll(graphSimScoreByPostId.keySet());
 
         if (!followedUserIds.isEmpty()) {
             List<User> followed = userRepository.findAllById(followedUserIds);
             postRepository.findByUserInOrderByCreatedDateDesc(followed)
+                    .forEach(p -> personalPostIds.add(p.getPostId()));
+        }
+
+        if (allowedPostIds != null) {
+            personalPostIds.retainAll(allowedPostIds);
+        }
+
+        // Популярні за тиждень потрапляють у кандидати завжди
+        Set<Long> candidatePostIds = new HashSet<>(popularityByPostId.keySet());
+        candidatePostIds.addAll(personalPostIds);
+
+        // Холодний старт: персональних сигналів немає — додаємо 50 найновіших публікацій
+        if (personalPostIds.isEmpty()) {
+            postRepository.findTop50ByOrderByCreatedDateDesc()
                     .forEach(p -> candidatePostIds.add(p.getPostId()));
         }
 
@@ -221,18 +235,7 @@ public class RecommendationService {
             candidatePostIds.retainAll(allowedPostIds);
         }
 
-        List<Post> candidates;
-        if (candidatePostIds.isEmpty()) {
-            // холодний старт: найновіші пости
-            candidates = postRepository.findTop50ByOrderByCreatedDateDesc();
-            if (allowedPostIds != null) {
-                candidates = candidates.stream()
-                        .filter(p -> allowedPostIds.contains(p.getPostId()))
-                        .collect(Collectors.toList());
-            }
-        } else {
-            candidates = postRepository.findAllById(candidatePostIds);
-        }
+        List<Post> candidates = postRepository.findAllById(candidatePostIds);
 
         Map<Long, Double> semanticScoreByPostId = computeSemanticScores(currentUser, candidates);
 
