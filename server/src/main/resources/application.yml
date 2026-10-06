@@ -53,9 +53,9 @@ app:
 
 recommendation:
   weights:
-    popularity: 0.20
-    item-cf: 0.25
-    graph-sim: 0.20
-    semantic: 0.20
-    recency: 0.15
+    popularity: 0.10
+    item-cf: 0.35
+    graph-sim: 0.35
+    semantic: 0.10
+    recency: 0.10
     followed-bonus: 0.3
