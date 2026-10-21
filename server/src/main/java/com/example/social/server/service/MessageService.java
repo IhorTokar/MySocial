@@ -1,5 +1,7 @@
 package com.example.social.server.service;
 
+import com.example.social.server.exception.*;
+
 import com.example.social.server.entity.Message;
 import com.example.social.server.entity.User;
 import com.example.social.server.repository.MessageRepository;
@@ -59,7 +61,7 @@ public class MessageService {
 
         if (parentMessageId != null) {
             Message parent = messageRepository.findById(parentMessageId)
-                    .orElseThrow(() -> new IllegalArgumentException("Parent message not found: " + parentMessageId));
+                    .orElseThrow(() -> new NotFoundException("Parent message not found: " + parentMessageId));
 
             boolean sameConversation =
                     (parent.getSender().getUserId().equals(senderId) && parent.getReceiver().getUserId().equals(receiverId))
@@ -76,10 +78,10 @@ public class MessageService {
     @Transactional
     public MessageDto editMessage(Long messageId, Long currentUserId, String newText) {
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new IllegalArgumentException("Message not found: " + messageId));
+                .orElseThrow(() -> new NotFoundException("Message not found: " + messageId));
 
         if (!message.getSender().getUserId().equals(currentUserId)) {
-            throw new SecurityException("You can only edit your own messages");
+            throw new ForbiddenException("You can only edit your own messages");
         }
         if (Boolean.TRUE.equals(message.getDeleted())) {
             throw new IllegalArgumentException("Cannot edit a deleted message");
@@ -101,10 +103,10 @@ public class MessageService {
     @Transactional
     public MessageDto deleteMessage(Long messageId, Long currentUserId) {
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new IllegalArgumentException("Message not found: " + messageId));
+                .orElseThrow(() -> new NotFoundException("Message not found: " + messageId));
 
         if (!message.getSender().getUserId().equals(currentUserId)) {
-            throw new SecurityException("You can only delete your own messages");
+            throw new ForbiddenException("You can only delete your own messages");
         }
 
         message.setDeleted(true);
@@ -181,7 +183,7 @@ public class MessageService {
 
     private User findUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
     }
 
     /**

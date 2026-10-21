@@ -1,5 +1,7 @@
 package com.example.social.server.service;
 
+import com.example.social.server.exception.*;
+
 import com.example.social.server.entity.Post;
 import com.example.social.server.entity.PostLike;
 import com.example.social.server.entity.Tag;
@@ -97,7 +99,7 @@ public class RecommendationWeightExperimentService {
     public Map<String, Object> run(Params p) {
         validate(p);
         if (embeddingApiService.embed("Перевірка зʼєднання з NLP-сервісом.") == null) {
-            throw new IllegalStateException("NLP-сервіс недоступний — запустіть його (docker compose up -d)");
+            throw new ServiceUnavailableException("NLP-сервіс недоступний — запустіть його (docker compose up -d)");
         }
 
         long started = System.nanoTime();
@@ -168,7 +170,7 @@ public class RecommendationWeightExperimentService {
                     try {
                         followersService.follow(u.id(), target.id());
                         followsCreated++;
-                    } catch (IllegalArgumentException ignored) {
+                    } catch (ApiException | IllegalArgumentException ignored) {
                         // вже підписаний
                     }
                 }

@@ -1,5 +1,7 @@
 package com.example.social.server.service;
 
+import com.example.social.server.exception.*;
+
 import com.example.social.server.entity.Post;
 import com.example.social.server.entity.Tag;
 import com.example.social.server.entity.User;
@@ -52,7 +54,7 @@ public class CommunityAnalysisService {
                 ? communityDetectionService.getCommunitiesLeiden()
                 : communityDetectionService.getCommunities();
         if (communityRows.isEmpty()) {
-            throw new IllegalStateException("Спільноти ще не визначені — спершу викличте /api/graph/communities");
+            throw new ConflictException("Спільноти ще не визначені — спершу викличте /api/graph/communities");
         }
 
         Map<Long, List<Long>> userIdsByCommunity = new HashMap<>();

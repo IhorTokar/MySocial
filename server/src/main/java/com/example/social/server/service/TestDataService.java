@@ -1,5 +1,7 @@
 package com.example.social.server.service;
 
+import com.example.social.server.exception.*;
+
 import com.example.social.server.entity.Post;
 import com.example.social.server.entity.PostLike;
 import com.example.social.server.entity.Tag;
@@ -86,7 +88,7 @@ public class TestDataService {
             try {
                 var user = userService.registerUser(username, email, TEST_PASSWORD);
                 createdUserIds.add(user.getUserId());
-            } catch (IllegalArgumentException e) {
+            } catch (ApiException | IllegalArgumentException e) {
                 log.warn("Skipped user {}: {}", username, e.getMessage());
             }
         }
@@ -106,7 +108,7 @@ public class TestDataService {
                 try {
                     followersService.follow(followerId, followingId);
                     followsCreated++;
-                } catch (IllegalArgumentException e) {
+                } catch (ApiException | IllegalArgumentException e) {
                     // вже підписаний — нормально, просто пропускаємо
                 }
             }
@@ -128,7 +130,7 @@ public class TestDataService {
     public Map<String, Object> generateRandomPosts(int count) {
         List<User> allUsers = userRepository.findAll();
         if (allUsers.isEmpty()) {
-            throw new IllegalStateException("Немає жодного користувача — спершу викличте generateTestData");
+            throw new ConflictException("Немає жодного користувача — спершу викличте generateTestData");
         }
 
         List<Tag> tagPool = ensureTagPool();
@@ -187,7 +189,7 @@ public class TestDataService {
         List<Post> allPosts = postRepository.findAll();
 
         if (allUsers.isEmpty() || allPosts.isEmpty()) {
-            throw new IllegalStateException("Потрібні користувачі й пости — спершу /seed і /seed-posts");
+            throw new ConflictException("Потрібні користувачі й пости — спершу /seed і /seed-posts");
         }
 
         Random random = new Random();

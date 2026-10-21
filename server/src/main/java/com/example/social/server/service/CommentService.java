@@ -1,5 +1,7 @@
 package com.example.social.server.service;
 
+import com.example.social.server.exception.*;
+
 import com.example.social.server.entity.Comment;
 import com.example.social.server.entity.Post;
 import com.example.social.server.entity.User;
@@ -32,9 +34,9 @@ public class CommentService {
     @Transactional
     public CommentResponseDto addComment(Long postId, Long userId, CommentCreateDto dto) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found: " + postId));
+                .orElseThrow(() -> new NotFoundException("Post not found: " + postId));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         Comment comment = new Comment();
         comment.setPost(post);
@@ -43,7 +45,7 @@ public class CommentService {
 
         if (dto.getParentCommentId() != null) {
             Comment parent = commentRepository.findById(dto.getParentCommentId())
-                    .orElseThrow(() -> new IllegalArgumentException(
+                    .orElseThrow(() -> new NotFoundException(
                             "Parent comment not found: " + dto.getParentCommentId()));
             comment.setParentComment(parent);
         }
@@ -55,7 +57,7 @@ public class CommentService {
     @Transactional(readOnly = true)
     public List<CommentResponseDto> getComments(Long postId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found: " + postId));
+                .orElseThrow(() -> new NotFoundException("Post not found: " + postId));
 
         return commentRepository.findByPostOrderByCreatedAtAsc(post).stream()
                 .map(this::toDto)
@@ -65,10 +67,10 @@ public class CommentService {
     @Transactional
     public void deleteComment(Long commentId, Long userId) {
         Comment comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("Comment not found: " + commentId));
+                .orElseThrow(() -> new NotFoundException("Comment not found: " + commentId));
 
         if (!comment.getUser().getUserId().equals(userId)) {
-            throw new SecurityException("You can only delete your own comments");
+            throw new ForbiddenException("You can only delete your own comments");
         }
 
         commentRepository.delete(comment);

@@ -1,11 +1,16 @@
 spring:
+  # Секрети беруться зі змінних оточення або з файлу .env у корені проєкту (він не потрапляє в git).
+  # Шаблон з усіма потрібними змінними — .env.example.
+  config:
+    import: "optional:file:.env[.properties],optional:file:../.env[.properties]"
+
   application:
     name: social-server
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/social_network
-    username: social_app
-    password: frogchairuwu9AB
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/social_network}
+    username: ${DB_USERNAME:social_app}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -32,13 +37,13 @@ server:
   port: 8080
 
 jwt:
-  secret: ${JWT_SECRET:w4mw7pX1bVdP4LdkIqJTO8heH1OALGIM8OwERQcW7n0=}
+  secret: ${JWT_SECRET}          # щонайменше 32 символи
   expiration-ms: 86400000
 
 neo4j:
-  uri: bolt://localhost:7687
-  username: neo4j
-  password: neo4jpassword123
+  uri: ${NEO4J_URI:bolt://localhost:7687}
+  username: ${NEO4J_USERNAME:neo4j}
+  password: ${NEO4J_PASSWORD}
 
 nlp-service:
   base-url: http://localhost:8001

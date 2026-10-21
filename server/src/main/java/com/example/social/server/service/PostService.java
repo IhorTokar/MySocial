@@ -1,5 +1,7 @@
 package com.example.social.server.service;
 
+import com.example.social.server.exception.*;
+
 import com.example.social.server.entity.Followers;
 import com.example.social.server.entity.Post;
 import com.example.social.server.entity.Tag;
@@ -60,7 +62,7 @@ public class PostService {
     @Transactional
     public PostResponseDto createPost(Long userId, PostCreateDto dto) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         Post post = new Post();
         post.setUser(user);
@@ -85,14 +87,14 @@ public class PostService {
     @Transactional(readOnly = true)
     public PostResponseDto getPost(Long postId, Long currentUserId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found: " + postId));
+                .orElseThrow(() -> new NotFoundException("Post not found: " + postId));
         return toDtos(List.of(post), currentUserId).get(0);
     }
 
     @Transactional
     public PostResponseDto updatePostMedia(Long postId, String mediaUrl) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found: " + postId));
+                .orElseThrow(() -> new NotFoundException("Post not found: " + postId));
         post.setMediaUrl(mediaUrl);
         Post saved = postRepository.save(post);
         // медіа може змінювати лише власник, тож дивимось на пост його очима
@@ -103,7 +105,7 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostResponseDto> getFeed(Long currentUserId) {
         User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + currentUserId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + currentUserId));
 
         List<User> followedUsers = followersRepository.findByFollower(currentUser).stream()
                 .map(Followers::getFollowing)
@@ -118,14 +120,14 @@ public class PostService {
     @Transactional(readOnly = true)
     public List<PostResponseDto> getPostsByUser(Long userId, Long currentUserId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
         return toDtos(postRepository.findByUserOrderByCreatedDateDesc(user), currentUserId);
     }
 
     @Transactional
     public void deletePost(Long postId) {
         if (!postRepository.existsById(postId)) {
-            throw new IllegalArgumentException("Post not found: " + postId);
+            throw new NotFoundException("Post not found: " + postId);
         }
         postRepository.deleteById(postId);
     }
@@ -208,10 +210,10 @@ public class PostService {
     @Transactional
     public PostResponseDto updatePost(Long postId, Long currentUserId, PostCreateDto dto) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found: " + postId));
+                .orElseThrow(() -> new NotFoundException("Post not found: " + postId));
 
         if (!post.getUser().getUserId().equals(currentUserId)) {
-            throw new SecurityException("You can only edit your own posts");
+            throw new ForbiddenException("You can only edit your own posts");
         }
 
         if (dto.getLabel() != null) {

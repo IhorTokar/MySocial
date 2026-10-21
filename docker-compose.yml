@@ -5,14 +5,14 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_DB: social_network
-      POSTGRES_USER: social_app
-      POSTGRES_PASSWORD: frogchairuwu9AB
+      POSTGRES_USER: ${DB_USERNAME:-social_app}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Вкажіть DB_PASSWORD у файлі .env}
     ports:
       - "5432:5432"
     volumes:
       - social-pg-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U social_app -d social_network"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -22,8 +22,8 @@ services:
     container_name: social-pgadmin
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?Вкажіть PGADMIN_PASSWORD у файлі .env}
     ports:
       - "5050:80"
     depends_on:
@@ -37,7 +37,7 @@ services:
     container_name: social-neo4j
     restart: unless-stopped
     environment:
-      NEO4J_AUTH: neo4j/neo4jpassword123
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:?Вкажіть NEO4J_PASSWORD у файлі .env}
       NEO4J_server_memory_pagecache_size: 256m
       NEO4J_server_memory_heap_initial__size: 256m
       NEO4J_server_memory_heap_max__size: 512m

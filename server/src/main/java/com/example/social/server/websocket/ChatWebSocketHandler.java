@@ -1,5 +1,7 @@
 package com.example.social.server.websocket;
 
+import com.example.social.server.exception.ApiException;
+
 import com.example.social.server.service.MessageService;
 import com.example.social.shared.dto.MessageDto;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -59,7 +61,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 case "delete" -> handleDelete(senderId, node);
                 default -> sendError(session, "Unknown message type: " + type);
             }
-        } catch (IllegalArgumentException | SecurityException e) {
+        } catch (ApiException | IllegalArgumentException | SecurityException e) {
             sendError(session, e.getMessage());
         } catch (Exception e) {
             log.warn("Bad chat message from user {}: {}", senderId, e.getMessage());

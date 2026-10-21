@@ -1,5 +1,7 @@
 package com.example.social.server.service;
 
+import com.example.social.server.exception.*;
+
 import com.example.social.server.entity.Post;
 import com.example.social.server.entity.Tag;
 import com.example.social.server.entity.User;
@@ -134,7 +136,7 @@ public class EchoChamberValidationService {
                     + MAX_POSTS_PER_COMMUNITY + " (обмеження вибірки в аналізі згуртованості)");
         }
         if (embeddingApiService.embed("Перевірка зʼєднання з NLP-сервісом.") == null) {
-            throw new IllegalStateException("NLP-сервіс недоступний — запустіть його (docker compose up -d)");
+            throw new ServiceUnavailableException("NLP-сервіс недоступний — запустіть його (docker compose up -d)");
         }
 
         long started = System.nanoTime();

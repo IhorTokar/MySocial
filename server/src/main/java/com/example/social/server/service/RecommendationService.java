@@ -1,5 +1,7 @@
 package com.example.social.server.service;
 
+import com.example.social.server.exception.*;
+
 import com.example.social.server.entity.Comment;
 import com.example.social.server.entity.Post;
 import com.example.social.server.entity.PostLike;
@@ -184,7 +186,7 @@ public class RecommendationService {
     @Transactional(readOnly = true)
     public List<CandidateScores> computeCandidateScores(Long currentUserId, Set<Long> allowedPostIds) {
         User currentUser = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + currentUserId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + currentUserId));
 
         LocalDateTime since = LocalDateTime.now().minusDays(POPULARITY_WINDOW_DAYS);
 
@@ -291,7 +293,7 @@ public class RecommendationService {
         List<Map<String, Object>> similarUsers;
         try {
             similarUsers = userSimilarityService.getSimilarUsers(currentUserId, SIMILAR_USERS_TOP_N, false);
-        } catch (IllegalArgumentException e) {
+        } catch (ApiException | IllegalArgumentException e) {
             log.debug("[feed uid={}] graph similarity skipped: {}", currentUserId, e.getMessage());
             return Map.of();
         }

@@ -41,6 +41,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/followers/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
                         .requestMatchers("/error").permitAll()
+                        // адмінські та службові запити — лише для ролі admin
+                        .requestMatchers("/api/admin/**", "/api/dev/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
 
                 )

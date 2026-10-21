@@ -83,7 +83,8 @@ public class AuthController {
         return ResponseEntity.ok(Map.of(
                 "token", token,
                 "userId", user.getUserId(),
-                "username", user.getUsername()
+                "username", user.getUsername(),
+                "role", userPrivate.getRole().name()   // клієнт за цим полем покаже вкладку адміністратора
         ));
     }
 

@@ -1,5 +1,7 @@
 package com.example.social.server.service;
 
+import com.example.social.server.exception.*;
+
 import com.example.social.server.entity.Followers;
 import com.example.social.server.entity.User;
 import com.example.social.server.repository.FollowersRepository;
@@ -29,7 +31,7 @@ public class UserSimilarityService {
         Map<String, Object> targetEntry = allEmbeddings.stream()
                 .filter(e -> userId.equals(e.get("userId")))
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException(
+                .orElseThrow(() -> new NotFoundException(
                         "No embedding found for user " + userId + " — run /api/graph/embeddings first"));
 
         @SuppressWarnings("unchecked")
@@ -40,7 +42,7 @@ public class UserSimilarityService {
 
         if (excludeFollowed) {
             User user = userRepository.findById(userId)
-                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                    .orElseThrow(() -> new NotFoundException("User not found: " + userId));
             for (Followers rel : followersRepository.findByFollower(user)) {
                 excludedIds.add(rel.getFollowing().getUserId());
             }

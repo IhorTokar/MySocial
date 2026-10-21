@@ -1,4 +1,8 @@
 # Project exclude paths
 /server/target/
 /shared/target/
+/client/target/
+
+# Секрети: справжні значення лише локально, у git — тільки шаблон .env.example
+.env
 uploads/

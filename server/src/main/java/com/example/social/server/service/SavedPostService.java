@@ -1,5 +1,7 @@
 package com.example.social.server.service;
 
+import com.example.social.server.exception.*;
+
 import com.example.social.server.entity.Post;
 import com.example.social.server.entity.SavedPost;
 import com.example.social.server.entity.User;
@@ -34,12 +36,12 @@ public class SavedPostService {
     @Transactional
     public void save(Long postId, Long userId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found: " + postId));
+                .orElseThrow(() -> new NotFoundException("Post not found: " + postId));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         if (savedPostRepository.existsByUserAndPost(user, post)) {
-            throw new IllegalArgumentException("Post already saved");
+            throw new ConflictException("Post already saved");
         }
 
         SavedPost savedPost = new SavedPost();
@@ -51,21 +53,21 @@ public class SavedPostService {
     @Transactional(readOnly = true)
     public boolean isSavedByUser(Long postId, Long userId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found: " + postId));
+                .orElseThrow(() -> new NotFoundException("Post not found: " + postId));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
         return savedPostRepository.existsByUserAndPost(user, post);
     }
 
     @Transactional
     public void unsave(Long postId, Long userId) {
         Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("Post not found: " + postId));
+                .orElseThrow(() -> new NotFoundException("Post not found: " + postId));
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         SavedPost savedPost = savedPostRepository.findByUserAndPost(user, post)
-                .orElseThrow(() -> new IllegalArgumentException("Post is not saved"));
+                .orElseThrow(() -> new NotFoundException("Post is not saved"));
 
         savedPostRepository.delete(savedPost);
     }
@@ -73,7 +75,7 @@ public class SavedPostService {
     @Transactional(readOnly = true)
     public List<PostResponseDto> getSavedPosts(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         List<Post> posts = savedPostRepository.findByUser(user).stream()
                 .map(SavedPost::getPost)

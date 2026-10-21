@@ -1,5 +1,7 @@
 package com.example.social.server.service;
 
+import com.example.social.server.exception.*;
+
 import com.example.social.server.entity.Followers;
 import com.example.social.server.entity.User;
 import com.example.social.server.repository.FollowersRepository;
@@ -30,12 +32,12 @@ public class FollowersService {
         }
 
         User follower = userRepository.findById(followerId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + followerId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + followerId));
         User following = userRepository.findById(followingId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + followingId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + followingId));
 
         if (followersRepository.findByFollowerAndFollowing(follower, following).isPresent()) {
-            throw new IllegalArgumentException("Already following this user");
+            throw new ConflictException("Already following this user");
         }
 
         Followers relation = new Followers();
@@ -47,12 +49,12 @@ public class FollowersService {
     @Transactional
     public void unfollow(Long followerId, Long followingId) {
         User follower = userRepository.findById(followerId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + followerId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + followerId));
         User following = userRepository.findById(followingId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + followingId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + followingId));
 
         Followers relation = followersRepository.findByFollowerAndFollowing(follower, following)
-                .orElseThrow(() -> new IllegalArgumentException("You are not following this user"));
+                .orElseThrow(() -> new NotFoundException("You are not following this user"));
 
         followersRepository.delete(relation);
     }
@@ -60,7 +62,7 @@ public class FollowersService {
     @Transactional(readOnly = true)
     public List<FollowerResponseDto> getFollowers(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         return followersRepository.findByFollowing(user).stream()
                 .map(rel -> toDto(rel.getFollower(), rel.getCreatedAt()))
@@ -70,7 +72,7 @@ public class FollowersService {
     @Transactional(readOnly = true)
     public List<FollowerResponseDto> getFollowing(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         return followersRepository.findByFollower(user).stream()
                 .map(rel -> toDto(rel.getFollowing(), rel.getCreatedAt()))
@@ -80,7 +82,7 @@ public class FollowersService {
     @Transactional(readOnly = true)
     public long getFollowersCount(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
         return followersRepository.countByFollowing(user);
     }
 
@@ -88,7 +90,7 @@ public class FollowersService {
     @Transactional(readOnly = true)
     public List<UserSummaryDto> getFollowingSummary(Long userId, Long currentUserId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         List<User> following = followersRepository.findByFollower(user).stream()
                 .map(Followers::getFollowing)
@@ -101,7 +103,7 @@ public class FollowersService {
     @Transactional(readOnly = true)
     public List<UserSummaryDto> getFollowersSummary(Long userId, Long currentUserId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         List<User> followers = followersRepository.findByFollowing(user).stream()
                 .map(Followers::getFollower)

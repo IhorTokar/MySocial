@@ -1,5 +1,7 @@
 package com.example.social.server.service;
 
+import com.example.social.server.exception.*;
+
 import com.example.social.server.entity.*;
 import com.example.social.server.repository.*;
 import com.example.social.shared.dto.ChangePasswordDto;
@@ -52,10 +54,10 @@ public class UserService {
     @Transactional
     public User registerUser(String username, String email, String rawPassword) {
         if (userRepository.existsByUsername(username)) {
-            throw new IllegalArgumentException("Username already taken: " + username);
+            throw new ConflictException("Username already taken: " + username);
         }
         if (userPrivateRepository.existsByEmail(email)) {
-            throw new IllegalArgumentException("Email already registered: " + email);
+            throw new ConflictException("Email already registered: " + email);
         }
 
         User user = new User();
@@ -80,7 +82,7 @@ public class UserService {
     @Transactional(readOnly = true)
     public UserDto getUserProfile(Long targetUserId, Long currentUserId) {
         User target = userRepository.findById(targetUserId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + targetUserId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + targetUserId));
 
         long postsCount = postRepository.countByUser(target);
         long followersCount = followersRepository.countByFollowing(target);
@@ -111,7 +113,7 @@ public class UserService {
     @Transactional
     public UserDto updateProfile(Long userId, UpdateProfileDto dto) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         if (dto.getDisplayName() != null) {
             user.setDisplayName(dto.getDisplayName().isBlank() ? null : dto.getDisplayName().trim());
@@ -127,7 +129,7 @@ public class UserService {
     @Transactional
     public UserDto updateAvatar(Long userId, String avatarUrl) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
 
         user.setUserAvatarUrl(avatarUrl);
         userRepository.save(user);
@@ -137,12 +139,12 @@ public class UserService {
     @Transactional
     public void changePassword(Long userId, ChangePasswordDto dto) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
         UserPrivate userPrivate = userPrivateRepository.findByUser(user)
-                .orElseThrow(() -> new IllegalArgumentException("Private data not found for user: " + userId));
+                .orElseThrow(() -> new NotFoundException("Private data not found for user: " + userId));
 
         if (!passwordEncoder.matches(dto.getCurrentPassword(), userPrivate.getPasswordHash())) {
-            throw new SecurityException("Current password is incorrect");
+            throw new BadRequestException("Current password is incorrect");
         }
 
         userPrivate.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
@@ -158,12 +160,12 @@ public class UserService {
     @Transactional
     public void deleteAccount(Long userId, String password) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
         UserPrivate userPrivate = userPrivateRepository.findByUser(user)
-                .orElseThrow(() -> new IllegalArgumentException("Private data not found for user: " + userId));
+                .orElseThrow(() -> new NotFoundException("Private data not found for user: " + userId));
 
         if (!passwordEncoder.matches(password, userPrivate.getPasswordHash())) {
-            throw new SecurityException("Password is incorrect");
+            throw new BadRequestException("Password is incorrect");
         }
 
         // 1. Повідомлення (як відправник, так і отримувач)
