@@ -21,34 +21,22 @@ public class SavedPostController {
     @PostMapping("/api/posts/{postId}/save")
     public ResponseEntity<?> save(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                   @PathVariable("postId") Long postId) {
-        try {
-            savedPostService.save(postId, currentUser.getUserId());
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("status", "saved"));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        savedPostService.save(postId, currentUser.getUserId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("status", "saved"));
     }
 
     @GetMapping("/api/posts/{postId}/save/status")
     public ResponseEntity<?> getStatus(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                        @PathVariable("postId") Long postId) {
-        try {
-            boolean saved = savedPostService.isSavedByUser(postId, currentUser.getUserId());
-            return ResponseEntity.ok(Map.of("saved", saved));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        boolean saved = savedPostService.isSavedByUser(postId, currentUser.getUserId());
+        return ResponseEntity.ok(Map.of("saved", saved));
     }
 
     @DeleteMapping("/api/posts/{postId}/save")
     public ResponseEntity<?> unsave(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                     @PathVariable("postId") Long postId) {
-        try {
-            savedPostService.unsave(postId, currentUser.getUserId());
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        savedPostService.unsave(postId, currentUser.getUserId());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/api/posts/saved")

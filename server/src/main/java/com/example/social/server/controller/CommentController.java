@@ -9,8 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Map;
-
 @RestController
 public class CommentController {
 
@@ -24,33 +22,19 @@ public class CommentController {
     public ResponseEntity<?> addComment(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                         @PathVariable("postId") Long postId,
                                         @Valid @RequestBody CommentCreateDto dto) {
-        try {
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(commentService.addComment(postId, currentUser.getUserId(), dto));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(commentService.addComment(postId, currentUser.getUserId(), dto));
     }
 
     @GetMapping("/api/posts/{postId}/comments")
     public ResponseEntity<?> getComments(@PathVariable("postId") Long postId) {
-        try {
-            return ResponseEntity.ok(commentService.getComments(postId));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(commentService.getComments(postId));
     }
 
     @DeleteMapping("/api/comments/{commentId}")
     public ResponseEntity<?> deleteComment(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                            @PathVariable("commentId") Long commentId) {
-        try {
-            commentService.deleteComment(commentId, currentUser.getUserId());
-            return ResponseEntity.noContent().build();
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        commentService.deleteComment(commentId, currentUser.getUserId());
+        return ResponseEntity.noContent().build();
     }
 }

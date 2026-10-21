@@ -22,43 +22,27 @@ public class PostLikeController {
     @PostMapping
     public ResponseEntity<?> like(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                   @PathVariable("postId") Long postId) {
-        try {
-            postLikeService.like(postId, currentUser.getUserId());
-            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("status", "liked"));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        postLikeService.like(postId, currentUser.getUserId());
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("status", "liked"));
     }
 
     @GetMapping("/status")
     public ResponseEntity<?> getStatus(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                        @PathVariable("postId") Long postId) {
-        try {
-            boolean liked = postLikeService.isLikedByUser(postId, currentUser.getUserId());
-            long count = postLikeService.getLikesCount(postId);
-            return ResponseEntity.ok(Map.of("liked", liked, "likesCount", count));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        boolean liked = postLikeService.isLikedByUser(postId, currentUser.getUserId());
+        long count = postLikeService.getLikesCount(postId);
+        return ResponseEntity.ok(Map.of("liked", liked, "likesCount", count));
     }
 
     @DeleteMapping
     public ResponseEntity<?> unlike(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                     @PathVariable("postId") Long postId) {
-        try {
-            postLikeService.unlike(postId, currentUser.getUserId());
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        postLikeService.unlike(postId, currentUser.getUserId());
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/count")
     public ResponseEntity<?> getCount(@PathVariable("postId") Long postId) {
-        try {
-            return ResponseEntity.ok(Map.of("likesCount", postLikeService.getLikesCount(postId)));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(Map.of("likesCount", postLikeService.getLikesCount(postId)));
     }
 }
