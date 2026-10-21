@@ -43,6 +43,8 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         // адмінські та службові запити — лише для ролі admin
                         .requestMatchers("/api/admin/**", "/api/dev/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/graph/community/**").authenticated()
+                        .requestMatchers("/api/graph/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
 
                 )

@@ -2,6 +2,7 @@ package com.example.social.server.controller;
 
 import com.example.social.server.entity.User;
 import com.example.social.server.entity.UserPrivate;
+import com.example.social.server.exception.UnauthorizedException;
 import com.example.social.server.repository.UserPrivateRepository;
 import com.example.social.server.repository.UserRepository;
 import com.example.social.server.security.JwtTokenProvider;
@@ -40,24 +41,18 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequestDto request) {
-        try {
-            User user = userService.registerUser(
-                    request.getUsername(),
-                    request.getEmail(),
-                    request.getPassword()
-            );
-            return ResponseEntity
-                    .status(HttpStatus.CREATED)
-                    .body(Map.of(
-                            "userId", user.getUserId(),
-                            "username", user.getUsername(),
-                            "uid", user.getUid()
-                    ));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity
-                    .status(HttpStatus.CONFLICT)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        User user = userService.registerUser(
+                request.getUsername(),
+                request.getEmail(),
+                request.getPassword()
+        );
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(Map.of(
+                        "userId", user.getUserId(),
+                        "username", user.getUsername(),
+                        "uid", user.getUid()
+                ));
     }
 
     @PostMapping("/login")
@@ -66,16 +61,14 @@ public class AuthController {
                 .orElse(null);
 
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid username or password"));
+            throw new UnauthorizedException("Invalid username or password");
         }
 
         UserPrivate userPrivate = userPrivateRepository.findByUser(user)
                 .orElse(null);
 
         if (userPrivate == null || !passwordEncoder.matches(request.getPassword(), userPrivate.getPasswordHash())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid username or password"));
+            throw new UnauthorizedException("Invalid username or password");
         }
 
         String token = jwtTokenProvider.generateToken(user.getUserId(), user.getUsername());
@@ -84,8 +77,7 @@ public class AuthController {
                 "token", token,
                 "userId", user.getUserId(),
                 "username", user.getUsername(),
-                "role", userPrivate.getRole().name()   // клієнт за цим полем покаже вкладку адміністратора
+                "role", userPrivate.getRole().name()
         ));
     }
-
 }

@@ -1,5 +1,6 @@
 package com.example.social.server.controller;
 
+import com.example.social.server.exception.NotFoundException;
 import com.example.social.server.service.*;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
@@ -19,7 +20,6 @@ public class GraphController {
     private final CommunityDetectionService communityDetectionService;
     private final UserSimilarityService userSimilarityService;
     private final CommunityAnalysisService communityAnalysisService;
-
 
     public GraphController(Driver neo4jDriver,
                            GraphSyncService graphSyncService,
@@ -51,158 +51,81 @@ public class GraphController {
 
     @PostMapping("/communities")
     public ResponseEntity<?> detectCommunities() {
-        try {
-            return ResponseEntity.ok(communityDetectionService.detectCommunities());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(communityDetectionService.detectCommunities());
     }
 
     @GetMapping("/communities")
     public ResponseEntity<?> getCommunities() {
-        try {
-            return ResponseEntity.ok(communityDetectionService.getCommunities());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(communityDetectionService.getCommunities());
     }
 
     @GetMapping("/recommendations/{userId}")
     public ResponseEntity<?> getRecommendations(@PathVariable("userId") Long userId,
                                                 @RequestParam(value = "topN", defaultValue = "5") int topN,
                                                 @RequestParam(value = "excludeFollowed", defaultValue = "true") boolean excludeFollowed) {
-        try {
-            return ResponseEntity.ok(userSimilarityService.getSimilarUsers(userId, topN, excludeFollowed));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(userSimilarityService.getSimilarUsers(userId, topN, excludeFollowed));
     }
 
     @GetMapping("/communities/summary")
     public ResponseEntity<?> getCommunitySummary() {
-        try {
-            return ResponseEntity.ok(communityDetectionService.getCommunitySummary());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(communityDetectionService.getCommunitySummary());
     }
 
     @PostMapping("/sync")
     public ResponseEntity<?> sync() {
-        try {
-            return ResponseEntity.ok(graphSyncService.syncAll());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(graphSyncService.syncAll());
     }
 
     @GetMapping("/stats")
     public ResponseEntity<?> stats() {
-        try {
-            return ResponseEntity.ok(graphSyncService.getGraphStats());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(graphSyncService.getGraphStats());
     }
 
     @PostMapping("/embeddings")
     public ResponseEntity<?> generateEmbeddings(@RequestParam(value = "dimension", defaultValue = "16") int dimension) {
-        try {
-            return ResponseEntity.ok(graphEmbeddingService.generateEmbeddings(dimension));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(graphEmbeddingService.generateEmbeddings(dimension));
     }
 
     @GetMapping("/embeddings")
     public ResponseEntity<?> getEmbeddings() {
-        try {
-            return ResponseEntity.ok(graphEmbeddingService.getEmbeddings());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(graphEmbeddingService.getEmbeddings());
     }
 
     @GetMapping("/communities/analysis")
     public ResponseEntity<?> analyzeCommunities(@RequestParam(defaultValue = "false") boolean leiden) {
-        try {
-            return ResponseEntity.ok(communityAnalysisService.analyzeCommunities(leiden));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(communityAnalysisService.analyzeCommunities(leiden));
     }
 
     @PostMapping("/communities/leiden")
     public ResponseEntity<?> detectCommunitiesLeiden() {
-        try {
-            return ResponseEntity.ok(communityDetectionService.detectCommunitiesLeiden());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(communityDetectionService.detectCommunitiesLeiden());
     }
 
     @GetMapping("/communities/leiden")
     public ResponseEntity<?> getCommunitiesLeiden() {
-        try {
-            return ResponseEntity.ok(communityDetectionService.getCommunitiesLeiden());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(communityDetectionService.getCommunitiesLeiden());
     }
 
     @GetMapping("/communities/leiden/summary")
     public ResponseEntity<?> getCommunitySummaryLeiden() {
-        try {
-            return ResponseEntity.ok(communityDetectionService.getCommunitySummaryLeiden());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(communityDetectionService.getCommunitySummaryLeiden());
     }
 
     @GetMapping("/communities/connectivity")
     public ResponseEntity<?> checkConnectivityLouvain() {
-        try {
-            return ResponseEntity.ok(communityDetectionService.checkConnectivityLouvain());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(communityDetectionService.checkConnectivityLouvain());
     }
 
     @GetMapping("/communities/leiden/connectivity")
     public ResponseEntity<?> checkConnectivityLeiden() {
-        try {
-            return ResponseEntity.ok(communityDetectionService.checkConnectivityLeiden());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(communityDetectionService.checkConnectivityLeiden());
     }
 
     @GetMapping("/community/{userId}")
     public ResponseEntity<?> getUserCommunity(@PathVariable("userId") Long userId,
                                               @RequestParam(defaultValue = "false") boolean leiden) {
-        try {
-            return communityAnalysisService.getCommunityForUser(userId, leiden)
-                    .<ResponseEntity<?>>map(ResponseEntity::ok)
-                    .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND)
-                            .body(Map.of("error", "Спільнота ще не визначена або юзер поза значущою спільнотою")));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(communityAnalysisService.getCommunityForUser(userId, leiden)
+                .orElseThrow(() -> new NotFoundException(
+                        "Спільнота ще не визначена або юзер поза значущою спільнотою")));
     }
 }

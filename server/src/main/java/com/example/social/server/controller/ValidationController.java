@@ -1,13 +1,12 @@
 package com.example.social.server.controller;
 
+import com.example.social.server.exception.BadRequestException;
 import com.example.social.server.service.EchoChamberValidationService;
 import com.example.social.server.service.RecommendationWeightExperimentService;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/dev/validation")
@@ -28,7 +27,7 @@ public class ValidationController {
             @RequestParam(name = "usersPerCommunity", defaultValue = "6") int usersPerCommunity,
             @RequestParam(name = "postsPerUser", defaultValue = "8") int postsPerUser,
             @RequestParam(name = "seed", defaultValue = "42") long seed) {
-        return wrap(() -> echoService.run(repeats, usersPerCommunity, postsPerUser, seed));
+        return ResponseEntity.ok(echoService.run(repeats, usersPerCommunity, postsPerUser, seed));
     }
 
     @DeleteMapping("/echo-chamber/leftovers")
@@ -55,30 +54,16 @@ public class ValidationController {
                 candidateWeights = Arrays.stream(candidate.split(","))
                         .map(String::trim).mapToDouble(Double::parseDouble).toArray();
             } catch (NumberFormatException e) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-                        "error", "candidate: п'ять чисел через кому, напр. 0.1,0.35,0.35,0.1,0.1"));
+                throw new BadRequestException("candidate: п'ять чисел через кому, напр. 0.1,0.35,0.35,0.1,0.1");
             }
         }
-        final double[] cw = candidateWeights;
-        return wrap(() -> weightService.run(new RecommendationWeightExperimentService.Params(
+        return ResponseEntity.ok(weightService.run(new RecommendationWeightExperimentService.Params(
                 users, postsPerUser, likesPerUser, followsPerUser, hiddenShare,
-                recencyTauDays, seed, k, gridSteps, includeGrid, cw)));
+                recencyTauDays, seed, k, gridSteps, includeGrid, candidateWeights)));
     }
+
     @DeleteMapping("/recommendation-weights/leftovers")
     public ResponseEntity<?> weightsCleanup() {
         return ResponseEntity.ok(weightService.cleanupLeftovers());
-    }
-
-    private ResponseEntity<?> wrap(java.util.function.Supplier<Map<String, Object>> action) {
-        try {
-            return ResponseEntity.ok(action.get());
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", e.getMessage()));
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(Map.of("error", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Map.of("error", String.valueOf(e.getMessage())));
-        }
     }
 }

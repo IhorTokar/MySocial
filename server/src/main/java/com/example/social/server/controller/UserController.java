@@ -1,17 +1,17 @@
 package com.example.social.server.controller;
 
+import com.example.social.server.exception.BadRequestException;
 import com.example.social.server.security.AuthenticatedUser;
 import com.example.social.server.service.FileStorageService;
 import com.example.social.server.service.UserService;
+import com.example.social.shared.dto.ChangePasswordDto;
+import com.example.social.shared.dto.DeleteAccountDto;
 import com.example.social.shared.dto.UpdateProfileDto;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import com.example.social.shared.dto.ChangePasswordDto;
-import com.example.social.shared.dto.DeleteAccountDto;
 
 import java.util.Map;
 
@@ -30,72 +30,44 @@ public class UserController {
     @GetMapping("/{userId}")
     public ResponseEntity<?> getUser(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                      @PathVariable("userId") Long userId) {
-        try {
-            Long currentUserId = currentUser != null ? currentUser.getUserId() : null;
-            return ResponseEntity.ok(userService.getUserProfile(userId, currentUserId));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        Long currentUserId = currentUser != null ? currentUser.getUserId() : null;
+        return ResponseEntity.ok(userService.getUserProfile(userId, currentUserId));
     }
 
     @GetMapping("/me")
     public ResponseEntity<?> getMyProfile(@AuthenticationPrincipal AuthenticatedUser currentUser) {
-        try {
-            return ResponseEntity.ok(userService.getUserProfile(currentUser.getUserId(), currentUser.getUserId()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(userService.getUserProfile(currentUser.getUserId(), currentUser.getUserId()));
     }
 
     @PatchMapping("/me")
     public ResponseEntity<?> updateMyProfile(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                              @Valid @RequestBody UpdateProfileDto dto) {
-        try {
-            return ResponseEntity.ok(userService.updateProfile(currentUser.getUserId(), dto));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        return ResponseEntity.ok(userService.updateProfile(currentUser.getUserId(), dto));
     }
 
     @PostMapping("/me/avatar")
     public ResponseEntity<?> updateAvatar(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                           @RequestParam("file") MultipartFile file) {
-        try {
-            String contentType = file.getContentType();
-            if (contentType == null || !contentType.startsWith("image/")) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(Map.of("error", "Дозволені лише зображення"));
-            }
-
-            String avatarUrl = fileStorageService.store(file);
-            return ResponseEntity.ok(userService.updateAvatar(currentUser.getUserId(), avatarUrl));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new BadRequestException("Дозволені лише зображення");
         }
+
+        String avatarUrl = fileStorageService.store(file);
+        return ResponseEntity.ok(userService.updateAvatar(currentUser.getUserId(), avatarUrl));
     }
+
     @PatchMapping("/me/password")
     public ResponseEntity<?> changePassword(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                             @Valid @RequestBody ChangePasswordDto dto) {
-        try {
-            userService.changePassword(currentUser.getUserId(), dto);
-            return ResponseEntity.ok(Map.of("status", "password changed"));
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        userService.changePassword(currentUser.getUserId(), dto);
+        return ResponseEntity.ok(Map.of("status", "password changed"));
     }
 
     @DeleteMapping("/me")
     public ResponseEntity<?> deleteAccount(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                            @Valid @RequestBody DeleteAccountDto dto) {
-        try {
-            userService.deleteAccount(currentUser.getUserId(), dto.getPassword());
-            return ResponseEntity.noContent().build();
-        } catch (SecurityException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", e.getMessage()));
-        }
+        userService.deleteAccount(currentUser.getUserId(), dto.getPassword());
+        return ResponseEntity.noContent().build();
     }
 }
