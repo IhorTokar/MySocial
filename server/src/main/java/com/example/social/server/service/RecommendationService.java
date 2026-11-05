@@ -18,7 +18,6 @@ import com.example.social.shared.dto.RecommendationDto;
 import com.example.social.shared.dto.SimilarUserDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -79,7 +78,7 @@ public class RecommendationService {
     private final PostEmbeddingRepository postEmbeddingRepository;
     private final PostService postService;
 
-    private final Weights weights;
+    private final RecommendationWeightsService weightsService;
 
     public RecommendationService(PostRepository postRepository,
                                  PostLikeRepository postLikeRepository,
@@ -89,12 +88,7 @@ public class RecommendationService {
                                  UserSimilarityService userSimilarityService,
                                  PostEmbeddingRepository postEmbeddingRepository,
                                  PostService postService,
-                                 @Value("${recommendation.weights.popularity:0.20}") double popularityWeight,
-                                 @Value("${recommendation.weights.item-cf:0.25}") double itemCfWeight,
-                                 @Value("${recommendation.weights.graph-sim:0.20}") double graphSimWeight,
-                                 @Value("${recommendation.weights.semantic:0.20}") double semanticWeight,
-                                 @Value("${recommendation.weights.recency:0.15}") double recencyWeight,
-                                 @Value("${recommendation.weights.followed-bonus:0.3}") double followedBonus) {
+                                 RecommendationWeightsService weightsService) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
         this.commentRepository = commentRepository;
@@ -103,27 +97,14 @@ public class RecommendationService {
         this.userSimilarityService = userSimilarityService;
         this.postEmbeddingRepository = postEmbeddingRepository;
         this.postService = postService;
-
-        double[] all = {popularityWeight, itemCfWeight, graphSimWeight, semanticWeight, recencyWeight, followedBonus};
-        for (double w : all) {
-            if (w < 0) {
-                throw new IllegalStateException("recommendation.weights.*: значення не можуть бути від'ємними");
-            }
-        }
-        this.weights = new Weights(popularityWeight, itemCfWeight, graphSimWeight,
-                semanticWeight, recencyWeight, followedBonus);
-
-        double sum = popularityWeight + itemCfWeight + graphSimWeight + semanticWeight + recencyWeight;
-        if (Math.abs(sum - 1.0) > 1e-6) {
-            log.warn("Сума вагових коефіцієнтів стрічки дорівнює {}, а не 1", sum);
-        }
-        log.info("Вагові коефіцієнти гібридної стрічки: {}", weights);
+        this.weightsService = weightsService;
     }
 
-    /** Ваги, з якими працює стрічка (з конфігурації). */
+    /** Ваги, з якими зараз працює стрічка (з БД, а якщо там порожньо — з application.yml). */
     public Weights currentWeights() {
-        return weights;
+        return weightsService.current();
     }
+
     @Transactional(readOnly = true)
     public List<PostResponseDto> getHybridFeed(Long currentUserId, int limit) {
         List<Post> posts = computeScoredFeed(currentUserId, limit).stream()
@@ -150,7 +131,7 @@ public class RecommendationService {
     }
 
     private List<ScoredPost> computeScoredFeed(Long currentUserId, int limit) {
-        Weights weights = this.weights;   // ваги з application.yml
+        Weights weights = weightsService.current();    // один знімок ваг на весь запит
         List<ScoredPost> scored = new ArrayList<>();
 
         for (CandidateScores c : computeCandidateScores(currentUserId, null)) {
