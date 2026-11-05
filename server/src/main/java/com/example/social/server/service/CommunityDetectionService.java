@@ -1,5 +1,9 @@
 package com.example.social.server.service;
 
+import com.example.social.shared.dto.CommunityConnectivityDto;
+import com.example.social.shared.dto.CommunityDetectionResultDto;
+import com.example.social.shared.dto.CommunityMemberDto;
+import com.example.social.shared.dto.CommunitySummaryDto;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Session;
@@ -24,7 +28,7 @@ public class CommunityDetectionService {
         this.neo4jDriver = neo4jDriver;
     }
 
-    public Map<String, Object> detectCommunities() {
+    public CommunityDetectionResultDto detectCommunities() {
         return runCommunityAlgorithm(
                 "gds.louvain.write",
                 "community",
@@ -39,7 +43,7 @@ public class CommunityDetectionService {
      * 'communityLeiden', не перезаписуючи результат Louvain — обидва
      * можна тримати одночасно для порівняння.
      */
-    public Map<String, Object> detectCommunitiesLeiden() {
+    public CommunityDetectionResultDto detectCommunitiesLeiden() {
         return runCommunityAlgorithm(
                 "gds.leiden.write",
                 "communityLeiden",
@@ -47,7 +51,7 @@ public class CommunityDetectionService {
         );
     }
 
-    private Map<String, Object> runCommunityAlgorithm(String procedure, String propertyName, Map<String, Object> config) {
+    private CommunityDetectionResultDto runCommunityAlgorithm(String procedure, String propertyName, Map<String, Object> config) {
         try (Session session = neo4jDriver.session()) {
 
             session.executeWrite(tx -> {
@@ -69,19 +73,18 @@ public class CommunityDetectionService {
                 return null;
             });
 
-            Map<String, Object> result = session.executeWrite(tx -> {
+            CommunityDetectionResultDto result = session.executeWrite(tx -> {
                 var res = tx.run(
                         "CALL " + procedure + "($name, $config) " +
                                 "YIELD communityCount, modularity, nodePropertiesWritten",
                         Map.of("name", GRAPH_NAME, "config", config)
                 );
                 Record record = res.single();
-                Map<String, Object> resultMap = new HashMap<>();
-                resultMap.put("algorithm", propertyName);
-                resultMap.put("communityCount", record.get("communityCount").asLong());
-                resultMap.put("modularity", record.get("modularity").asDouble());
-                resultMap.put("nodePropertiesWritten", record.get("nodePropertiesWritten").asLong());
-                return resultMap;
+                return new CommunityDetectionResultDto(
+                        propertyName,
+                        record.get("communityCount").asLong(),
+                        record.get("modularity").asDouble(),
+                        record.get("nodePropertiesWritten").asLong());
             });
 
             session.executeWrite(tx -> {
@@ -94,29 +97,28 @@ public class CommunityDetectionService {
         }
     }
 
-    public List<Map<String, Object>> getCommunities() {
+    public List<CommunityMemberDto> getCommunities() {
         return getCommunitiesByProperty("community");
     }
 
-    public List<Map<String, Object>> getCommunitiesLeiden() {
+    public List<CommunityMemberDto> getCommunitiesLeiden() {
         return getCommunitiesByProperty("communityLeiden");
     }
 
-    private List<Map<String, Object>> getCommunitiesByProperty(String propertyName) {
+    private List<CommunityMemberDto> getCommunitiesByProperty(String propertyName) {
         try (Session session = neo4jDriver.session()) {
-            List<Map<String, Object>> result = session.executeRead(tx -> {
+            List<CommunityMemberDto> result = session.executeRead(tx -> {
                 var res = tx.run(
                         "MATCH (u:User) WHERE u." + propertyName + " IS NOT NULL " +
                                 "RETURN u.userId AS userId, u.username AS username, u." + propertyName + " AS community " +
                                 "ORDER BY u." + propertyName + ", u.userId"
                 );
-                List<Map<String, Object>> list = new ArrayList<>();
+                List<CommunityMemberDto> list = new ArrayList<>();
                 for (Record record : res.list()) {
-                    Map<String, Object> entry = new HashMap<>();
-                    entry.put("userId", record.get("userId").asLong());
-                    entry.put("username", record.get("username").asString());
-                    entry.put("community", record.get("community").asLong());
-                    list.add(entry);
+                    list.add(new CommunityMemberDto(
+                            record.get("userId").asLong(),
+                            record.get("username").asString(),
+                            record.get("community").asLong()));
                 }
                 return list;
             });
@@ -124,36 +126,33 @@ public class CommunityDetectionService {
         }
     }
 
-    public Map<String, Object> getCommunitySummary() {
+    public CommunitySummaryDto getCommunitySummary() {
         return getCommunitySummaryByProperty("community");
     }
 
-    public Map<String, Object> getCommunitySummaryLeiden() {
+    public CommunitySummaryDto getCommunitySummaryLeiden() {
         return getCommunitySummaryByProperty("communityLeiden");
     }
 
-    private Map<String, Object> getCommunitySummaryByProperty(String propertyName) {
+    private CommunitySummaryDto getCommunitySummaryByProperty(String propertyName) {
         try (Session session = neo4jDriver.session()) {
-            List<Map<String, Object>> summary = session.executeRead(tx -> {
+            List<CommunitySummaryDto.CommunitySize> summary = session.executeRead(tx -> {
                 var res = tx.run(
                         "MATCH (u:User) WHERE u." + propertyName + " IS NOT NULL " +
                                 "RETURN u." + propertyName + " AS community, count(u) AS size " +
                                 "ORDER BY size DESC"
                 );
-                List<Map<String, Object>> list = new ArrayList<>();
+                List<CommunitySummaryDto.CommunitySize> list = new ArrayList<>();
                 for (Record record : res.list()) {
-                    Map<String, Object> entry = new HashMap<>();
-                    entry.put("community", record.get("community").asLong());
-                    entry.put("size", record.get("size").asLong());
-                    list.add(entry);
+                    list.add(new CommunitySummaryDto.CommunitySize(
+                            record.get("community").asLong(),
+                            record.get("size").asLong()
+                    ));
                 }
                 return list;
             });
 
-            Map<String, Object> response = new HashMap<>();
-            response.put("totalCommunities", summary.size());
-            response.put("communities", summary);
-            return response;
+            return new CommunitySummaryDto(summary.size(), summary);
         }
     }
 
@@ -174,7 +173,7 @@ public class CommunityDetectionService {
      * чистий Cypher (без GDS-проєкції довільного списку вузлів, яку gds.graph.project
      * не підтримує для колекції NodeEntity).
      */
-    public List<Map<String, Object>> checkConnectivity(String propertyName) {
+    public List<CommunityConnectivityDto> checkConnectivity(String propertyName) {
         try (Session session = neo4jDriver.session()) {
             List<Long> communityIds = session.executeRead(tx -> {
                 var res = tx.run(
@@ -188,7 +187,7 @@ public class CommunityDetectionService {
                 return ids;
             });
 
-            List<Map<String, Object>> results = new ArrayList<>();
+            List<CommunityConnectivityDto> results = new ArrayList<>();
 
             for (Long communityId : communityIds) {
                 long communitySize = session.executeRead(tx ->
@@ -209,23 +208,19 @@ public class CommunityDetectionService {
                                 Map.of("communityId", communityId)
                         ).single().get("c").asLong());
 
-                Map<String, Object> entry = new HashMap<>();
-                entry.put("community", communityId);
-                entry.put("communitySize", communitySize);
-                entry.put("reachableFromOneNode", reachableCount);
-                entry.put("isFullyConnected", reachableCount == communitySize);
-                results.add(entry);
+                results.add(new CommunityConnectivityDto(
+                        communityId, communitySize, reachableCount, reachableCount == communitySize));
             }
 
             return results;
         }
     }
 
-    public List<Map<String, Object>> checkConnectivityLouvain() {
+    public List<CommunityConnectivityDto> checkConnectivityLouvain() {
         return checkConnectivity("community");
     }
 
-    public List<Map<String, Object>> checkConnectivityLeiden() {
+    public List<CommunityConnectivityDto> checkConnectivityLeiden() {
         return checkConnectivity("communityLeiden");
     }
 

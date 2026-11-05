@@ -5,6 +5,8 @@ import com.example.social.server.exception.*;
 import com.example.social.server.entity.Followers;
 import com.example.social.server.entity.User;
 import com.example.social.server.repository.FollowersRepository;
+import com.example.social.shared.dto.SimilarUserDto;
+import com.example.social.shared.dto.UserEmbeddingDto;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -25,17 +27,16 @@ public class UserSimilarityService {
         this.userRepository = userRepository;
     }
 
-    public List<Map<String, Object>> getSimilarUsers(Long userId, int topN, boolean excludeFollowed) {
-        List<Map<String, Object>> allEmbeddings = graphEmbeddingService.getEmbeddings();
+    public List<SimilarUserDto> getSimilarUsers(Long userId, int topN, boolean excludeFollowed) {
+        List<UserEmbeddingDto> allEmbeddings = graphEmbeddingService.getEmbeddings();
 
-        Map<String, Object> targetEntry = allEmbeddings.stream()
-                .filter(e -> userId.equals(e.get("userId")))
+        UserEmbeddingDto targetEntry = allEmbeddings.stream()
+                .filter(e -> e.userId() == userId)
                 .findFirst()
                 .orElseThrow(() -> new NotFoundException(
                         "No embedding found for user " + userId + " — run /api/graph/embeddings first"));
 
-        @SuppressWarnings("unchecked")
-        List<Double> targetVector = (List<Double>) targetEntry.get("embedding");
+        List<Double> targetVector = targetEntry.embedding();
 
         Set<Long> excludedIds = new HashSet<>();
         excludedIds.add(userId);
@@ -48,30 +49,19 @@ public class UserSimilarityService {
             }
         }
 
-        List<Map<String, Object>> scored = new ArrayList<>();
+        List<SimilarUserDto> scored = new ArrayList<>();
 
-        for (Map<String, Object> entry : allEmbeddings) {
-            Long candidateId = (Long) entry.get("userId");
+        for (UserEmbeddingDto entry : allEmbeddings) {
+            long candidateId = entry.userId();
             if (excludedIds.contains(candidateId)) {
                 continue;
             }
-
-            @SuppressWarnings("unchecked")
-            List<Double> candidateVector = (List<Double>) entry.get("embedding");
-
-            double similarity = cosineSimilarity(targetVector, candidateVector);
-
-            Map<String, Object> result = new HashMap<>();
-            result.put("userId", candidateId);
-            result.put("username", entry.get("username"));
-            result.put("similarityScore", similarity);
-            scored.add(result);
+            double similarity = cosineSimilarity(targetVector, entry.embedding());
+            scored.add(new SimilarUserDto(candidateId, entry.username(), similarity));
         }
 
         return scored.stream()
-                .sorted((a, b) -> Double.compare(
-                        (Double) b.get("similarityScore"),
-                        (Double) a.get("similarityScore")))
+                .sorted(Comparator.comparingDouble(SimilarUserDto::similarityScore).reversed())
                 .limit(topN)
                 .collect(Collectors.toList());
     }

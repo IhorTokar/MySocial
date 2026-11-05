@@ -2,12 +2,14 @@ package com.example.social.server.controller;
 
 import com.example.social.server.exception.NotFoundException;
 import com.example.social.server.service.*;
+import com.example.social.shared.dto.*;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -50,80 +52,80 @@ public class GraphController {
     }
 
     @PostMapping("/communities")
-    public ResponseEntity<?> detectCommunities() {
+    public ResponseEntity<CommunityDetectionResultDto> detectCommunities() {
         return ResponseEntity.ok(communityDetectionService.detectCommunities());
     }
 
     @GetMapping("/communities")
-    public ResponseEntity<?> getCommunities() {
+    public ResponseEntity<List<CommunityMemberDto>> getCommunities() {
         return ResponseEntity.ok(communityDetectionService.getCommunities());
     }
 
     @GetMapping("/recommendations/{userId}")
-    public ResponseEntity<?> getRecommendations(@PathVariable("userId") Long userId,
-                                                @RequestParam(value = "topN", defaultValue = "5") int topN,
-                                                @RequestParam(value = "excludeFollowed", defaultValue = "true") boolean excludeFollowed) {
+    public ResponseEntity<List<SimilarUserDto>> getRecommendations(@PathVariable("userId") Long userId,
+                                                                   @RequestParam(value = "topN", defaultValue = "5") int topN,
+                                                                   @RequestParam(value = "excludeFollowed", defaultValue = "true") boolean excludeFollowed) {
         return ResponseEntity.ok(userSimilarityService.getSimilarUsers(userId, topN, excludeFollowed));
     }
 
     @GetMapping("/communities/summary")
-    public ResponseEntity<?> getCommunitySummary() {
+    public ResponseEntity<CommunitySummaryDto> getCommunitySummary() {
         return ResponseEntity.ok(communityDetectionService.getCommunitySummary());
     }
 
     @PostMapping("/sync")
-    public ResponseEntity<?> sync() {
+    public ResponseEntity<GraphSyncResultDto> sync() {
         return ResponseEntity.ok(graphSyncService.syncAll());
     }
 
     @GetMapping("/stats")
-    public ResponseEntity<?> stats() {
+    public ResponseEntity<GraphStatsDto> stats() {
         return ResponseEntity.ok(graphSyncService.getGraphStats());
     }
 
     @PostMapping("/embeddings")
-    public ResponseEntity<?> generateEmbeddings(@RequestParam(value = "dimension", defaultValue = "16") int dimension) {
+    public ResponseEntity<EmbeddingResultDto> generateEmbeddings(@RequestParam(value = "dimension", defaultValue = "16") int dimension) {
         return ResponseEntity.ok(graphEmbeddingService.generateEmbeddings(dimension));
     }
 
     @GetMapping("/embeddings")
-    public ResponseEntity<?> getEmbeddings() {
+    public ResponseEntity<List<UserEmbeddingDto>> getEmbeddings() {
         return ResponseEntity.ok(graphEmbeddingService.getEmbeddings());
     }
 
     @GetMapping("/communities/analysis")
-    public ResponseEntity<?> analyzeCommunities(@RequestParam(defaultValue = "false") boolean leiden) {
+    public ResponseEntity<List<CommunityAnalysisDto>> analyzeCommunities(@RequestParam(defaultValue = "false") boolean leiden) {
         return ResponseEntity.ok(communityAnalysisService.analyzeCommunities(leiden));
     }
 
     @PostMapping("/communities/leiden")
-    public ResponseEntity<?> detectCommunitiesLeiden() {
+    public ResponseEntity<CommunityDetectionResultDto> detectCommunitiesLeiden() {
         return ResponseEntity.ok(communityDetectionService.detectCommunitiesLeiden());
     }
 
     @GetMapping("/communities/leiden")
-    public ResponseEntity<?> getCommunitiesLeiden() {
+    public ResponseEntity<List<CommunityMemberDto>> getCommunitiesLeiden() {
         return ResponseEntity.ok(communityDetectionService.getCommunitiesLeiden());
     }
 
     @GetMapping("/communities/leiden/summary")
-    public ResponseEntity<?> getCommunitySummaryLeiden() {
+    public ResponseEntity<CommunitySummaryDto> getCommunitySummaryLeiden() {
         return ResponseEntity.ok(communityDetectionService.getCommunitySummaryLeiden());
     }
 
     @GetMapping("/communities/connectivity")
-    public ResponseEntity<?> checkConnectivityLouvain() {
+    public ResponseEntity<List<CommunityConnectivityDto>> checkConnectivityLouvain() {
         return ResponseEntity.ok(communityDetectionService.checkConnectivityLouvain());
     }
 
     @GetMapping("/communities/leiden/connectivity")
-    public ResponseEntity<?> checkConnectivityLeiden() {
+    public ResponseEntity<List<CommunityConnectivityDto>> checkConnectivityLeiden() {
         return ResponseEntity.ok(communityDetectionService.checkConnectivityLeiden());
     }
 
     @GetMapping("/community/{userId}")
-    public ResponseEntity<?> getUserCommunity(@PathVariable("userId") Long userId,
-                                              @RequestParam(defaultValue = "false") boolean leiden) {
+    public ResponseEntity<CommunityAnalysisDto> getUserCommunity(@PathVariable("userId") Long userId,
+                                                                 @RequestParam(defaultValue = "false") boolean leiden) {
         return ResponseEntity.ok(communityAnalysisService.getCommunityForUser(userId, leiden)
                 .orElseThrow(() -> new NotFoundException(
                         "Спільнота ще не визначена або юзер поза значущою спільнотою")));

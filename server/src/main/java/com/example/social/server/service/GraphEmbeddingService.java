@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.example.social.shared.dto.EmbeddingResultDto;
+import com.example.social.shared.dto.UserEmbeddingDto;
 
 @Service
 public class GraphEmbeddingService {
@@ -25,7 +27,7 @@ public class GraphEmbeddingService {
         this.neo4jDriver = neo4jDriver;
     }
 
-    public Map<String, Object> generateEmbeddings(int embeddingDimension) {
+    public EmbeddingResultDto generateEmbeddings(int embeddingDimension) {
         try (Session session = neo4jDriver.session()) {
 
             // Прибрати попередню проекцію, якщо лишилась від минулого разу
@@ -45,7 +47,7 @@ public class GraphEmbeddingService {
             });
 
             // Запустити node2vec і записати ембединги назад як властивість вузлів
-            Map<String, Object> result = session.executeWrite(tx -> {
+            EmbeddingResultDto result = session.executeWrite(tx -> {
                 var res = tx.run(
                         "CALL gds.node2vec.write($name, { " +
                                 "  embeddingDimension: $dim, " +
@@ -54,10 +56,9 @@ public class GraphEmbeddingService {
                         Map.of("name", GRAPH_NAME, "dim", embeddingDimension)
                 );
                 Record record = res.single();
-                Map<String, Object> resultMap = new HashMap<>();
-                resultMap.put("nodeCount", record.get("nodeCount").asLong());
-                resultMap.put("nodePropertiesWritten", record.get("nodePropertiesWritten").asLong());
-                return resultMap;
+                return new EmbeddingResultDto(
+                        record.get("nodeCount").asLong(),
+                        record.get("nodePropertiesWritten").asLong());
             });
 
             // Прибрати проекцію з пам'яті після завершення (дані вже записані у вузли)
@@ -71,25 +72,24 @@ public class GraphEmbeddingService {
         }
     }
 
-    public List<Map<String, Object>> getEmbeddings() {
+    public List<UserEmbeddingDto> getEmbeddings() {
         try (Session session = neo4jDriver.session()) {
-            List<Map<String, Object>> result = session.executeRead(tx -> {
+            List<UserEmbeddingDto> result = session.executeRead(tx -> {
                 var res = tx.run(
                         "MATCH (u:User) WHERE u.embedding IS NOT NULL " +
                                 "RETURN u.userId AS userId, u.username AS username, u.embedding AS embedding"
                 );
-                List<Map<String, Object>> list = new ArrayList<>();
+                List<UserEmbeddingDto> list = new ArrayList<>();
                 for (Record record : res.list()) {
                     Value embeddingValue = record.get("embedding");
                     List<Double> embedding = new ArrayList<>();
                     for (Value v : embeddingValue.values()) {
                         embedding.add(v.asDouble());
                     }
-                    Map<String, Object> entry = new HashMap<>();
-                    entry.put("userId", record.get("userId").asLong());
-                    entry.put("username", record.get("username").asString());
-                    entry.put("embedding", embedding);
-                    list.add(entry);
+                    list.add(new UserEmbeddingDto(
+                            record.get("userId").asLong(),
+                            record.get("username").asString(),
+                            embedding));
                 }
                 return list;
             });

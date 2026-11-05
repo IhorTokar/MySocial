@@ -7,6 +7,7 @@ import com.example.social.server.entity.PostLike;
 import com.example.social.server.entity.Tag;
 import com.example.social.server.entity.User;
 import com.example.social.server.repository.*;
+import com.example.social.shared.dto.GraphSyncResultDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -115,7 +116,7 @@ public class TestDataService {
         }
 
         // 3. Синхронізувати оновлений граф у Neo4j
-        Map<String, Object> syncResult = graphSyncService.syncAll();
+        GraphSyncResultDto syncResult = graphSyncService.syncAll();
 
         Map<String, Object> summary = new java.util.HashMap<>();
         summary.put("usersCreated", createdUserIds.size());

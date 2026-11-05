@@ -9,6 +9,7 @@ import com.example.social.server.repository.PostEmbeddingRepository;
 import com.example.social.server.repository.PostRepository;
 import com.example.social.server.repository.UserRepository;
 import com.example.social.shared.dto.CommunityAnalysisDto;
+import com.example.social.shared.dto.CommunityMemberDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,7 @@ public class CommunityAnalysisService {
 
     @Transactional(readOnly = true)
     public List<CommunityAnalysisDto> analyzeCommunities(boolean useLeiden) {
-        List<Map<String, Object>> communityRows = useLeiden
+        List<CommunityMemberDto> communityRows = useLeiden
                 ? communityDetectionService.getCommunitiesLeiden()
                 : communityDetectionService.getCommunities();
         if (communityRows.isEmpty()) {
@@ -58,9 +59,9 @@ public class CommunityAnalysisService {
         }
 
         Map<Long, List<Long>> userIdsByCommunity = new HashMap<>();
-        for (Map<String, Object> row : communityRows) {
-            Long community = (Long) row.get("community");
-            Long userId = (Long) row.get("userId");
+        for (CommunityMemberDto row : communityRows) {
+            Long community = row.community();
+            Long userId = row.userId();
             userIdsByCommunity.computeIfAbsent(community, k -> new ArrayList<>()).add(userId);
         }
 
@@ -144,16 +145,16 @@ public class CommunityAnalysisService {
     /** Ехо-спільнота конкретного користувача, або Optional.empty(), якщо ще не визначена чи закоротка. */
     @Transactional(readOnly = true)
     public Optional<CommunityAnalysisDto> getCommunityForUser(Long userId, boolean useLeiden) {
-        List<Map<String, Object>> communityRows = useLeiden
+        List<CommunityMemberDto> communityRows = useLeiden
                 ? communityDetectionService.getCommunitiesLeiden()
                 : communityDetectionService.getCommunities();
 
         Map<Long, List<Long>> userIdsByCommunity = new HashMap<>();
         Long myCommunity = null;
 
-        for (Map<String, Object> row : communityRows) {
-            Long community = (Long) row.get("community");
-            Long rowUserId = (Long) row.get("userId");
+        for (CommunityMemberDto row : communityRows) {
+            Long community = row.community();
+            Long rowUserId = row.userId();
             userIdsByCommunity.computeIfAbsent(community, k -> new ArrayList<>()).add(rowUserId);
             if (rowUserId.equals(userId)) {
                 myCommunity = community;

@@ -11,6 +11,7 @@ public class SceneUtil {
     public static Scene create(Parent root, double width, double height) {
         Scene scene = new Scene(root, width, height);
         ThemeManager.getInstance().applyTo(scene);
+        ScreenshotUtil.install(scene);
         return scene;
     }
 }

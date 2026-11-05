@@ -4,6 +4,8 @@ import com.example.social.server.entity.Followers;
 import com.example.social.server.entity.User;
 import com.example.social.server.repository.FollowersRepository;
 import com.example.social.server.repository.UserRepository;
+import com.example.social.shared.dto.GraphStatsDto;
+import com.example.social.shared.dto.GraphSyncResultDto;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Session;
 import org.slf4j.Logger;
@@ -40,7 +42,7 @@ public class GraphSyncService {
      * підписка скасована) — це не чіпає властивості вузлів, що лишаються.
      */
     @Transactional(readOnly = true)
-    public Map<String, Object> syncAll() {
+    public GraphSyncResultDto syncAll() {
         List<User> users = userRepository.findAll();
         List<Followers> relations = followersRepository.findAll();
 
@@ -110,13 +112,10 @@ public class GraphSyncService {
 
         log.info("Graph sync completed (merge mode): {} users, {} follow relations", users.size(), relations.size());
 
-        return Map.of(
-                "syncedUsers", users.size(),
-                "syncedRelations", relations.size()
-        );
+        return new GraphSyncResultDto(users.size(), relations.size());
     }
 
-    public Map<String, Object> getGraphStats() {
+    public GraphStatsDto getGraphStats() {
         try (Session session = neo4jDriver.session()) {
             long nodeCount = session.executeRead(tx ->
                     tx.run("MATCH (u:User) RETURN count(u) AS c").single().get("c").asLong());
@@ -124,10 +123,7 @@ public class GraphSyncService {
             long relCount = session.executeRead(tx ->
                     tx.run("MATCH ()-[r:FOLLOWS]->() RETURN count(r) AS c").single().get("c").asLong());
 
-            return Map.of(
-                    "userNodes", nodeCount,
-                    "followRelations", relCount
-            );
+            return new GraphStatsDto(nodeCount, relCount);
         }
     }
 }

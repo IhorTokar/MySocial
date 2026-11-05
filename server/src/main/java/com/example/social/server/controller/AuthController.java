@@ -8,7 +8,9 @@ import com.example.social.server.repository.UserRepository;
 import com.example.social.server.security.JwtTokenProvider;
 import com.example.social.server.service.UserService;
 import com.example.social.shared.dto.LoginRequestDto;
+import com.example.social.shared.dto.LoginResponseDto;
 import com.example.social.shared.dto.RegisterRequestDto;
+import com.example.social.shared.dto.RegisterResponseDto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,7 +42,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequestDto request) {
+    public ResponseEntity<RegisterResponseDto> register(@Valid @RequestBody RegisterRequestDto request) {
         User user = userService.registerUser(
                 request.getUsername(),
                 request.getEmail(),
@@ -48,15 +50,11 @@ public class AuthController {
         );
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(Map.of(
-                        "userId", user.getUserId(),
-                        "username", user.getUsername(),
-                        "uid", user.getUid()
-                ));
+                .body(new RegisterResponseDto(user.getUserId(), user.getUsername(), user.getUid()));
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequestDto request) {
+    public ResponseEntity<LoginResponseDto> login(@Valid @RequestBody LoginRequestDto request) {
         User user = userRepository.findByUsername(request.getUsername())
                 .orElse(null);
 
@@ -73,11 +71,7 @@ public class AuthController {
 
         String token = jwtTokenProvider.generateToken(user.getUserId(), user.getUsername());
 
-        return ResponseEntity.ok(Map.of(
-                "token", token,
-                "userId", user.getUserId(),
-                "username", user.getUsername(),
-                "role", userPrivate.getRole().name()
-        ));
+        return ResponseEntity.ok(new LoginResponseDto(
+                token, user.getUserId(), user.getUsername(), userPrivate.getRole().name()));
     }
 }

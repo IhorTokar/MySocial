@@ -15,6 +15,7 @@ import com.example.social.server.repository.PostRepository;
 import com.example.social.server.repository.UserRepository;
 import com.example.social.shared.dto.PostResponseDto;
 import com.example.social.shared.dto.RecommendationDto;
+import com.example.social.shared.dto.SimilarUserDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -290,7 +291,7 @@ public class RecommendationService {
     }
 
     private Map<Long, Double> computeGraphSimilarityScores(Long currentUserId, User currentUser) {
-        List<Map<String, Object>> similarUsers;
+        List<SimilarUserDto> similarUsers;
         try {
             similarUsers = userSimilarityService.getSimilarUsers(currentUserId, SIMILAR_USERS_TOP_N, false);
         } catch (ApiException | IllegalArgumentException e) {
@@ -303,8 +304,8 @@ public class RecommendationService {
         }
 
         Map<Long, Double> similarityByUserId = new HashMap<>();
-        for (Map<String, Object> entry : similarUsers) {
-            similarityByUserId.put((Long) entry.get("userId"), (Double) entry.get("similarityScore"));
+        for (SimilarUserDto entry : similarUsers) {
+            similarityByUserId.put(entry.userId(), entry.similarityScore());
         }
 
         List<User> similarUserEntities = userRepository.findAllById(similarityByUserId.keySet());
