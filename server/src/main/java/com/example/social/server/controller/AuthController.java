@@ -2,6 +2,7 @@ package com.example.social.server.controller;
 
 import com.example.social.server.entity.User;
 import com.example.social.server.entity.UserPrivate;
+import com.example.social.server.exception.ForbiddenException;
 import com.example.social.server.exception.UnauthorizedException;
 import com.example.social.server.repository.UserPrivateRepository;
 import com.example.social.server.repository.UserRepository;
@@ -65,11 +66,13 @@ public class AuthController {
         UserPrivate userPrivate = userPrivateRepository.findByUser(user)
                 .orElse(null);
 
-        if (userPrivate == null || !passwordEncoder.matches(request.getPassword(), userPrivate.getPasswordHash())) {
-            throw new UnauthorizedException("Invalid username or password");
+        if (userPrivate.isBlocked()) {
+            String reason = userPrivate.getBlockedReason();
+            throw new ForbiddenException(reason == null ? "Акаунт заблоковано" : "Акаунт заблоковано: " + reason);
         }
 
-        String token = jwtTokenProvider.generateToken(user.getUserId(), user.getUsername());
+        String token = jwtTokenProvider.generateToken(
+                user.getUserId(), user.getUsername(), userPrivate.getTokenVersion());
 
         return ResponseEntity.ok(new LoginResponseDto(
                 token, user.getUserId(), user.getUsername(), userPrivate.getRole().name()));

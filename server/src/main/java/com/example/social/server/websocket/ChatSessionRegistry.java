@@ -3,6 +3,7 @@ package com.example.social.server.websocket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
@@ -28,6 +29,21 @@ public class ChatSessionRegistry {
             set.remove(session);
             return set.isEmpty() ? null : set;
         });
+    }
+
+    /** Закриває всі відкриті з'єднання користувача (після блокування або скидання пароля). */
+    public void closeAll(Long userId) {
+        Set<WebSocketSession> userSessions = sessions.remove(userId);
+        if (userSessions == null) {
+            return;
+        }
+        for (WebSocketSession session : userSessions) {
+            try {
+                session.close(CloseStatus.POLICY_VIOLATION);
+            } catch (IOException e) {
+                log.warn("Failed to close WebSocket session {}: {}", session.getId(), e.getMessage());
+            }
+        }
     }
 
     public void sendToUser(Long userId, String payload) {

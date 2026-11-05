@@ -13,6 +13,9 @@ import java.util.Date;
 @Component
 public class JwtTokenProvider {
 
+    /** Назва claim'а з версією токенів користувача. */
+    public static final String TOKEN_VERSION_CLAIM = "ver";
+
     private final SecretKey key;
     private final long expirationMs;
 
@@ -27,19 +30,21 @@ public class JwtTokenProvider {
         this.expirationMs = expirationMs;
     }
 
-    public String generateToken(Long userId, String username) {
+    public String generateToken(Long userId, String username, int tokenVersion) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + expirationMs);
 
         return Jwts.builder()
                 .subject(username)
                 .claim("userId", userId)
+                .claim(TOKEN_VERSION_CLAIM, tokenVersion)
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(key)
                 .compact();
     }
 
+    /** Перевіряє підпис і строк дії; при недійсному токені кидає JwtException. */
     public Claims parseClaims(String token) {
         return Jwts.parser()
                 .verifyWith(key)
@@ -63,5 +68,11 @@ public class JwtTokenProvider {
 
     public Long getUserId(String token) {
         return parseClaims(token).get("userId", Long.class);
+    }
+
+    /** Версія токенів із claim'ів; токени, видані до появи версій, вважаються версією 0. */
+    public static int tokenVersion(Claims claims) {
+        Integer version = claims.get(TOKEN_VERSION_CLAIM, Integer.class);
+        return version == null ? 0 : version;
     }
 }

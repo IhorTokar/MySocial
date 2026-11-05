@@ -5,21 +5,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.6.2">
-      <change afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/AdminController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/AdminAuditLog.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/AuditAction.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/RecommendationWeightsVersion.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/AdminAuditLogRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/RecommendationWeightsRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/AuditService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/RecommendationWeightsService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/resources/db/migration/migration/V5__admin_weights_and_audit.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/AuditLogEntryDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/RecommendationWeightsDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/WeightsUpdateRequestDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/security/AuthState.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/AdminContentService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/AdminUserService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/src/main/resources/db/migration/migration/V6__user_blocking_and_token_version.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/AdminCommentDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/AdminPasswordResetDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/AdminProfileUpdateDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/AdminUserDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/BlockUserRequestDto.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/ChangeRoleRequestDto.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/RecommendationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/RecommendationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/AdminController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/AdminController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/AuthController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/UserPrivate.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/UserPrivate.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/CommentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/CommentRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/UserPrivateRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/UserPrivateRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/security/JwtAuthFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/security/JwtAuthFilter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/security/JwtTokenProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/security/JwtTokenProvider.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/websocket/ChatSessionRegistry.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/websocket/ChatSessionRegistry.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/websocket/JwtHandshakeInterceptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/websocket/JwtHandshakeInterceptor.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -239,6 +244,16 @@
           <url>file://$PROJECT_DIR$/src/main/java/org/example/Main.java</url>
           <line>13</line>
           <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/UserPrivate.java</url>
+          <line>106</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="java-line">
+          <url>file://$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/CommentRepository.java</url>
+          <line>25</line>
+          <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

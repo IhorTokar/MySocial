@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "user_private")
@@ -34,6 +35,18 @@ public class UserPrivate {
 
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
+
+    @Column(nullable = false)
+    private boolean blocked = false;
+
+    @Column(name = "blocked_reason", length = 255)
+    private String blockedReason;
+
+    @Column(name = "blocked_at")
+    private LocalDateTime blockedAt;
+
+    @Column(name = "token_version", nullable = false)
+    private int tokenVersion = 0;
 
     // ===== Геттери / сеттери =====
 
@@ -91,5 +104,38 @@ public class UserPrivate {
 
     public void setDateOfBirth(LocalDate dateOfBirth) {
         this.dateOfBirth = dateOfBirth;
+    }
+
+    public boolean isBlocked() {
+        return blocked;
+    }
+
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
+    }
+
+    public String getBlockedReason() {
+        return blockedReason;
+    }
+
+    public void setBlockedReason(String blockedReason) {
+        this.blockedReason = blockedReason;
+    }
+
+    public LocalDateTime getBlockedAt() {
+        return blockedAt;
+    }
+
+    public void setBlockedAt(LocalDateTime blockedAt) {
+        this.blockedAt = blockedAt;
+    }
+
+    public int getTokenVersion() {
+        return tokenVersion;
+    }
+
+    /** Робить недійсними всі раніше видані JWT цього користувача. */
+    public void incrementTokenVersion() {
+        this.tokenVersion++;
     }
 }

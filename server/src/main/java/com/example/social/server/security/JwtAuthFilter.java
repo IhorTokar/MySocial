@@ -1,7 +1,8 @@
 package com.example.social.server.security;
 
-import com.example.social.server.entity.UserRole;
 import com.example.social.server.repository.UserPrivateRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,34 +37,42 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
-
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-
-            if (jwtTokenProvider.isValid(token)) {
-                String username = jwtTokenProvider.getUsername(token);
-                Long userId = jwtTokenProvider.getUserId(token);
-
-                // Роль читається з бази при кожному запиті, а не з токена:
-                // так зміна ролі адміністратором діє одразу, без повторного входу.
-                Optional<UserRole> role = userPrivateRepository.findRoleByUserId(userId);
-
-                // Акаунт видалено — токен більше нічого не дає
-                if (role.isPresent()) {
-                    AuthenticatedUser principal = new AuthenticatedUser(userId, username, role.get());
-
-                    // Spring Security очікує права у форматі ROLE_ADMIN / ROLE_USER
-                    var authorities = List.of(
-                            new SimpleGrantedAuthority("ROLE_" + role.get().name().toUpperCase()));
-
-                    UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(principal, null, authorities);
-
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                }
-            }
+            authenticate(authHeader.substring(7));
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    /**
+     * Якщо токен дійсний, а користувач не заблокований і версія токена збігається з поточною,
+     * кладе користувача в SecurityContext. Інакше запит іде далі як анонімний і отримає 403.
+     */
+    private void authenticate(String token) {
+        Claims claims;
+        try {
+            claims = jwtTokenProvider.parseClaims(token);   // токен розбирається один раз
+        } catch (JwtException | IllegalArgumentException e) {
+            return;
+        }
+
+        Long userId = claims.get("userId", Long.class);
+        if (userId == null) {
+            return;
+        }
+
+        // Стан читається з бази при кожному запиті: зміна ролі, блокування
+        // і скидання пароля адміністратором діють одразу, без повторного входу.
+        Optional<AuthState> state = userPrivateRepository.findAuthStateByUserId(userId);
+        if (state.isEmpty() || !state.get().allows(JwtTokenProvider.tokenVersion(claims))) {
+            return;
+        }
+
+        AuthenticatedUser principal = new AuthenticatedUser(userId, claims.getSubject(), state.get().role());
+        var authorities = List.of(
+                new SimpleGrantedAuthority("ROLE_" + state.get().role().name().toUpperCase()));
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(principal, null, authorities));
     }
 }
