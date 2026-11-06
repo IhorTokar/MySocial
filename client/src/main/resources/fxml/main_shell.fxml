@@ -59,6 +59,13 @@
                 </graphic>
             </Button>
 
+            <Button fx:id="navAdminButton" onAction="#handleShowAdmin" styleClass="nav-link"
+                    contentDisplay="LEFT" graphicTextGap="10.0" text="Адмін" visible="false" managed="false">
+                <graphic>
+                    <FontIcon iconLiteral="fas-shield-alt" />
+                </graphic>
+            </Button>
+
             <Button fx:id="navSettingsButton" onAction="#handleShowSettings" styleClass="nav-link"
                     contentDisplay="LEFT" graphicTextGap="10.0" text="Налаштування">
                 <graphic>

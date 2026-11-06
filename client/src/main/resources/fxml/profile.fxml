@@ -33,6 +33,7 @@
                 <VBox spacing="4.0" HBox.hgrow="ALWAYS">
                     <Label fx:id="displayNameLabel" styleClass="title-label" />
                     <Label fx:id="usernameHandleLabel" styleClass="secondary-label" />
+                    <Label fx:id="userIdLabel" />
                 </VBox>
 
                 <Button fx:id="followButton" text="Підписатись" styleClass="button, button-primary"

@@ -24,6 +24,8 @@ public class MainShellController {
     private Label unreadBadge;
     @FXML
     private javafx.scene.control.TextField searchField;
+    @FXML
+    private javafx.scene.control.Button navAdminButton;
 
     private ChatConnection.Listener badgeListener;
 
@@ -52,6 +54,10 @@ public class MainShellController {
         chat.addListener(badgeListener);
 
         counter.refresh();
+        // Пункт «Адмін» бачить лише адміністратор (доступ однаково перевіряє сервер)
+        boolean admin = SessionManager.getInstance().isAdmin();
+        navAdminButton.setVisible(admin);
+        navAdminButton.setManaged(admin);
         showFeed();
     }
 
@@ -176,6 +182,18 @@ public class MainShellController {
     @FXML
     private void handleShowSettings() {
         showSettings();
+    }
+
+    public void showAdmin() {
+        AdminPanelController controller = loadIntoContent("/fxml/admin.fxml");
+        if (controller != null) {
+            controller.setShell(this);
+        }
+    }
+
+    @FXML
+    private void handleShowAdmin() {
+        showAdmin();
     }
 
 }

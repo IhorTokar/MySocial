@@ -53,6 +53,8 @@ public class SettingsController {
     @FXML private ColorPicker customBgPicker;
     @FXML private ColorPicker customAccentPicker;
     @FXML private ColorPicker customTextPicker;
+    @FXML private VBox adminCard;
+    @FXML private CheckBox showIdsCheckBox;
 
     private final AppSettings appSettings = AppSettings.getInstance();
     private boolean suppressSizeSync;
@@ -65,6 +67,19 @@ public class SettingsController {
     private void initialize() {
         bindSizeControls();
         bindThemeControls();
+        bindAdminControls();
+    }
+
+    /** Блок «Адміністрування» бачить лише адмін. */
+    private void bindAdminControls() {
+        boolean admin = SessionManager.getInstance().isAdmin();
+        adminCard.setVisible(admin);
+        adminCard.setManaged(admin);
+        if (!admin) {
+            return;
+        }
+        showIdsCheckBox.setSelected(appSettings.showIdsProperty().get());
+        showIdsCheckBox.selectedProperty().addListener((obs, old, value) -> appSettings.setShowIds(value));
     }
 
     private void bindSizeControls() {

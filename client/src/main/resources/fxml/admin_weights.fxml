@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane fitToWidth="true" styleClass="settings-scroll"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.social.client.controller.AdminWeightsController">
+    <content>
+        <VBox spacing="16.0">
+            <padding>
+                <Insets top="16.0" right="4.0" bottom="16.0" left="4.0" />
+            </padding>
+
+            <VBox styleClass="post-card" spacing="12.0">
+                <Label text="Чинні ваги гібридної стрічки" styleClass="post-title" />
+                <Label fx:id="currentVersionLabel" styleClass="secondary-label" wrapText="true" />
+
+                <GridPane fx:id="weightsGrid" hgap="12.0" vgap="10.0" />
+
+                <HBox spacing="12.0" alignment="CENTER_LEFT">
+                    <Label fx:id="sumLabel" />
+                    <Button fx:id="normalizeButton" text="Нормалізувати до 1" onAction="#handleNormalize"
+                            styleClass="button, button-secondary" />
+                </HBox>
+
+                <TextField fx:id="commentField" promptText="Коментар до зміни (необов'язково)" styleClass="text-field" />
+
+                <HBox spacing="8.0" alignment="CENTER_LEFT">
+                    <Button fx:id="saveButton" text="Зберегти нову версію" onAction="#handleSave"
+                            styleClass="button, button-primary" />
+                    <Button fx:id="resetButton" text="Скасувати зміни" onAction="#handleReset"
+                            styleClass="button, button-secondary" />
+                </HBox>
+                <Label fx:id="statusLabel" wrapText="true" />
+            </VBox>
+
+            <VBox styleClass="post-card" spacing="10.0">
+                <Label text="Історія змін" styleClass="post-title" />
+                <TableView fx:id="historyTable" prefHeight="280.0" />
+                <HBox spacing="8.0" alignment="CENTER_LEFT">
+                    <Button fx:id="restoreButton" text="Відновити вибрану версію" onAction="#handleRestore"
+                            styleClass="button, button-secondary" />
+                    <Button text="Оновити" onAction="#handleRefresh" styleClass="button, button-secondary" />
+                </HBox>
+            </VBox>
+        </VBox>
+    </content>
+</ScrollPane>

@@ -6,6 +6,7 @@ import com.example.social.client.service.FollowApiService;
 import com.example.social.client.service.PostApiService;
 import com.example.social.client.service.UserApiService;
 import com.example.social.client.util.AvatarUtil;
+import com.example.social.client.util.IdBadge;
 import com.example.social.client.util.SceneUtil;
 import com.example.social.client.util.SessionManager;
 import javafx.application.Platform;
@@ -21,6 +22,7 @@ public class ProfileController {
     @FXML private StackPane avatarContainer;
     private UserApiService.UserProfile currentProfile;
     @FXML private Label displayNameLabel;
+    @FXML private Label userIdLabel;
     @FXML private Label usernameHandleLabel;
     @FXML private Label aboutMeLabel;
     @FXML private Label postsCountLabel;
@@ -50,6 +52,10 @@ public class ProfileController {
 
     private Long profileUserId;
     private boolean isFollowing;
+    @FXML
+    private void initialize() {
+        IdBadge.configure(userIdLabel);
+    }
 
     public void setShell(MainShellController shell) {
         this.shell = shell;
@@ -121,6 +127,7 @@ public class ProfileController {
     public void applyProfile(UserApiService.UserProfile profile) {
         displayNameLabel.setText(profile.displayNameOrUsername());
         usernameHandleLabel.setText("@" + profile.username());
+        IdBadge.set(userIdLabel, "ID " + profile.userId(), profile.userId());
         aboutMeLabel.setText(profile.aboutMe() != null && !profile.aboutMe().isBlank()
                 ? profile.aboutMe() : "Опис профілю відсутній");
 

@@ -4,27 +4,34 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.6.2">
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/security/AuthState.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/AdminContentService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/AdminUserService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/resources/db/migration/migration/V6__user_blocking_and_token_version.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/AdminCommentDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/AdminPasswordResetDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/AdminProfileUpdateDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/AdminUserDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/BlockUserRequestDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/ChangeRoleRequestDto.java" afterDir="false" />
+    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.6.4">
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminAuditController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminPanelController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminWeightsController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/AdminApiService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AdminFormat.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/CopyOnClick.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/IdBadge.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/TableColumns.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/admin.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/admin_audit.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/admin_weights.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/AdminController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/AdminController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/AuthController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/AuthController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/UserPrivate.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/UserPrivate.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/CommentRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/CommentRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/UserPrivateRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/UserPrivateRepository.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/security/JwtAuthFilter.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/security/JwtAuthFilter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/security/JwtTokenProvider.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/security/JwtTokenProvider.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/websocket/ChatSessionRegistry.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/websocket/ChatSessionRegistry.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/websocket/JwtHandshakeInterceptor.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/websocket/JwtHandshakeInterceptor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/client/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/CommentThreadPane.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/CommentThreadPane.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/PostListCell.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/PostListCell.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/LoginController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/MainShellController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/MainShellController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ProfileController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/SettingsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/SettingsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/ApiClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/ApiClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/AuthApiService.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/AuthApiService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AppSettings.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AppSettings.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/SessionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/SessionManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/main_shell.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/main_shell.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/profile.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/profile.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/settings.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/settings.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -235,7 +242,8 @@
     <MESSAGE value="update 2.6" />
     <MESSAGE value="update 2.6.1" />
     <MESSAGE value="update 2.6.2" />
-    <option name="LAST_COMMIT_MESSAGE" value="update 2.6.2" />
+    <MESSAGE value="update 2.6.4" />
+    <option name="LAST_COMMIT_MESSAGE" value="update 2.6.4" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

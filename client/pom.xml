@@ -76,6 +76,13 @@
             <version>${jackson.version}</version>
         </dependency>
 
+        <!-- LocalDateTime у DTO з модуля shared (дати змін ваг, записів журналу) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+            <version>${jackson.version}</version>
+        </dependency>
+
         <!-- WebSocket-клієнт для чату -->
         <dependency>
             <groupId>org.java-websocket</groupId>

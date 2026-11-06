@@ -53,7 +53,7 @@ public class LoginController {
 
                     if (result.success()) {
                         SessionManager.getInstance().setSession(
-                                result.token(), result.userId(), result.username());
+                                result.token(), result.userId(), result.username(), result.role());
                         goToFeed();
                     } else {
                         errorLabel.setText(result.errorMessage());

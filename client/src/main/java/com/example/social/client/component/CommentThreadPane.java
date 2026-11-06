@@ -3,6 +3,7 @@ package com.example.social.client.component;
 import com.example.social.client.service.ApiClient;
 import com.example.social.client.service.CommentApiService;
 import com.example.social.client.util.AvatarUtil;
+import com.example.social.client.util.IdBadge;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -216,7 +217,10 @@ public class CommentThreadPane extends VBox {
         Label timeLabel = new Label(formatDate(comment.createdAt()));
         timeLabel.getStyleClass().add("post-date");
 
-        HBox header = new HBox(8, avatar, nameLabel, timeLabel);
+        Label idBadge = IdBadge.create();
+        IdBadge.set(idBadge, "коментар #" + comment.commentId(), comment.commentId());
+
+        HBox header = new HBox(8, avatar, nameLabel, timeLabel, idBadge);
         header.setAlignment(Pos.CENTER_LEFT);
 
         Label textLabel = new Label(comment.text());

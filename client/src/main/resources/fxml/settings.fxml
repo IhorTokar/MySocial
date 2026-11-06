@@ -13,6 +13,7 @@
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.control.RadioButton?>
 <?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.CheckBox?>
 <ScrollPane fitToWidth="true" styleClass="settings-scroll"
             xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -24,6 +25,13 @@
             </padding>
 
             <Label text="Налаштування" styleClass="title-label" />
+
+            <VBox fx:id="adminCard" styleClass="post-card" spacing="10.0" visible="false" managed="false">
+                <Label text="Адміністрування" styleClass="post-title" />
+                <CheckBox fx:id="showIdsCheckBox" text="Показувати ID постів, користувачів і коментарів" />
+                <Label text="Клік по ID копіює його в буфер обміну — зручно для пошуку в адмін-панелі."
+                       wrapText="true" styleClass="secondary-label" />
+            </VBox>
 
             <VBox styleClass="post-card" spacing="10.0">
                 <Label text="Тема оформлення" styleClass="post-title" />

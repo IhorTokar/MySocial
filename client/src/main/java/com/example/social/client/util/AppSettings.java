@@ -2,6 +2,8 @@ package com.example.social.client.util;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -24,7 +26,7 @@ public class AppSettings {
 
     private static final String KEY_CARD_WIDTH = "post.cardWidth";
     private static final String KEY_IMAGE_HEIGHT = "post.imageHeight";
-
+    private static final String KEY_SHOW_IDS = "admin.showIds";
     public enum SizePreset {
         SMALL(1, "Малий", 460, 280),
         NORMAL(2, "Нормальний", 640, 520),
@@ -59,6 +61,8 @@ public class AppSettings {
     private final Path settingsFile;
     private final DoubleProperty cardWidth = new SimpleDoubleProperty(DEFAULT_CARD_WIDTH);
     private final DoubleProperty imageHeight = new SimpleDoubleProperty(DEFAULT_IMAGE_HEIGHT);
+    /** Показувати адміністратору ID постів, користувачів і коментарів. */
+    private final BooleanProperty showIds = new SimpleBooleanProperty(true);
 
     private AppSettings() {
         settingsFile = Path.of(System.getProperty("user.home"), ".socialapp", "settings.properties");
@@ -71,6 +75,15 @@ public class AppSettings {
 
     public DoubleProperty imageHeightProperty() {
         return imageHeight;
+    }
+
+    public BooleanProperty showIdsProperty() {
+        return showIds;
+    }
+
+    public void setShowIds(boolean value) {
+        showIds.set(value);
+        save();
     }
 
     public void setCardWidth(double value) {
@@ -120,6 +133,7 @@ public class AppSettings {
             imageHeight.set(clamp(
                     parseOrDefault(props.getProperty(KEY_IMAGE_HEIGHT), DEFAULT_IMAGE_HEIGHT),
                     MIN_IMAGE_HEIGHT, MAX_IMAGE_HEIGHT));
+            showIds.set(Boolean.parseBoolean(props.getProperty(KEY_SHOW_IDS, "true")));
         } catch (IOException ignored) {
             // якщо файл пошкоджено — просто лишаємось на значеннях за замовчуванням
         }
@@ -135,6 +149,7 @@ public class AppSettings {
         Properties props = new Properties();
         props.setProperty(KEY_CARD_WIDTH, String.valueOf(cardWidth.get()));
         props.setProperty(KEY_IMAGE_HEIGHT, String.valueOf(imageHeight.get()));
+        props.setProperty(KEY_SHOW_IDS, String.valueOf(showIds.get()));
 
         try (OutputStream out = Files.newOutputStream(settingsFile)) {
             props.store(out, "Social Network client settings");

@@ -27,7 +27,8 @@ public class AuthApiService {
         return LoginResult.ok(
                 node.get("token").asText(),
                 node.get("userId").asLong(),
-                node.get("username").asText()
+                node.get("username").asText(),
+                node.path("role").asText("user")
         );
     }
 
@@ -46,13 +47,14 @@ public class AuthApiService {
     }
 
 
-    public record LoginResult(boolean success, String token, Long userId, String username, String errorMessage) {
-        public static LoginResult ok(String token, Long userId, String username) {
-            return new LoginResult(true, token, userId, username, null);
+    public record LoginResult(boolean success, String token, Long userId, String username, String role,
+                              String errorMessage) {
+        public static LoginResult ok(String token, Long userId, String username, String role) {
+            return new LoginResult(true, token, userId, username, role, null);
         }
 
         public static LoginResult fail(String errorMessage) {
-            return new LoginResult(false, null, null, null, errorMessage);
+            return new LoginResult(false, null, null, null, null, errorMessage);
         }
     }
 

@@ -4,9 +4,7 @@ import com.example.social.client.service.ApiClient;
 import com.example.social.client.service.LikeApiService;
 import com.example.social.client.service.PostApiService;
 import com.example.social.client.service.SavePostApiService;
-import com.example.social.client.util.AppSettings;
-import com.example.social.client.util.AvatarUtil;
-import com.example.social.client.util.SessionManager;
+import com.example.social.client.util.*;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
@@ -63,6 +61,8 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
     private final Label handleLabel = new Label();
     private final Label dotLabel = new Label("·");
     private final Label dateLabel = new Label();
+    private final Label postIdBadge = IdBadge.create();
+    private final Label authorIdBadge = IdBadge.create();
     private final Button moreButton = new Button("⋯");
     private final ContextMenu moreMenu = new ContextMenu();
     private final MenuItem editItem = new MenuItem("Редагувати");
@@ -121,7 +121,7 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
         dotLabel.getStyleClass().add("post-date");
         dateLabel.getStyleClass().add("post-date");
 
-        HBox nameRow = new HBox(6, nameLabel, handleLabel, dotLabel, dateLabel);
+        HBox nameRow = new HBox(6, nameLabel, handleLabel, dotLabel, dateLabel, postIdBadge, authorIdBadge);
         nameRow.setAlignment(Pos.CENTER_LEFT);
 
         moreButton.getStyleClass().add("action-button");
@@ -210,6 +210,8 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
         nameLabel.setText(post.authorNameOrUsername());
         handleLabel.setText("@" + post.authorUsername());
         dateLabel.setText(formatDate(post.createdDate()));
+        IdBadge.set(postIdBadge, "пост #" + post.postId(), post.postId());
+        IdBadge.set(authorIdBadge, "автор #" + post.authorId(), post.authorId());
 
         boolean isOwner = post.authorId() != null
                 && post.authorId().equals(SessionManager.getInstance().getUserId());
@@ -240,6 +242,8 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
         for (String tag : post.tags()) {
             Label tagLabel = new Label("#" + tag);
             tagLabel.getStyleClass().add("post-tag");
+            CopyOnClick.install(tagLabel, "Натисніть, щоб скопіювати тег");
+            CopyOnClick.setValue(tagLabel, "#" + tag);
             tagsPane.getChildren().add(tagLabel);
         }
         show(tagsPane, !post.tags().isEmpty());
