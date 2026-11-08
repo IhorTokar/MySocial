@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox spacing="10.0"
+      xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.example.social.client.controller.AdminGraphController">
+    <padding>
+        <Insets top="16.0" right="4.0" bottom="8.0" left="4.0" />
+    </padding>
+
+    <HBox spacing="8.0" alignment="CENTER_LEFT">
+        <ComboBox fx:id="algorithmCombo" prefWidth="120.0" />
+        <CheckBox fx:id="labelsCheck" text="Імена" />
+        <TextField fx:id="findField" promptText="Знайти: ID або ім'я" prefColumnCount="14"
+                   onAction="#handleFind" styleClass="text-field" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button text="Вмістити" onAction="#handleFit" styleClass="button, button-secondary" />
+        <Button text="Інша розкладка" onAction="#handleRelayout" styleClass="button, button-secondary" />
+        <Button text="Оновити" onAction="#handleReload" styleClass="button, button-secondary" />
+    </HBox>
+
+    <FlowPane fx:id="legendPane" hgap="6.0" vgap="6.0" />
+
+    <StackPane fx:id="graphHolder" VBox.vgrow="ALWAYS" minHeight="320.0" />
+
+    <HBox fx:id="infoBox" spacing="12.0" alignment="CENTER_LEFT" styleClass="post-card" visible="false" managed="false">
+        <Label fx:id="infoLabel" wrapText="true" HBox.hgrow="ALWAYS" />
+        <Button text="Керувати користувачем" onAction="#handleOpenUser" styleClass="button, button-primary" />
+    </HBox>
+
+    <HBox spacing="8.0" alignment="CENTER_LEFT">
+        <Label fx:id="statusLabel" styleClass="secondary-label" HBox.hgrow="ALWAYS" maxWidth="Infinity" />
+        <Button text="Синхронізувати з БД" onAction="#handleSync" styleClass="button, button-secondary" />
+        <Button text="Перерахувати спільноти" onAction="#handleDetect" styleClass="button, button-secondary" />
+    </HBox>
+</VBox>

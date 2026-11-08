@@ -27,6 +27,15 @@ public class SentimentService {
 
     private static final Pattern WORD_SPLIT = Pattern.compile("[^а-щьюяіїєґ']+", Pattern.CASE_INSENSITIVE);
 
+    /** Джерела значення — зберігаються в posts.sentiment_source. */
+    public static final String SOURCE_MODEL = "model";
+    public static final String SOURCE_LEXICON = "lexicon";
+    public static final String SOURCE_EMPTY = "empty";
+
+    /** Тональність разом з тим, як її отримано. */
+    public record Result(double value, String source) {
+    }
+
     private final SentimentApiService sentimentApiService;
 
     public SentimentService(SentimentApiService sentimentApiService) {
@@ -39,13 +48,21 @@ public class SentimentService {
      * лексиконного підрахунку, щоб аналіз спільнот не падав повністю.
      */
     public double analyze(String text) {
+        return analyzeWithSource(text).value();
+    }
+
+    /** Те саме, що analyze(), але з позначкою джерела — для збереження в БД. */
+    public Result analyzeWithSource(String text) {
+        if (text == null || text.isBlank()) {
+            return new Result(0.0, SOURCE_EMPTY);
+        }
         Double mlResult = sentimentApiService.analyze(text);
         if (mlResult != null) {
-            return mlResult;
+            return new Result(mlResult, SOURCE_MODEL);
         }
 
         log.debug("Falling back to lexicon-based sentiment for text");
-        return analyzeLexicon(text);
+        return new Result(analyzeLexicon(text), SOURCE_LEXICON);
     }
 
     private double analyzeLexicon(String text) {

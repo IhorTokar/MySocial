@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane fitToWidth="true" styleClass="settings-scroll"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.social.client.controller.AdminContentController">
+    <content>
+        <VBox spacing="16.0">
+            <padding>
+                <Insets top="16.0" right="4.0" bottom="16.0" left="4.0" />
+            </padding>
+
+            <!-- ===== Пост ===== -->
+            <VBox styleClass="post-card" spacing="10.0">
+                <Label text="Пост за ID" styleClass="post-title" />
+                <HBox spacing="8.0" alignment="CENTER_LEFT">
+                    <TextField fx:id="postIdField" promptText="ID поста" prefColumnCount="10"
+                               onAction="#handleFindPost" styleClass="text-field" />
+                    <Button text="Знайти" onAction="#handleFindPost" styleClass="button, button-primary" />
+                </HBox>
+
+                <VBox fx:id="postBox" spacing="8.0" visible="false" managed="false">
+                    <Label fx:id="postMetaLabel" wrapText="true" styleClass="secondary-label" />
+                    <Label fx:id="postTextLabel" wrapText="true" styleClass="post-text" />
+                    <Label fx:id="postTagsLabel" wrapText="true" styleClass="post-tag" />
+                    <HBox spacing="8.0" alignment="CENTER_LEFT">
+                        <TextField fx:id="postReasonField" promptText="Причина видалення (потрапить у журнал)"
+                                   HBox.hgrow="ALWAYS" styleClass="text-field" />
+                        <Button fx:id="deletePostButton" text="Видалити пост" onAction="#handleDeletePost"
+                                styleClass="button, button-danger" />
+                    </HBox>
+                    <Button text="Керувати автором" onAction="#handleOpenPostAuthor"
+                            styleClass="button, button-secondary" />
+                </VBox>
+                <Label fx:id="postStatusLabel" wrapText="true" />
+            </VBox>
+
+            <!-- ===== Коментар ===== -->
+            <VBox styleClass="post-card" spacing="10.0">
+                <Label text="Коментар за ID" styleClass="post-title" />
+                <HBox spacing="8.0" alignment="CENTER_LEFT">
+                    <TextField fx:id="commentIdField" promptText="ID коментаря" prefColumnCount="10"
+                               onAction="#handleFindComment" styleClass="text-field" />
+                    <Button text="Знайти" onAction="#handleFindComment" styleClass="button, button-primary" />
+                </HBox>
+
+                <VBox fx:id="commentBox" spacing="8.0" visible="false" managed="false">
+                    <Label fx:id="commentMetaLabel" wrapText="true" styleClass="secondary-label" />
+                    <Label fx:id="commentTextLabel" wrapText="true" styleClass="post-text" />
+                    <HBox spacing="8.0" alignment="CENTER_LEFT">
+                        <TextField fx:id="commentReasonField" promptText="Причина видалення (потрапить у журнал)"
+                                   HBox.hgrow="ALWAYS" styleClass="text-field" />
+                        <Button fx:id="deleteCommentButton" text="Видалити коментар" onAction="#handleDeleteComment"
+                                styleClass="button, button-danger" />
+                    </HBox>
+                    <HBox spacing="8.0">
+                        <Button text="Керувати автором" onAction="#handleOpenCommentAuthor"
+                                styleClass="button, button-secondary" />
+                        <Button text="Показати пост" onAction="#handleShowCommentPost"
+                                styleClass="button, button-secondary" />
+                    </HBox>
+                </VBox>
+                <Label fx:id="commentStatusLabel" wrapText="true" />
+            </VBox>
+        </VBox>
+    </content>
+</ScrollPane>

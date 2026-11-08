@@ -38,6 +38,7 @@ public class PostService {
     private final PostLikeRepository postLikeRepository;
     private final CommentRepository commentRepository;
     private final SavedPostRepository savedPostRepository;
+    private final PostSentimentService postSentimentService;
 
     public PostService(PostRepository postRepository,
                        UserRepository userRepository,
@@ -47,7 +48,8 @@ public class PostService {
                        PostEmbeddingRepository postEmbeddingRepository,
                        PostLikeRepository postLikeRepository,
                        CommentRepository commentRepository,
-                       SavedPostRepository savedPostRepository) {
+                       SavedPostRepository savedPostRepository,
+                       PostSentimentService postSentimentService) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.tagRepository = tagRepository;
@@ -57,6 +59,7 @@ public class PostService {
         this.postLikeRepository = postLikeRepository;
         this.commentRepository = commentRepository;
         this.savedPostRepository = savedPostRepository;
+        this.postSentimentService = postSentimentService;
     }
 
     @Transactional
@@ -73,6 +76,8 @@ public class PostService {
         if (dto.getTags() != null && !dto.getTags().isEmpty()) {
             post.setTags(resolveTags(dto.getTags()));
         }
+        // Тональність рахується один раз тут, а не при кожному аналізі спільнот
+        postSentimentService.apply(post);
 
         Post saved = postRepository.save(post);
 
@@ -219,8 +224,9 @@ public class PostService {
         if (dto.getLabel() != null) {
             post.setLabel(dto.getLabel());
         }
-        if (dto.getText() != null && !dto.getText().isBlank()) {
+        if (dto.getText() != null && !dto.getText().isBlank() && !dto.getText().equals(post.getText())) {
             post.setText(dto.getText());
+            postSentimentService.apply(post);   // текст змінився — тональність теж
         }
         if (dto.getTags() != null) {
             post.setTags(resolveTags(dto.getTags()));

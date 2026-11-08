@@ -3,6 +3,7 @@ package com.example.social.server.controller;
 import com.example.social.server.repository.PostEmbeddingRepository;
 import com.example.social.server.service.EmbeddingApiService;
 import com.example.social.server.service.TestDataService;
+import com.example.social.server.service.PostSentimentService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,11 +14,15 @@ public class TestDataController {
     private final TestDataService testDataService;
     private final EmbeddingApiService embeddingApiService;
     private final PostEmbeddingRepository postEmbeddingRepository;
+    private final PostSentimentService postSentimentService;
 
-    public TestDataController(TestDataService testDataService, EmbeddingApiService embeddingApiService, PostEmbeddingRepository postEmbeddingRepository) {
+    public TestDataController(TestDataService testDataService, EmbeddingApiService embeddingApiService,
+                              PostEmbeddingRepository postEmbeddingRepository,
+                              PostSentimentService postSentimentService) {
         this.testDataService = testDataService;
         this.embeddingApiService = embeddingApiService;
         this.postEmbeddingRepository = postEmbeddingRepository;
+        this.postSentimentService = postSentimentService;
     }
 
     @PostMapping("/seed-posts")
@@ -39,6 +44,13 @@ public class TestDataController {
     @PostMapping("/backfill-embeddings")
     public ResponseEntity<?> backfillEmbeddings() {
         return ResponseEntity.ok(testDataService.backfillEmbeddings());
+    }
+
+    /** Тональність для постів без неї; retryLexicon=true — також перерахувати оцінені словником. */
+    @PostMapping("/backfill-sentiment")
+    public ResponseEntity<?> backfillSentiment(
+            @RequestParam(name = "retryLexicon", defaultValue = "false") boolean retryLexicon) {
+        return ResponseEntity.ok(postSentimentService.backfill(retryLexicon));
     }
 
     @PostMapping("/randomize-usernames")

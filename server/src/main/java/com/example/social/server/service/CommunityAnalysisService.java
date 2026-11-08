@@ -35,18 +35,18 @@ public class CommunityAnalysisService {
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final PostEmbeddingRepository postEmbeddingRepository;
-    private final SentimentService sentimentService;
+    private final PostSentimentService postSentimentService;
 
     public CommunityAnalysisService(CommunityDetectionService communityDetectionService,
                                     UserRepository userRepository,
                                     PostRepository postRepository,
                                     PostEmbeddingRepository postEmbeddingRepository,
-                                    SentimentService sentimentService) {
+                                    PostSentimentService postSentimentService) {
         this.communityDetectionService = communityDetectionService;
         this.userRepository = userRepository;
         this.postRepository = postRepository;
         this.postEmbeddingRepository = postEmbeddingRepository;
-        this.sentimentService = sentimentService;
+        this.postSentimentService = postSentimentService;
     }
 
     @Transactional(readOnly = true)
@@ -120,9 +120,14 @@ public class CommunityAnalysisService {
                 .collect(Collectors.toList());
         Double semanticCohesion = postEmbeddingRepository.findAveragePairwiseSimilarity(postIdsForCohesion);
 
-        // --- 3. Емоційна однорідність: середній сентимент і його стабільність ---
+        // Тональність береться з БД; для старих постів без неї — дораховується й зберігається один раз
+        Map<Long, Double> computedNow = postSentimentService.fillMissing(posts.stream()
+                .filter(p -> p.getSentiment() == null)
+                .map(Post::getPostId)
+                .toList());
         List<Double> sentiments = posts.stream()
-                .map(p -> sentimentService.analyze(p.getText()))
+                .map(p -> p.getSentiment() != null ? p.getSentiment() : computedNow.get(p.getPostId()))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         double avgSentiment = sentiments.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);

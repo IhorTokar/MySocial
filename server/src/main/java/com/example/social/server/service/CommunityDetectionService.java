@@ -4,6 +4,8 @@ import com.example.social.shared.dto.CommunityConnectivityDto;
 import com.example.social.shared.dto.CommunityDetectionResultDto;
 import com.example.social.shared.dto.CommunityMemberDto;
 import com.example.social.shared.dto.CommunitySummaryDto;
+import com.example.social.shared.dto.GraphDataDto;
+import org.neo4j.driver.Value;
 import org.neo4j.driver.Driver;
 import org.neo4j.driver.Record;
 import org.neo4j.driver.Session;
@@ -222,6 +224,35 @@ public class CommunityDetectionService {
 
     public List<CommunityConnectivityDto> checkConnectivityLeiden() {
         return checkConnectivity("communityLeiden");
+    }
+
+    /**
+     * Увесь граф підписок з номерами спільнот обраного алгоритму — для перегляду в адмін-панелі.
+     * Обидва запити виконуються в одній транзакції читання, тож вузли й ребра узгоджені між собою.
+     */
+    public GraphDataDto getGraph(boolean leiden) {
+        String propertyName = leiden ? "communityLeiden" : "community";
+        try (Session session = neo4jDriver.session()) {
+            return session.executeRead(tx -> {
+                List<GraphDataDto.Node> nodes = new ArrayList<>();
+                for (Record record : tx.run(
+                        "MATCH (u:User) RETURN u.userId AS userId, u.username AS username, "
+                                + "u." + propertyName + " AS community ORDER BY u.userId").list()) {
+                    Value community = record.get("community");
+                    nodes.add(new GraphDataDto.Node(
+                            record.get("userId").asLong(),
+                            record.get("username").asString(""),
+                            community.isNull() ? null : community.asLong()));
+                }
+
+                List<GraphDataDto.Edge> edges = new ArrayList<>();
+                for (Record record : tx.run(
+                        "MATCH (a:User)-[:FOLLOWS]->(b:User) RETURN a.userId AS source, b.userId AS target").list()) {
+                    edges.add(new GraphDataDto.Edge(record.get("source").asLong(), record.get("target").asLong()));
+                }
+                return new GraphDataDto(propertyName, nodes, edges);
+            });
+        }
     }
 
     /** Community id користувача за вказаною властивістю, або null, якщо ще не визначено. */

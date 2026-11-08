@@ -86,6 +86,15 @@
     -fx-background-color: -fx-button-secondary-hover-bg;
 }
 
+.button-danger {
+    -fx-background-color: -fx-error-text;
+    -fx-text-fill: white;
+}
+
+.button-danger:hover {
+    -fx-opacity: 0.85;
+}
+
 .link-button {
     -fx-background-color: transparent;
     -fx-text-fill: -fx-accent;
@@ -475,4 +484,31 @@
 
 .admin-tabs > .tab-header-area .tab:selected .tab-label {
     -fx-text-fill: white;
+}
+
+/* ===== Граф спільнот (адмін-панель) ===== */
+
+.graph-view {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-border-color: -fx-card-border;
+    -fx-border-radius: 12px;
+    -fx-background-radius: 12px;
+}
+
+.graph-legend-chip {
+    -fx-background-color: -fx-button-secondary-bg;
+    -fx-background-radius: 12px;
+    -fx-border-radius: 12px;
+    -fx-border-color: transparent;
+    -fx-padding: 3px 10px;
+    -fx-cursor: hand;
+}
+
+.graph-legend-chip .label {
+    -fx-text-fill: -fx-primary-text;
+    -fx-font-size: 12px;
+}
+
+.graph-legend-chip.active {
+    -fx-border-color: -fx-accent;
 }

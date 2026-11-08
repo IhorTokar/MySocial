@@ -20,6 +20,15 @@
         <Tab fx:id="weightsTab" text="Ваги стрічки">
             <fx:include fx:id="weights" source="admin_weights.fxml" />
         </Tab>
+        <Tab fx:id="usersTab" text="Користувачі">
+            <fx:include fx:id="users" source="admin_users.fxml" />
+        </Tab>
+        <Tab fx:id="contentTab" text="Контент">
+            <fx:include fx:id="content" source="admin_content.fxml" />
+        </Tab>
+        <Tab fx:id="graphTab" text="Граф">
+            <fx:include fx:id="graph" source="admin_graph.fxml" />
+        </Tab>
         <Tab fx:id="auditTab" text="Журнал дій">
             <fx:include fx:id="audit" source="admin_audit.fxml" />
         </Tab>

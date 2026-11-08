@@ -15,6 +15,8 @@ import com.example.social.shared.dto.ChangeRoleRequestDto;
 import com.example.social.server.service.AdminContentService;
 import com.example.social.shared.dto.AdminCommentDto;
 import com.example.social.shared.dto.PostResponseDto;
+import com.example.social.server.service.CommunityDetectionService;
+import com.example.social.shared.dto.GraphDataDto;
 import java.util.Map;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -34,15 +36,18 @@ public class AdminController {
     private final AuditService auditService;
     private final AdminUserService adminUserService;
     private final AdminContentService adminContentService;
+    private final CommunityDetectionService communityDetectionService;
 
     public AdminController(RecommendationWeightsService weightsService,
                            AuditService auditService,
                            AdminUserService adminUserService,
-                           AdminContentService adminContentService) {
+                           AdminContentService adminContentService,
+                           CommunityDetectionService communityDetectionService) {
         this.weightsService = weightsService;
         this.auditService = auditService;
         this.adminUserService = adminUserService;
         this.adminContentService = adminContentService;
+        this.communityDetectionService = communityDetectionService;
     }
 
     @GetMapping("/weights")
@@ -149,6 +154,13 @@ public class AdminController {
                                               @RequestParam(name = "reason", required = false) String reason) {
         adminContentService.deleteComment(commentId, reason, admin.getUserId());
         return ResponseEntity.noContent().build();
+    }
+
+    // ===== Граф =====
+
+    @GetMapping("/graph")
+    public ResponseEntity<GraphDataDto> getGraph(@RequestParam(name = "leiden", defaultValue = "false") boolean leiden) {
+        return ResponseEntity.ok(communityDetectionService.getGraph(leiden));
     }
 
     private static int clamp(int limit) {

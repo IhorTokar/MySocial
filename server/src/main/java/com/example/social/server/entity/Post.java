@@ -33,6 +33,14 @@ public class Post {
     @Column(name = "update_date")
     private LocalDateTime updateDate;
 
+    /** Тональність тексту в [-1, 1]; null — ще не обчислено. */
+    @Column
+    private Double sentiment;
+
+    /** Звідки взято тональність: model / lexicon / empty (див. V7__post_sentiment.sql). */
+    @Column(name = "sentiment_source", length = 10)
+    private String sentimentSource;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
             name = "post_tags",
@@ -105,5 +113,18 @@ public class Post {
 
     public void setTags(Set<Tag> tags) {
         this.tags = tags;
+    }
+
+    public Double getSentiment() {
+        return sentiment;
+    }
+
+    public String getSentimentSource() {
+        return sentimentSource;
+    }
+
+    public void setSentiment(Double sentiment, String source) {
+        this.sentiment = sentiment;
+        this.sentimentSource = source;
     }
 }

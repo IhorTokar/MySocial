@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<ScrollPane fitToWidth="true" styleClass="settings-scroll"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.social.client.controller.AdminUsersController">
+    <content>
+        <VBox spacing="16.0">
+            <padding>
+                <Insets top="16.0" right="4.0" bottom="16.0" left="4.0" />
+            </padding>
+
+            <VBox styleClass="post-card" spacing="10.0">
+                <Label text="Пошук користувачів" styleClass="post-title" />
+                <HBox spacing="8.0" alignment="CENTER_LEFT">
+                    <TextField fx:id="searchField" promptText="ID, uid або частина імені" HBox.hgrow="ALWAYS"
+                               onAction="#handleSearch" styleClass="text-field" />
+                    <Button text="Знайти" onAction="#handleSearch" styleClass="button, button-primary" />
+                </HBox>
+                <Label fx:id="searchStatusLabel" styleClass="secondary-label" />
+                <TableView fx:id="usersTable" prefHeight="220.0" />
+            </VBox>
+
+            <VBox fx:id="detailCard" styleClass="post-card" spacing="12.0" visible="false" managed="false">
+                <HBox spacing="12.0" alignment="CENTER_LEFT">
+                    <StackPane fx:id="avatarHolder" />
+                    <VBox spacing="2.0">
+                        <Label fx:id="nameLabel" styleClass="post-author-name" />
+                        <Label fx:id="handleLabel" styleClass="secondary-label" />
+                    </VBox>
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button text="Відкрити профіль" onAction="#handleOpenProfile" styleClass="button, button-secondary" />
+                </HBox>
+                <Label fx:id="infoLabel" wrapText="true" styleClass="secondary-label" />
+                <Label fx:id="blockedLabel" wrapText="true" styleClass="error-label" />
+
+                <Separator />
+                <Label text="Блокування" styleClass="post-title" />
+                <HBox spacing="8.0" alignment="CENTER_LEFT">
+                    <TextField fx:id="blockReasonField" promptText="Причина блокування (побачить користувач)"
+                               HBox.hgrow="ALWAYS" styleClass="text-field" />
+                    <Button fx:id="blockButton" onAction="#handleBlockToggle" styleClass="button, button-danger" />
+                </HBox>
+
+                <Label text="Роль" styleClass="post-title" />
+                <HBox spacing="8.0" alignment="CENTER_LEFT">
+                    <ComboBox fx:id="roleCombo" prefWidth="160.0" />
+                    <Button fx:id="roleButton" text="Змінити роль" onAction="#handleChangeRole"
+                            styleClass="button, button-secondary" />
+                </HBox>
+
+                <Label text="Профіль" styleClass="post-title" />
+                <TextField fx:id="displayNameField" promptText="Відображуване ім'я (порожнє — прибрати)"
+                           styleClass="text-field" />
+                <TextArea fx:id="aboutMeField" promptText="Про себе (порожнє — прибрати)" prefRowCount="3"
+                          wrapText="true" styleClass="text-area" />
+                <CheckBox fx:id="removeAvatarCheck" text="Прибрати аватар" />
+                <Button fx:id="profileButton" text="Зберегти профіль" onAction="#handleSaveProfile"
+                        styleClass="button, button-secondary" />
+
+                <Label text="Пароль" styleClass="post-title" />
+                <HBox spacing="8.0" alignment="CENTER_LEFT">
+                    <PasswordField fx:id="newPasswordField" promptText="Новий пароль (щонайменше 8 символів)"
+                                   HBox.hgrow="ALWAYS" styleClass="password-field" />
+                    <Button fx:id="passwordButton" text="Скинути пароль" onAction="#handleResetPassword"
+                            styleClass="button, button-secondary" />
+                </HBox>
+                <Label text="Користувач вийде з усіх пристроїв і чату; новий пароль треба передати йому окремо."
+                       wrapText="true" styleClass="secondary-label" />
+
+                <Label fx:id="statusLabel" wrapText="true" />
+            </VBox>
+        </VBox>
+    </content>
+</ScrollPane>

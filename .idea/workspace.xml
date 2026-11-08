@@ -4,34 +4,31 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.6.4">
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminAuditController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminPanelController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminWeightsController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/AdminApiService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AdminFormat.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/CopyOnClick.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/IdBadge.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/TableColumns.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/admin.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/admin_audit.fxml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/admin_weights.fxml" afterDir="false" />
+    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.6.5">
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminContentController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminGraphController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminUsersController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/graph/ForceLayout.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/graph/GraphView.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/Async.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/admin_content.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/admin_graph.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/admin_users.fxml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/PostSentimentService.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/src/main/resources/db/migration/migration/V7__post_sentiment.sql" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/GraphDataDto.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/client/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/CommentThreadPane.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/CommentThreadPane.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/PostListCell.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/PostListCell.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/LoginController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/MainShellController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/MainShellController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ProfileController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/SettingsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/SettingsController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/ApiClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/ApiClient.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/AuthApiService.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/AuthApiService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AppSettings.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AppSettings.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/SessionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/SessionManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminPanelController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminPanelController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/AdminApiService.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/AdminApiService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/main_shell.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/main_shell.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/profile.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/profile.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/settings.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/settings.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/admin.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/admin.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/AdminController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/AdminController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/Post.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/Post.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/PostRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/PostRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/CommunityAnalysisService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/CommunityAnalysisService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/CommunityDetectionService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/CommunityDetectionService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/PostService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/PostService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/SentimentService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/SentimentService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,30 +78,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Application.ServerApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Maven.ClientApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Maven.Run Client (JavaFX).executor&quot;: &quot;Run&quot;,
-    &quot;Maven.ServerApplication.executor&quot;: &quot;Run&quot;,
-    &quot;Maven.social-network [clean,install,--projects...].executor&quot;: &quot;Run&quot;,
-    &quot;Maven.social-network [install,--projects...].executor&quot;: &quot;Run&quot;,
-    &quot;Maven.social-network.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/medoko/IdeaProjects/MySocial/server/src/main/java/com/example/social/server/service&quot;,
-    &quot;onboarding.tips.debug.path&quot;: &quot;/home/medoko/IdeaProjects/MySocial/server/src/main/java/com/example/social/Main.java&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
-    &quot;python.packages.toolwindow.project.migrated.to.right.top.v2&quot;: &quot;true&quot;,
-    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settings.project.maven.repository.indices&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.ServerApplication.executor": "Run",
+    "JUnit.com.example.social.server.service in server.executor": "Debug",
+    "Maven.ClientApplication.executor": "Run",
+    "Maven.Run Client (JavaFX).executor": "Run",
+    "Maven.ServerApplication.executor": "Run",
+    "Maven.server [install].executor": "Run",
+    "Maven.social-network [clean,install,--projects...].executor": "Run",
+    "Maven.social-network [install,--projects...].executor": "Run",
+    "Maven.social-network.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "master",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/home/medoko/IdeaProjects/MySocial/server/src/main/java/com/example/social/server/service",
+    "onboarding.tips.debug.path": "/home/medoko/IdeaProjects/MySocial/server/src/main/java/com/example/social/Main.java",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.2",
+    "python.packages.toolwindow.project.migrated.to.right.top.v2": "true",
+    "run.code.analysis.last.selected.profile": "pProject Default",
+    "settings.editor.selected.configurable": "reference.settings.project.maven.repository.indices"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
@@ -124,6 +123,20 @@
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="com.example.social.server.service in server" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="server" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.example.social.server.service.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.example.social.server.service" />
+      <option name="TEST_OBJECT" value="package" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
@@ -201,11 +214,13 @@
     </configuration>
     <list>
       <item itemvalue="Application.ServerApplication" />
+      <item itemvalue="JUnit.com.example.social.server.service in server" />
       <item itemvalue="Maven.social-network" />
       <item itemvalue="Maven.Run Client (JavaFX)" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="JUnit.com.example.social.server.service in server" />
         <item itemvalue="Application.ServerApplication" />
       </list>
     </recent_temporary>
@@ -243,7 +258,8 @@
     <MESSAGE value="update 2.6.1" />
     <MESSAGE value="update 2.6.2" />
     <MESSAGE value="update 2.6.4" />
-    <option name="LAST_COMMIT_MESSAGE" value="update 2.6.4" />
+    <MESSAGE value="update 2.6.5" />
+    <option name="LAST_COMMIT_MESSAGE" value="update 2.6.5" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
