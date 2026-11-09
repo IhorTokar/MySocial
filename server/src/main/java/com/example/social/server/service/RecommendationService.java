@@ -114,6 +114,18 @@ public class RecommendationService {
     public Weights currentWeights() {
         return weightsService.current();
     }
+    @Transactional(readOnly = true)
+    public List<PostResponseDto> getHybridFeed(Long currentUserId, int limit) {
+        List<Post> posts = computeScoredFeed(currentUserId, limit).stream()
+                .map(ScoredPost::post)
+                .collect(Collectors.toList());
+        return postService.toDtos(posts, currentUserId);
+    }
+
+    @Transactional(readOnly = true)
+    public List<PostResponseDto> getHybridFeed(Long currentUserId) {
+        return getHybridFeed(currentUserId, DEFAULT_LIMIT);
+    }
 
     @Transactional(readOnly = true)
     public List<RecommendationDto> getHybridFeedDebug(Long currentUserId, int limit) {
@@ -125,18 +137,6 @@ public class RecommendationService {
     public List<RecommendationDto> getHybridFeedDebug(Long currentUserId, int limit, Double mmrLambda) {
         double lambda = mmrLambda != null ? mmrLambda : this.mmrLambda;
         return computeScoredFeed(currentUserId, limit, lambda).stream()
-                .map(this::toDebugDto)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    public List<PostResponseDto> getHybridFeed(Long currentUserId) {
-        return getHybridFeed(currentUserId, DEFAULT_LIMIT);
-    }
-
-    @Transactional(readOnly = true)
-    public List<RecommendationDto> getHybridFeedDebug(Long currentUserId, int limit) {
-        return computeScoredFeed(currentUserId, limit).stream()
                 .map(this::toDebugDto)
                 .collect(Collectors.toList());
     }
@@ -161,13 +161,34 @@ public class RecommendationService {
         return order.stream().map(pool::get).collect(Collectors.toList());
     }
 
+    /** Усі кандидати, відсортовані за гібридною оцінкою (3.1) — від найрелевантнішого. */
     private List<ScoredPost> rankByRelevance(Long currentUserId) {
-        Weights weights = weightsService.current();
+        Weights weights = weightsService.current();    // один знімок ваг на весь запит
+        List<ScoredPost> scored = new ArrayList<>();
+
+        for (CandidateScores c : computeCandidateScores(currentUserId, null)) {
+            double totalScore = c.total(weights);
+            double followedBonus = c.followed() ? weights.followedBonus() : 0.0;
+
+            ScoreBreakdown breakdown = new ScoreBreakdown(
+                    c.likesInWindow(), c.popularity(), c.itemCf(), c.graphSim(), c.semantic(),
+                    c.recency(), c.postAgeHours(), c.followed(), followedBonus, totalScore);
+
+            if (log.isDebugEnabled()) {
+                log.debug(String.format(
+                        "[feed uid=%d] post=%d author=%s likes=%d pop=%.3f itemCf=%.3f graphSim=%.3f semantic=%.3f rec=%.3f(%dh) followed=%b TOTAL=%.3f",
+                        currentUserId, c.postId(), c.post().getUser().getUsername(),
+                        c.likesInWindow(), c.popularity(), c.itemCf(), c.graphSim(), c.semantic(),
+                        c.recency(), c.postAgeHours(), c.followed(), totalScore));
+            }
+
+            scored.add(new ScoredPost(c.post(), totalScore, breakdown));
+        }
+
         return scored.stream()
                 .sorted(Comparator.comparingDouble(ScoredPost::score).reversed())
                 .collect(Collectors.toList());
     }
-
     // ===== MMR =====
 
     /** Результат MMR-експерименту для одного λ. */

@@ -98,7 +98,7 @@
       <recent name="" />
     </key>
   </component>
-  <component name="RunManager" selected="JUnit.java in server">
+  <component name="RunManager" selected="Application.ServerApplication">
     <configuration name="ServerApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.example.social.server.ServerApplication" />
       <module name="server" />
