@@ -22,19 +22,22 @@ public class GraphController {
     private final CommunityDetectionService communityDetectionService;
     private final UserSimilarityService userSimilarityService;
     private final CommunityAnalysisService communityAnalysisService;
+    private final EchoHistoryService echoHistoryService;
 
     public GraphController(Driver neo4jDriver,
                            GraphSyncService graphSyncService,
                            GraphEmbeddingService graphEmbeddingService,
                            CommunityDetectionService communityDetectionService,
                            UserSimilarityService userSimilarityService,
-                           CommunityAnalysisService communityAnalysisService) {
+                           CommunityAnalysisService communityAnalysisService,
+                           EchoHistoryService echoHistoryService) {
         this.neo4jDriver = neo4jDriver;
         this.graphSyncService = graphSyncService;
         this.graphEmbeddingService = graphEmbeddingService;
         this.communityDetectionService = communityDetectionService;
         this.userSimilarityService = userSimilarityService;
         this.communityAnalysisService = communityAnalysisService;
+        this.echoHistoryService = echoHistoryService;
     }
 
     @GetMapping("/health")
@@ -129,5 +132,12 @@ public class GraphController {
         return ResponseEntity.ok(communityAnalysisService.getCommunityForUser(userId, leiden)
                 .orElseThrow(() -> new NotFoundException(
                         "Спільнота ще не визначена або юзер поза значущою спільнотою")));
+    }
+    /** Траєкторія користувача по знімках історії ехо-камер (доступно будь-якому авторизованому, як і /community/{userId}). */
+    @GetMapping("/community/{userId}/history")
+    public ResponseEntity<List<UserEchoPointDto>> getUserCommunityHistory(@PathVariable("userId") Long userId,
+                                                                          @RequestParam(name = "leiden", defaultValue = "false") boolean leiden,
+                                                                          @RequestParam(name = "limit", defaultValue = "100") int limit) {
+        return ResponseEntity.ok(echoHistoryService.userHistory(userId, leiden, Math.max(1, Math.min(limit, 500))));
     }
 }

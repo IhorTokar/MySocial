@@ -51,6 +51,7 @@ public abstract class IntegrationTestBase {
         registry.add("neo4j.uri", () -> "bolt://localhost:7999");
         registry.add("neo4j.password", () -> "unused");
         registry.add("nlp-service.base-url", () -> "http://localhost:8999");
+        registry.add("echo-history.cron", () -> "-");
         registry.add("spring.jpa.show-sql", () -> "false");
         // Відповіді в UTF-8, щоб кирилиця в повідомленнях про помилки порівнювалась коректно
         registry.add("server.servlet.encoding.force-response", () -> "true");

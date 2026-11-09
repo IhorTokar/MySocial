@@ -49,8 +49,20 @@ public class CommunityAnalysisService {
         this.postSentimentService = postSentimentService;
     }
 
+    /** Результат аналізу спільноти разом з її складом — для історії ехо-камер. */
+    public record AnalyzedCommunity(CommunityAnalysisDto analysis, List<Long> memberIds) {
+    }
+
     @Transactional(readOnly = true)
     public List<CommunityAnalysisDto> analyzeCommunities(boolean useLeiden) {
+        return analyzeCommunitiesWithMembers(useLeiden).stream()
+                .map(AnalyzedCommunity::analysis)
+                .collect(Collectors.toList());
+    }
+
+    /** Те саме, що analyzeCommunities, але кожна спільнота — разом зі списком учасників. */
+    @Transactional(readOnly = true)
+    public List<AnalyzedCommunity> analyzeCommunitiesWithMembers(boolean useLeiden) {
         List<CommunityMemberDto> communityRows = useLeiden
                 ? communityDetectionService.getCommunitiesLeiden()
                 : communityDetectionService.getCommunities();
@@ -60,26 +72,19 @@ public class CommunityAnalysisService {
 
         Map<Long, List<Long>> userIdsByCommunity = new HashMap<>();
         for (CommunityMemberDto row : communityRows) {
-            Long community = row.community();
-            Long userId = row.userId();
-            userIdsByCommunity.computeIfAbsent(community, k -> new ArrayList<>()).add(userId);
+            userIdsByCommunity.computeIfAbsent(row.community(), k -> new ArrayList<>()).add(row.userId());
         }
 
-        List<CommunityAnalysisDto> results = new ArrayList<>();
-
+        List<AnalyzedCommunity> results = new ArrayList<>();
         for (Map.Entry<Long, List<Long>> entry : userIdsByCommunity.entrySet()) {
-            Long community = entry.getKey();
             List<Long> userIds = entry.getValue();
-
             if (userIds.size() < MIN_COMMUNITY_SIZE) {
                 continue;
             }
-
-            CommunityAnalysisDto dto = analyzeSingleCommunity(community, userIds);
-            results.add(dto);
+            results.add(new AnalyzedCommunity(analyzeSingleCommunity(entry.getKey(), userIds), userIds));
         }
 
-        results.sort(Comparator.comparingDouble(CommunityAnalysisDto::getEchoChamberScore).reversed());
+        results.sort(Comparator.comparingDouble((AnalyzedCommunity c) -> c.analysis().getEchoChamberScore()).reversed());
 
         log.info("Analyzed {} communities (min size {})", results.size(), MIN_COMMUNITY_SIZE);
         return results;
