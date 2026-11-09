@@ -16,6 +16,7 @@ import com.example.social.server.repository.UserRepository;
 import com.example.social.shared.dto.PostResponseDto;
 import com.example.social.shared.dto.RecommendationDto;
 import com.example.social.shared.dto.SimilarUserDto;
+import org.springframework.beans.factory.annotation.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,8 @@ public class RecommendationService {
     private static final int DEFAULT_LIMIT = 30;
     private static final int MAX_CO_REACTORS = 20;
     private static final int SIMILAR_USERS_TOP_N = 10;
+    /** MMR обирає зі стількох найрелевантніших кандидатів: limit × 3. */
+    private static final int MMR_POOL_FACTOR = 3;
 
     /** Вагові коефіцієнти гібридної оцінки. */
     public record Weights(double popularity, double itemCf, double graphSim,
@@ -79,6 +82,8 @@ public class RecommendationService {
     private final PostService postService;
 
     private final RecommendationWeightsService weightsService;
+    /** λ для MMR: 1 — без перестановки (чиста релевантність), менше — різноманітніша стрічка. */
+    private final double mmrLambda;
 
     public RecommendationService(PostRepository postRepository,
                                  PostLikeRepository postLikeRepository,
@@ -88,7 +93,8 @@ public class RecommendationService {
                                  UserSimilarityService userSimilarityService,
                                  PostEmbeddingRepository postEmbeddingRepository,
                                  PostService postService,
-                                 RecommendationWeightsService weightsService) {
+                                 RecommendationWeightsService weightsService,
+                                 @Value("${recommendation.mmr.lambda:1.0}") double mmrLambda) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
         this.commentRepository = commentRepository;
@@ -98,6 +104,10 @@ public class RecommendationService {
         this.postEmbeddingRepository = postEmbeddingRepository;
         this.postService = postService;
         this.weightsService = weightsService;
+        if (mmrLambda < 0 || mmrLambda > 1) {
+            throw new IllegalStateException("recommendation.mmr.lambda має бути в межах [0, 1]");
+        }
+        this.mmrLambda = mmrLambda;
     }
 
     /** Ваги, з якими зараз працює стрічка (з БД, а якщо там порожньо — з application.yml). */
@@ -106,11 +116,17 @@ public class RecommendationService {
     }
 
     @Transactional(readOnly = true)
-    public List<PostResponseDto> getHybridFeed(Long currentUserId, int limit) {
-        List<Post> posts = computeScoredFeed(currentUserId, limit).stream()
-                .map(ScoredPost::post)
+    public List<RecommendationDto> getHybridFeedDebug(Long currentUserId, int limit) {
+        return getHybridFeedDebug(currentUserId, limit, null);
+    }
+
+    /** @param mmrLambda λ лише для цього запиту (для порівняння); null — значення з application.yml */
+    @Transactional(readOnly = true)
+    public List<RecommendationDto> getHybridFeedDebug(Long currentUserId, int limit, Double mmrLambda) {
+        double lambda = mmrLambda != null ? mmrLambda : this.mmrLambda;
+        return computeScoredFeed(currentUserId, limit, lambda).stream()
+                .map(this::toDebugDto)
                 .collect(Collectors.toList());
-        return postService.toDtos(posts, currentUserId);
     }
 
     @Transactional(readOnly = true)
@@ -131,32 +147,87 @@ public class RecommendationService {
     }
 
     private List<ScoredPost> computeScoredFeed(Long currentUserId, int limit) {
-        Weights weights = weightsService.current();    // один знімок ваг на весь запит
-        List<ScoredPost> scored = new ArrayList<>();
+        return computeScoredFeed(currentUserId, limit, mmrLambda);
+    }
 
-        for (CandidateScores c : computeCandidateScores(currentUserId, null)) {
-            double totalScore = c.total(weights);
-            double followedBonus = c.followed() ? weights.followedBonus() : 0.0;
-
-            ScoreBreakdown breakdown = new ScoreBreakdown(
-                    c.likesInWindow(), c.popularity(), c.itemCf(), c.graphSim(), c.semantic(),
-                    c.recency(), c.postAgeHours(), c.followed(), followedBonus, totalScore);
-
-            if (log.isDebugEnabled()) {
-                log.debug(String.format(
-                        "[feed uid=%d] post=%d author=%s likes=%d pop=%.3f itemCf=%.3f graphSim=%.3f semantic=%.3f rec=%.3f(%dh) followed=%b TOTAL=%.3f",
-                        currentUserId, c.postId(), c.post().getUser().getUsername(),
-                        c.likesInWindow(), c.popularity(), c.itemCf(), c.graphSim(), c.semantic(),
-                        c.recency(), c.postAgeHours(), c.followed(), totalScore));
-            }
-
-            scored.add(new ScoredPost(c.post(), totalScore, breakdown));
+    /** Стрічка: ранжування за формулою (3.1), а при λ < 1 — ще й MMR-перестановка для різноманітності. */
+    private List<ScoredPost> computeScoredFeed(Long currentUserId, int limit, double lambda) {
+        List<ScoredPost> ranked = rankByRelevance(currentUserId);
+        if (lambda >= 1.0 || ranked.size() <= 1) {
+            return new ArrayList<>(ranked.subList(0, Math.min(limit, ranked.size())));
         }
+        List<ScoredPost> pool = mmrPool(ranked, limit);
+        List<Integer> order = MmrReranker.rerank(normalizedRelevance(pool), similarityMatrix(pool), limit, lambda);
+        return order.stream().map(pool::get).collect(Collectors.toList());
+    }
 
+    private List<ScoredPost> rankByRelevance(Long currentUserId) {
+        Weights weights = weightsService.current();
         return scored.stream()
                 .sorted(Comparator.comparingDouble(ScoredPost::score).reversed())
-                .limit(limit)
                 .collect(Collectors.toList());
+    }
+
+    // ===== MMR =====
+
+    /** Результат MMR-експерименту для одного λ. */
+    public record MmrExperimentRow(double lambda, double intraListDiversity, double relevanceRetained,
+                                   int distinctTags, int distinctAuthors, List<Long> postIds) {
+    }
+
+    /**
+     * Порівняння стрічки користувача при різних λ на одному й тому самому наборі кандидатів:
+     * intraListDiversity — наскільки різні за змістом пости у видачі (0..1, більше — різноманітніше);
+     * relevanceRetained — частка релевантності, що лишилась від чистого ранжування (λ = 1 дає 1.0);
+     * distinctTags / distinctAuthors — скільки різних тем і авторів потрапило у видачу.
+     */
+    @Transactional(readOnly = true)
+    public List<MmrExperimentRow> runMmrExperiment(Long currentUserId, int limit, List<Double> lambdas) {
+        List<ScoredPost> pool = mmrPool(rankByRelevance(currentUserId), limit);
+        if (pool.isEmpty()) {
+            return List.of();
+        }
+        double[] relevance = normalizedRelevance(pool);
+        double[][] similarity = similarityMatrix(pool);
+
+        double bestPossible = 0;   // кандидати вже відсортовані, тож перші limit — максимум релевантності
+        for (int i = 0; i < Math.min(limit, pool.size()); i++) {
+            bestPossible += relevance[i];
+        }
+
+        List<MmrExperimentRow> rows = new ArrayList<>();
+        for (double lambda : lambdas) {
+            List<Integer> order = MmrReranker.rerank(relevance, similarity, limit, lambda);
+            double kept = 0;
+            Set<String> tags = new HashSet<>();
+            Set<Long> authors = new HashSet<>();
+            List<Long> postIds = new ArrayList<>();
+            for (int i : order) {
+                Post post = pool.get(i).post();
+                kept += relevance[i];
+                tags.addAll(tagNames(post));
+                authors.add(post.getUser().getUserId());
+                postIds.add(post.getPostId());
+            }
+            rows.add(new MmrExperimentRow(lambda, MmrReranker.intraListDiversity(order, similarity),
+                    bestPossible > 0 ? kept / bestPossible : 0.0, tags.size(), authors.size(), postIds));
+        }
+        return rows;
+    }
+
+    private static List<ScoredPost> mmrPool(List<ScoredPost> ranked, int limit) {
+        return ranked.subList(0, Math.min(ranked.size(), limit * MMR_POOL_FACTOR));
+    }
+
+    /** Оцінки (3.1) у [0, 1] відносно найкращого кандидата — щоб їх можна було порівнювати зі схожістю. */
+    private static double[] normalizedRelevance(List<ScoredPost> pool) {
+        double max = pool.stream().mapToDouble(ScoredPost::score).max().orElse(0);
+        return pool.stream().mapToDouble(p -> max > 0 ? Math.max(p.score(), 0) / max : 0).toArray();
+    }
+
+    private double[][] similarityMatrix(List<ScoredPost> pool) {
+        return postEmbeddingRepository.findPairwiseSimilarity(
+                pool.stream().map(p -> p.post().getPostId()).collect(Collectors.toList()));
     }
 
     /**

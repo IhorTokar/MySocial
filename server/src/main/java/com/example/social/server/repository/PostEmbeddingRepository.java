@@ -2,6 +2,7 @@ package com.example.social.server.repository;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.jdbc.core.RowCallbackHandler;
 
 import java.util.HashMap;
 import java.util.List;
@@ -94,11 +95,9 @@ public class PostEmbeddingRepository {
                     ps.setArray(1, ps.getConnection().createArrayOf("bigint", candidateArray));
                     ps.setArray(2, ps.getConnection().createArrayOf("bigint", seedArray));
                 },
-                rs -> {
-                    while (rs.next()) {
-                        result.put(rs.getLong("candidate_id"), rs.getDouble("avg_similarity"));
-                    }
-                }
+                // RowCallbackHandler викликається для кожного рядка окремо; власний while (rs.next())
+                // тут пропускав би перший рядок результату
+                (RowCallbackHandler) rs -> result.put(rs.getLong("candidate_id"), rs.getDouble("avg_similarity"))
         );
 
         return result;
@@ -129,6 +128,52 @@ public class PostEmbeddingRepository {
                 },
                 rs -> rs.next() ? rs.getObject("avg_similarity", Double.class) : null
         );
+    }
+
+    /**
+     * Матриця попарної схожості постів у тому ж порядку, що postIds:
+     * similarity = 1 − cosine_distance / 2 ∈ [0, 1], на діагоналі 1.
+     * Якщо в поста немає ембедингу, його схожість з іншими лишається 0 (вважається «іншим»).
+     * Потрібна для MMR-перестановки стрічки.
+     */
+    public double[][] findPairwiseSimilarity(List<Long> postIds) {
+        int n = postIds.size();
+        double[][] matrix = new double[n][n];
+        for (int i = 0; i < n; i++) {
+            matrix[i][i] = 1.0;
+        }
+        if (n < 2) {
+            return matrix;
+        }
+
+        Map<Long, Integer> indexById = new HashMap<>();
+        for (int i = 0; i < n; i++) {
+            indexById.put(postIds.get(i), i);
+        }
+
+        String sql = "SELECT a.post_id AS a_id, b.post_id AS b_id, " +
+                "1 - (a.embedding <=> b.embedding) / 2 AS similarity " +
+                "FROM posts a JOIN posts b ON a.post_id < b.post_id " +
+                "WHERE a.post_id = ANY(?) AND b.post_id = ANY(?) " +
+                "AND a.embedding IS NOT NULL AND b.embedding IS NOT NULL";
+        Long[] idArray = postIds.toArray(new Long[0]);
+
+        // RowCallbackHandler викликається для КОЖНОГО рядка — тому всередині без while (rs.next())
+        RowCallbackHandler fillCell = rs -> {
+            int i = indexById.get(rs.getLong("a_id"));
+            int j = indexById.get(rs.getLong("b_id"));
+            double similarity = rs.getDouble("similarity");
+            matrix[i][j] = similarity;
+            matrix[j][i] = similarity;
+        };
+        jdbcTemplate.query(
+                sql,
+                ps -> {
+                    ps.setArray(1, ps.getConnection().createArrayOf("bigint", idArray));
+                    ps.setArray(2, ps.getConnection().createArrayOf("bigint", idArray));
+                },
+                fillCell);
+        return matrix;
     }
 
 }

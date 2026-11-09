@@ -7,6 +7,7 @@ import com.example.social.server.service.FileStorageService;
 import com.example.social.server.service.PostService;
 import com.example.social.server.service.RecommendationService;
 import com.example.social.shared.dto.PostCreateDto;
+import com.example.social.server.exception.BadRequestException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -56,8 +57,12 @@ public class PostController {
 
     @GetMapping("/feed/debug")
     public ResponseEntity<?> getFeedDebug(@AuthenticationPrincipal AuthenticatedUser currentUser,
-                                          @RequestParam(name = "limit", defaultValue = "30") int limit) {
-        return ResponseEntity.ok(recommendationService.getHybridFeedDebug(currentUser.getUserId(), limit));
+                                          @RequestParam(name = "limit", defaultValue = "30") int limit,
+                                          @RequestParam(name = "mmrLambda", required = false) Double mmrLambda) {
+        if (mmrLambda != null && (mmrLambda < 0 || mmrLambda > 1)) {
+            throw new BadRequestException("mmrLambda має бути в межах [0, 1]");
+        }
+        return ResponseEntity.ok(recommendationService.getHybridFeedDebug(currentUser.getUserId(), limit, mmrLambda));
     }
 
     @GetMapping("/feed")

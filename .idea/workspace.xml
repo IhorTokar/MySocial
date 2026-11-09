@@ -4,17 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.6.6">
-      <change afterPath="$PROJECT_DIR$/client/src/test/java/client/src/test/java/com/example/social/client/graph/ForceLayoutTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/security/JwtTokenProviderTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/service/AdminUserServiceTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/service/RecommendationScoringTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/service/RecommendationWeightsServiceTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/service/SentimentServiceTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/test/resources/docker-java.properties" afterDir="false" />
+    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.6.7">
+      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/MmrReranker.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/integration/PostEmbeddingRepositoryIntegrationTest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/service/MmrRerankerTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/client/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/server/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/PostController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/PostController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/PostEmbeddingRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/PostEmbeddingRepository.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/RecommendationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/RecommendationService.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -270,7 +266,8 @@
     <MESSAGE value="update 2.6.4" />
     <MESSAGE value="update 2.6.5" />
     <MESSAGE value="update 2.6.6" />
-    <option name="LAST_COMMIT_MESSAGE" value="update 2.6.6" />
+    <MESSAGE value="update 2.6.7" />
+    <option name="LAST_COMMIT_MESSAGE" value="update 2.6.7" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
