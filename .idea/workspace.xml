@@ -4,27 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.6.9">
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/EchoHistoryController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/EchoHistoryRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/CommunityMatcher.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/EchoHistoryScheduler.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/EchoHistoryService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/resources/db/migration/migration/V8__echo_chamber_history.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/integration/EchoHistoryRepositoryIntegrationTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/service/CommunityMatcherTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/service/EchoHistoryServiceTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/EchoSnapshotDetailDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/EchoSnapshotDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/UserEchoPointDto.java" afterDir="false" />
+    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.7">
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminEchoHistoryController.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/EchoChart.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/admin_echo_history.fxml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/PostDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/ServerApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/ServerApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/GraphController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/GraphController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/AuditAction.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/AuditAction.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/CommunityAnalysisService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/CommunityAnalysisService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/resources/application.yml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/integration/IntegrationTestBase.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/integration/IntegrationTestBase.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminPanelController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminPanelController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ProfileController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/AdminApiService.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/AdminApiService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/GraphApiService.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/GraphApiService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AdminFormat.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AdminFormat.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AppSettings.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AppSettings.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/admin.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/admin.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/profile.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/profile.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -111,7 +104,7 @@
       <recent name="" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.ServerApplication">
+  <component name="RunManager" selected="Maven.Run Client (JavaFX)">
     <configuration name="ServerApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.example.social.server.ServerApplication" />
       <module name="server" />
@@ -255,7 +248,6 @@
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="update 1.3" />
     <MESSAGE value="update 1.4" />
     <MESSAGE value="update 1.4&#10;feat: add Neo4j integration — driver config, graph sync service, stats endpoint, verified visually in Neo4j Browser" />
     <MESSAGE value="update 1.5" />
@@ -280,7 +272,8 @@
     <MESSAGE value="update 2.6.7" />
     <MESSAGE value="update 2.6.8" />
     <MESSAGE value="update 2.6.9" />
-    <option name="LAST_COMMIT_MESSAGE" value="update 2.6.9" />
+    <MESSAGE value="update 2.7" />
+    <option name="LAST_COMMIT_MESSAGE" value="update 2.7" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

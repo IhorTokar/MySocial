@@ -29,6 +29,9 @@
         <Tab fx:id="graphTab" text="Граф">
             <fx:include fx:id="graph" source="admin_graph.fxml" />
         </Tab>
+        <Tab fx:id="echoTab" text="Історія ехо-камер">
+            <fx:include fx:id="echoHistory" source="admin_echo_history.fxml" />
+        </Tab>
         <Tab fx:id="auditTab" text="Журнал дій">
             <fx:include fx:id="audit" source="admin_audit.fxml" />
         </Tab>

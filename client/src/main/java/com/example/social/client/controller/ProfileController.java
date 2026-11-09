@@ -9,6 +9,14 @@ import com.example.social.client.util.AvatarUtil;
 import com.example.social.client.util.IdBadge;
 import com.example.social.client.util.SceneUtil;
 import com.example.social.client.util.SessionManager;
+import com.example.social.client.util.EchoChart;
+import com.example.social.shared.dto.UserEchoPointDto;
+import com.example.social.client.util.AppSettings;
+import javafx.scene.chart.XYChart;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -19,26 +27,53 @@ import javafx.scene.layout.StackPane;
 
 public class ProfileController {
 
-    @FXML private StackPane avatarContainer;
+    @FXML
+    private StackPane avatarContainer;
     private UserApiService.UserProfile currentProfile;
-    @FXML private Label displayNameLabel;
-    @FXML private Label userIdLabel;
-    @FXML private Label usernameHandleLabel;
-    @FXML private Label aboutMeLabel;
-    @FXML private Label postsCountLabel;
-    @FXML private Label followersCountLabel;
-    @FXML private Label followingCountLabel;
-    @FXML private Button followButton;
-    @FXML private Button editProfileButton;
-    @FXML private Label statusLabel;
-    @FXML private ListView<PostApiService.PostItem> postsListView;
-    @FXML private Button backButton;
-    @FXML private Button messageButton;
-    @FXML private javafx.scene.control.Button toggleCreatePostButton;
-    @FXML private javafx.scene.layout.VBox createPost;
-    @FXML private CreatePostController createPostController;
-    @FXML private javafx.scene.layout.VBox communityCard;
-    @FXML private Label communityInfoLabel;
+    @FXML
+    private Label displayNameLabel;
+    @FXML
+    private Label userIdLabel;
+    @FXML
+    private Label usernameHandleLabel;
+    @FXML
+    private Label aboutMeLabel;
+    @FXML
+    private Label postsCountLabel;
+    @FXML
+    private Label followersCountLabel;
+    @FXML
+    private Label followingCountLabel;
+    @FXML
+    private Button followButton;
+    @FXML
+    private Button editProfileButton;
+    @FXML
+    private Label statusLabel;
+    @FXML
+    private ListView<PostApiService.PostItem> postsListView;
+    @FXML
+    private Button backButton;
+    @FXML
+    private Button messageButton;
+    @FXML
+    private javafx.scene.control.Button toggleCreatePostButton;
+    @FXML
+    private javafx.scene.layout.VBox createPost;
+    @FXML
+    private CreatePostController createPostController;
+    @FXML
+    private javafx.scene.layout.VBox communityCard;
+    @FXML
+    private Label communityInfoLabel;
+    @FXML
+    private javafx.scene.chart.LineChart<String, Number> communityHistoryChart;
+    @FXML
+    private Button communityHistoryToggle;
+    /**
+     * Чи є що показувати на графіку (щонайменше 2 знімки).
+     */
+    private boolean hasCommunityHistory;
 
     private final com.example.social.client.service.GraphApiService graphApiService =
             new com.example.social.client.service.GraphApiService(new ApiClient());
@@ -52,6 +87,7 @@ public class ProfileController {
 
     private Long profileUserId;
     private boolean isFollowing;
+
     @FXML
     private void initialize() {
         IdBadge.configure(userIdLabel);
@@ -313,19 +349,22 @@ public class ProfileController {
         }
         communityCard.setVisible(false);
         communityCard.setManaged(false);
+        showCommunityHistory(List.of());
 
         Thread.ofVirtual().start(() -> {
             try {
                 var result = graphApiService.getUserCommunity(profileUserId);
+                if (!result.found()) {
+                    return;
+                }
+                List<UserEchoPointDto> history = graphApiService.getUserCommunityHistory(profileUserId);
                 Platform.runLater(() -> {
-                    if (!result.found()) {
-                        return;
-                    }
                     var info = result.info();
                     String tags = info.topTags().isEmpty() ? "—" : String.join(", ", info.topTags());
                     communityInfoLabel.setText(String.format(
                             "Спільнота з %d учасників · теми: %s · показник однорідності: %.0f%%",
                             info.memberCount(), tags, info.echoChamberScore() * 100));
+                    showCommunityHistory(history);
                     communityCard.setVisible(true);
                     communityCard.setManaged(true);
                 });
@@ -334,4 +373,48 @@ public class ProfileController {
             }
         });
     }
+
+    /**
+     * Графік динаміки: echo-score спільноти користувача і всієї мережі по знімках. Потрібно щонайменше 2 точки.
+     */
+    private void showCommunityHistory(List<UserEchoPointDto> history) {
+        hasCommunityHistory = history.size() >= 2;
+        communityHistoryToggle.setVisible(hasCommunityHistory);
+        communityHistoryToggle.setManaged(hasCommunityHistory);
+
+        if (!hasCommunityHistory) {
+            communityHistoryChart.getData().clear();
+        } else {
+            Set<String> usedLabels = new HashSet<>();
+            XYChart.Series<String, Number> community = EchoChart.series("Спільнота користувача");
+            XYChart.Series<String, Number> network = EchoChart.series("Уся мережа");
+            for (UserEchoPointDto p : history) {
+                String x = EchoChart.timeLabel(p.createdAt(), p.snapshotId(), usedLabels);
+                community.getData().add(EchoChart.point(x, p.echoChamberScore(), String.format(
+                        "Спільнота з %d учасників: %.0f%%", p.memberCount(), p.echoChamberScore() * 100)));
+                network.getData().add(EchoChart.point(x, p.networkEchoScore(), String.format(
+                        "Середнє по мережі: %.0f%%", p.networkEchoScore() * 100)));
+            }
+            EchoChart.show(communityHistoryChart, List.of(community, network));
+        }
+        updateCommunityHistoryVisibility();
+    }
+
+    /**
+     * «Показати / Сховати динаміку»: вибір запам'ятовується між запусками.
+     */
+    @FXML
+    private void handleToggleCommunityHistory() {
+        AppSettings settings = AppSettings.getInstance();
+        settings.setShowEchoHistory(!settings.isShowEchoHistory());
+        updateCommunityHistoryVisibility();
+    }
+
+    private void updateCommunityHistoryVisibility() {
+        boolean show = hasCommunityHistory && AppSettings.getInstance().isShowEchoHistory();
+        communityHistoryChart.setVisible(show);
+        communityHistoryChart.setManaged(show);
+        communityHistoryToggle.setText(show ? "Сховати динаміку" : "Показати динаміку");
+    }
+
 }

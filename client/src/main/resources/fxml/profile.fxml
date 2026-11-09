@@ -11,6 +11,9 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.Circle?>
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
 
 <BorderPane xmlns="http://javafx.com/javafx/26" xmlns:fx="http://javafx.com/fxml/1"
             fx:controller="com.example.social.client.controller.ProfileController"
@@ -53,8 +56,23 @@
             </HBox>
 
             <VBox fx:id="communityCard" styleClass="post-card" spacing="4.0" visible="false" managed="false">
-                <Label text="Ехо-спільнота" styleClass="post-author-name" />
+                <HBox alignment="CENTER_LEFT">
+                    <Label text="Ехо-спільнота" styleClass="post-author-name" />
+                    <Region HBox.hgrow="ALWAYS" />
+                    <Button fx:id="communityHistoryToggle" text="Показати динаміку"
+                            onAction="#handleToggleCommunityHistory" styleClass="button, link-button"
+                            visible="false" managed="false" />
+                </HBox>
                 <Label fx:id="communityInfoLabel" styleClass="secondary-label" wrapText="true" />
+                <LineChart fx:id="communityHistoryChart" animated="false" legendSide="BOTTOM"
+                           prefHeight="170.0" minHeight="150.0" visible="false" managed="false">
+                    <xAxis>
+                        <CategoryAxis />
+                    </xAxis>
+                    <yAxis>
+                        <NumberAxis forceZeroInRange="false" />
+                    </yAxis>
+                </LineChart>
             </VBox>
             <Label fx:id="statusLabel" />
             <HBox alignment="CENTER_LEFT" spacing="10.0">

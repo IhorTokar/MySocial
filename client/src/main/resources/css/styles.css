@@ -512,3 +512,67 @@
 .graph-legend-chip.active {
     -fx-border-color: -fx-accent;
 }
+
+
+/* ===== Графіки історії ехо-камер ===== */
+
+.chart {
+    -fx-padding: 4 8 4 4;
+}
+
+.chart-plot-background {
+    -fx-background-color: -fx-secondary-bg;
+}
+
+.chart-vertical-grid-lines,
+.chart-horizontal-grid-lines {
+    -fx-stroke: -fx-card-border;
+}
+
+.chart-alternative-row-fill,
+.chart-alternative-column-fill {
+    -fx-fill: transparent;
+}
+
+.chart .axis {
+    -fx-tick-label-fill: -fx-secondary-text;
+}
+
+.chart .axis-label {
+    -fx-text-fill: -fx-secondary-text;
+}
+
+.chart .axis-tick-mark,
+.chart .axis-minor-tick-mark {
+    -fx-stroke: -fx-card-border;
+}
+
+.chart-legend {
+    -fx-background-color: transparent;
+}
+
+.chart-legend-item {
+    -fx-text-fill: -fx-primary-text;
+}
+
+.chart-series-line {
+    -fx-stroke-width: 2px;
+}
+
+/* перша серія — основна (акцентний колір), друга — для порівняння (пунктир) */
+.default-color0.chart-series-line {
+    -fx-stroke: -fx-accent;
+}
+
+.default-color0.chart-line-symbol {
+    -fx-background-color: -fx-accent, -fx-secondary-bg;
+}
+
+.default-color1.chart-series-line {
+    -fx-stroke: -fx-like-color;
+    -fx-stroke-dash-array: 6 4;
+}
+
+.default-color1.chart-line-symbol {
+    -fx-background-color: -fx-like-color, -fx-secondary-bg;
+}

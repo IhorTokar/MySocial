@@ -1,6 +1,8 @@
 package com.example.social.client.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.example.social.shared.dto.UserEchoPointDto;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,6 +34,15 @@ public class GraphApiService {
                 topTags,
                 node.get("echoChamberScore").asDouble()
         ));
+    }
+
+    /** Траєкторія користувача по знімках історії ехо-камер (Louvain), від найстарішого; при помилці — порожньо. */
+    public List<UserEchoPointDto> getUserCommunityHistory(Long userId) throws IOException, InterruptedException {
+        ApiClient.ApiResponse response = apiClient.get("/api/graph/community/" + userId + "/history");
+        if (!response.isSuccess()) {
+            return List.of();
+        }
+        return apiClient.getObjectMapper().readValue(response.body(), new TypeReference<List<UserEchoPointDto>>() {});
     }
 
     public record CommunityInfo(long communityId, int memberCount, List<String> topTags, double echoChamberScore) {

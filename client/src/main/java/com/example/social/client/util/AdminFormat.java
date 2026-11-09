@@ -19,13 +19,15 @@ public final class AdminFormat {
             "USER_PROFILE_EDIT", "Редагування профілю",
             "USER_PASSWORD_RESET", "Скидання пароля",
             "POST_DELETE", "Видалення поста",
-            "COMMENT_DELETE", "Видалення коментаря");
+            "COMMENT_DELETE", "Видалення коментаря",
+            "ECHO_SNAPSHOT", "Знімок ехо-камер");
 
     private static final Map<String, String> TARGETS = Map.of(
             "WEIGHTS", "ваги",
             "USER", "користувач",
             "POST", "пост",
-            "COMMENT", "коментар");
+            "COMMENT", "коментар",
+            "echo_snapshot", "знімок");
 
     private AdminFormat() {
     }
@@ -36,6 +38,26 @@ public final class AdminFormat {
 
     public static String weight(double value) {
         return String.format(Locale.ROOT, "%.3f", value);
+    }
+
+    /** Echo-score та інші частки 0..1; null — «—». */
+    public static String score(Double value) {
+        return value == null ? "—" : String.format(Locale.ROOT, "%.3f", value);
+    }
+
+    /** Зміна зі знаком: +0.012 / −0.004; null — «—». */
+    public static String delta(Double value) {
+        if (value == null) {
+            return "—";
+        }
+        if (Math.abs(value) < 0.0005) {
+            return "0.000";
+        }
+        return (value > 0 ? "+" : "−") + String.format(Locale.ROOT, "%.3f", Math.abs(value));
+    }
+
+    public static String percent(Double value) {
+        return value == null ? "—" : String.format(Locale.ROOT, "%.0f%%", value * 100);
     }
 
     public static String action(String code) {

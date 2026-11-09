@@ -27,6 +27,7 @@ public class AppSettings {
     private static final String KEY_CARD_WIDTH = "post.cardWidth";
     private static final String KEY_IMAGE_HEIGHT = "post.imageHeight";
     private static final String KEY_SHOW_IDS = "admin.showIds";
+    private static final String KEY_SHOW_ECHO_HISTORY = "profile.showEchoHistory";
     public enum SizePreset {
         SMALL(1, "Малий", 460, 280),
         NORMAL(2, "Нормальний", 640, 520),
@@ -63,6 +64,8 @@ public class AppSettings {
     private final DoubleProperty imageHeight = new SimpleDoubleProperty(DEFAULT_IMAGE_HEIGHT);
     /** Показувати адміністратору ID постів, користувачів і коментарів. */
     private final BooleanProperty showIds = new SimpleBooleanProperty(true);
+    /** Показувати в профілі графік динаміки ехо-спільноти (кнопка «Показати / Сховати динаміку»). */
+    private final BooleanProperty showEchoHistory = new SimpleBooleanProperty(false);
 
     private AppSettings() {
         settingsFile = Path.of(System.getProperty("user.home"), ".socialapp", "settings.properties");
@@ -83,6 +86,15 @@ public class AppSettings {
 
     public void setShowIds(boolean value) {
         showIds.set(value);
+        save();
+    }
+
+    public boolean isShowEchoHistory() {
+        return showEchoHistory.get();
+    }
+
+    public void setShowEchoHistory(boolean value) {
+        showEchoHistory.set(value);
         save();
     }
 
@@ -134,6 +146,7 @@ public class AppSettings {
                     parseOrDefault(props.getProperty(KEY_IMAGE_HEIGHT), DEFAULT_IMAGE_HEIGHT),
                     MIN_IMAGE_HEIGHT, MAX_IMAGE_HEIGHT));
             showIds.set(Boolean.parseBoolean(props.getProperty(KEY_SHOW_IDS, "true")));
+            showEchoHistory.set(Boolean.parseBoolean(props.getProperty(KEY_SHOW_ECHO_HISTORY, "false")));
         } catch (IOException ignored) {
             // якщо файл пошкоджено — просто лишаємось на значеннях за замовчуванням
         }
@@ -150,6 +163,7 @@ public class AppSettings {
         props.setProperty(KEY_CARD_WIDTH, String.valueOf(cardWidth.get()));
         props.setProperty(KEY_IMAGE_HEIGHT, String.valueOf(imageHeight.get()));
         props.setProperty(KEY_SHOW_IDS, String.valueOf(showIds.get()));
+        props.setProperty(KEY_SHOW_ECHO_HISTORY, String.valueOf(showEchoHistory.get()));
 
         try (OutputStream out = Files.newOutputStream(settingsFile)) {
             props.store(out, "Social Network client settings");

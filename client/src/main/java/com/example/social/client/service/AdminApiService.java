@@ -15,6 +15,8 @@ import com.example.social.shared.dto.ChangeRoleRequestDto;
 import com.example.social.shared.dto.CommunityDetectionResultDto;
 import com.example.social.shared.dto.GraphDataDto;
 import com.example.social.shared.dto.GraphSyncResultDto;
+import com.example.social.shared.dto.EchoSnapshotDetailDto;
+import com.example.social.shared.dto.EchoSnapshotDto;
 import java.util.ArrayList;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -156,6 +158,27 @@ public class AdminApiService {
     }
 
     public record CommunityInfo(long community, int memberCount, double echoChamberScore) {
+    }
+
+    // ===== Історія ехо-камер =====
+
+    /** Новий знімок: сервер оновлює граф, заново шукає спільноти й зберігає їх показники. */
+    public EchoSnapshotDto takeEchoSnapshot(boolean leiden) throws IOException, InterruptedException, AdminApiException {
+        return read(apiClient.post("/api/admin/echo-history?leiden=" + leiden, null),
+                new TypeReference<EchoSnapshotDto>() {});
+    }
+
+    /** Знімки від найстарішого до найновішого. */
+    public List<EchoSnapshotDto> getEchoHistory(boolean leiden, int limit)
+            throws IOException, InterruptedException, AdminApiException {
+        return read(apiClient.get("/api/admin/echo-history?leiden=" + leiden + "&limit=" + limit),
+                new TypeReference<List<EchoSnapshotDto>>() {});
+    }
+
+    public EchoSnapshotDetailDto getEchoSnapshot(long snapshotId)
+            throws IOException, InterruptedException, AdminApiException {
+        return read(apiClient.get("/api/admin/echo-history/" + snapshotId),
+                new TypeReference<EchoSnapshotDetailDto>() {});
     }
 
     // ===== Журнал =====

@@ -11,6 +11,7 @@ public class AdminPanelController {
     @FXML private Tab usersTab;
     @FXML private Tab graphTab;
     @FXML private Tab auditTab;
+    @FXML private Tab echoTab;
 
     /** Контролери вкладених FXML: ім'я поля = fx:id включення + "Controller". */
     @FXML private AdminWeightsController weightsController;
@@ -18,6 +19,7 @@ public class AdminPanelController {
     @FXML private AdminContentController contentController;
     @FXML private AdminGraphController graphController;
     @FXML private AdminAuditController auditController;
+    @FXML private AdminEchoHistoryController echoHistoryController;
 
     private MainShellController shell;
 
@@ -38,6 +40,11 @@ public class AdminPanelController {
         graphTab.selectedProperty().addListener((obs, wasSelected, selected) -> {
             if (selected) {
                 graphController.onShown();
+            }
+        });
+        echoTab.selectedProperty().addListener((obs, wasSelected, selected) -> {
+            if (selected) {
+                echoHistoryController.onShown();
             }
         });
     }
