@@ -247,7 +247,7 @@ public class RecommendationService {
             boolean isFollowed = followedUserIds.contains(post.getUser().getUserId());
 
             long hoursOld = Duration.between(post.getCreatedDate(), now).toHours();
-            double recencyScore = 1.0 / (1.0 + hoursOld / 24.0);
+            double recencyScore = recencyScore(hoursOld);
 
             result.add(new CandidateScores(
                     post, post.getPostId(), post.getUser().getUserId(), likesInWindow,
@@ -256,6 +256,14 @@ public class RecommendationService {
         }
 
         return result;
+    }
+
+    /**
+     * Свіжість R = 1 / (1 + t / 24), де t — вік поста в годинах:
+     * щойно створений пост має 1, добовий — 0,5, тижневий — 0,125.
+     */
+    static double recencyScore(long hoursOld) {
+        return 1.0 / (1.0 + hoursOld / 24.0);
     }
 
     private Map<Long, Double> computeSemanticScores(User currentUser, List<Post> candidates) {

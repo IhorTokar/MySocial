@@ -111,6 +111,14 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- Інтеграційні тести: справжній PostgreSQL (з pgvector) у Docker на час тестів.
+             Версії задає spring-boot-dependencies, тому без <version>. -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
