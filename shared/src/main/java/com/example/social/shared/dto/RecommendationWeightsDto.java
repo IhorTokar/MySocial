@@ -9,5 +9,6 @@ import java.time.LocalDateTime;
 public record RecommendationWeightsDto(Long id,
                                        double popularity, double itemCf, double graphSim,
                                        double semantic, double recency, double followedBonus,
+                                       double mmrLambda,
                                        String comment, String createdBy, LocalDateTime createdAt) {
 }

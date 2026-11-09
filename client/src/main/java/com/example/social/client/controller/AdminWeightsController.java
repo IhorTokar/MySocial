@@ -44,7 +44,7 @@ public class AdminWeightsController {
 
     private final AdminApiService api = new AdminApiService(new ApiClient());
 
-    /** Рядки редактора: 0–4 — основні ваги (сума = 1), 5 — бонус за підписку. */
+    /** Рядки редактора: 0–4 — основні ваги (сума = 1), 5 — бонус за підписку, 6 — λ для MMR. */
     private final List<WeightRow> rows = new ArrayList<>();
     private RecommendationWeightsDto loaded;
     private boolean busy;
@@ -57,6 +57,8 @@ public class AdminWeightsController {
         rows.add(new WeightRow("Семантика (S)", "Близькість тексту до постів, які сподобались", 3));
         rows.add(new WeightRow("Свіжість (R)", "Новіші публікації вище", 4));
         rows.add(new WeightRow("Бонус за підписку", "Додається, якщо автор у підписках; у суму не входить", 5));
+        rows.add(new WeightRow("Різноманітність, MMR λ",
+                "1 — порядок лише за оцінкою; менше — схожі пости розводяться; у суму не входить", 6));
 
         setupHistoryTable();
         reload();
@@ -68,7 +70,7 @@ public class AdminWeightsController {
     private void handleSave() {
         WeightsUpdateRequestDto request = new WeightsUpdateRequestDto(
                 rows.get(0).get(), rows.get(1).get(), rows.get(2).get(), rows.get(3).get(), rows.get(4).get(),
-                rows.get(5).get(), blankToNull(commentField.getText()));
+                rows.get(5).get(), rows.get(6).get(), blankToNull(commentField.getText()));
 
         runAsync("Збереження...", () -> {
             RecommendationWeightsDto saved = api.updateWeights(request);
@@ -158,6 +160,7 @@ public class AdminWeightsController {
         rows.get(3).set(w.semantic());
         rows.get(4).set(w.recency());
         rows.get(5).set(w.followedBonus());
+        rows.get(6).set(w.mmrLambda());
         updateState();
     }
 
@@ -172,6 +175,7 @@ public class AdminWeightsController {
                 TableColumns.<RecommendationWeightsDto>text("S", 55, w -> AdminFormat.weight(w.semantic())),
                 TableColumns.<RecommendationWeightsDto>text("R", 55, w -> AdminFormat.weight(w.recency())),
                 TableColumns.<RecommendationWeightsDto>text("Бонус", 60, w -> AdminFormat.weight(w.followedBonus())),
+                TableColumns.<RecommendationWeightsDto>text("λ", 55, w -> AdminFormat.weight(w.mmrLambda())),
                 TableColumns.<RecommendationWeightsDto>text("Коментар", 200, w -> AdminFormat.orDash(w.comment()))));
         historyTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         historyTable.setPlaceholder(new Label("Змін ще не було — діють значення з application.yml"));
@@ -208,7 +212,7 @@ public class AdminWeightsController {
 
     private boolean isDirty() {
         double[] original = {loaded.popularity(), loaded.itemCf(), loaded.graphSim(),
-                loaded.semantic(), loaded.recency(), loaded.followedBonus()};
+                loaded.semantic(), loaded.recency(), loaded.followedBonus(), loaded.mmrLambda()};
         for (int i = 0; i < original.length; i++) {
             if (Math.abs(rows.get(i).get() - original[i]) > 1e-9) {
                 return true;

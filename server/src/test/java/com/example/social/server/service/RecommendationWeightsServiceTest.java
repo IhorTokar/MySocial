@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 /** Ваги стрічки: значення за замовчуванням, перевірка суми, кеш після коміту, запис у журнал. */
 class RecommendationWeightsServiceTest {
 
-    private static final Weights YML = new Weights(0.10, 0.35, 0.35, 0.10, 0.10, 0.3);
+    private static final Weights YML = new Weights(0.10, 0.35, 0.35, 0.10, 0.10, 0.3, 0.7);
     private static final long ADMIN_ID = 83L;
 
     private final RecommendationWeightsRepository repository = mock(RecommendationWeightsRepository.class);
@@ -59,8 +59,8 @@ class RecommendationWeightsServiceTest {
 
     private RecommendationWeightsService newService() {
         RecommendationWeightsService s = new RecommendationWeightsService(repository, userRepository, auditService,
-                YML.popularity(), YML.itemCf(), YML.graphSim(), YML.semantic(), YML.recency(), YML.followedBonus());
-        s.loadFromDatabase();
+                YML.popularity(), YML.itemCf(), YML.graphSim(), YML.semantic(), YML.recency(), YML.followedBonus(),
+                YML.mmrLambda());
         return s;
     }
 
@@ -70,7 +70,11 @@ class RecommendationWeightsServiceTest {
     }
 
     private static WeightsUpdateRequestDto request(double p, double i, double g, double s, double r) {
-        return new WeightsUpdateRequestDto(p, i, g, s, r, 0.3, "тест");
+        return new WeightsUpdateRequestDto(p, i, g, s, r, 0.3, 0.7, "тест");
+    }
+
+    private static WeightsUpdateRequestDto requestWithLambda(Double lambda) {
+        return new WeightsUpdateRequestDto(0.10, 0.35, 0.35, 0.10, 0.10, 0.3, lambda, "тест");
     }
 
     @Test
@@ -85,9 +89,9 @@ class RecommendationWeightsServiceTest {
     @Test
     void latestVersionFromDatabaseWinsOverYml() {
         when(repository.findTopByOrderByWeightsIdDesc()).thenReturn(Optional.of(
-                new RecommendationWeightsVersion(0.10, 0.30, 0.35, 0.15, 0.10, 0.3, null, null)));
+                new RecommendationWeightsVersion(0.10, 0.30, 0.35, 0.15, 0.10, 0.3, 0.5, null, null)));
 
-        assertEquals(new Weights(0.10, 0.30, 0.35, 0.15, 0.10, 0.3), newService().current());
+        assertEquals(new Weights(0.10, 0.30, 0.35, 0.15, 0.10, 0.3, 0.5), newService().current());
     }
 
     @Test
@@ -108,7 +112,7 @@ class RecommendationWeightsServiceTest {
         assertEquals(YML, service.current(), "до коміту стрічка працює на старих вагах");
 
         commit();
-        assertEquals(new Weights(0.10, 0.30, 0.35, 0.15, 0.10, 0.3), service.current());
+        assertEquals(new Weights(0.10, 0.30, 0.35, 0.15, 0.10, 0.3, 0.7), service.current());
     }
 
     @Test
@@ -125,5 +129,34 @@ class RecommendationWeightsServiceTest {
         service.update(request(0.10, 0.35, 0.35, 0.10, 0.10), ADMIN_ID);
 
         verify(auditService).log(eq(ADMIN_ID), eq(AuditAction.WEIGHTS_UPDATE), eq("WEIGHTS"), any(), eq("без змін"));
+    }
+
+    // ===== λ для MMR =====
+
+    @Test
+    void lambdaChangeIsVersionedAndAudited() {
+        service.update(requestWithLambda(0.5), ADMIN_ID);
+
+        ArgumentCaptor<String> details = ArgumentCaptor.forClass(String.class);
+        verify(auditService).log(eq(ADMIN_ID), eq(AuditAction.WEIGHTS_UPDATE), eq("WEIGHTS"), any(), details.capture());
+        assertEquals("mmrLambda 0.700 → 0.500", details.getValue());
+
+        commit();
+        assertEquals(0.5, service.current().mmrLambda(), 1e-12);
+    }
+
+    @Test
+    void missingLambdaKeepsCurrentValue() {
+        service.update(requestWithLambda(null), ADMIN_ID);
+
+        ArgumentCaptor<RecommendationWeightsVersion> saved = ArgumentCaptor.forClass(RecommendationWeightsVersion.class);
+        verify(repository).save(saved.capture());
+        assertEquals(0.7, saved.getValue().getMmrLambda(), 1e-12);
+    }
+
+    @Test
+    void rejectsLambdaOutsideRange() {
+        assertThrows(BadRequestException.class, () -> service.update(requestWithLambda(1.5), ADMIN_ID));
+        verify(repository, never()).save(any());
     }
 }

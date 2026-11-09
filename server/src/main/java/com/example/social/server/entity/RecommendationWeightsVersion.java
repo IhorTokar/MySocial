@@ -31,6 +31,10 @@ public class RecommendationWeightsVersion {
     @Column(name = "followed_bonus", nullable = false)
     private double followedBonus;
 
+    /** λ для MMR-перестановки стрічки: 1 — без перестановки, менше — різноманітніша стрічка. */
+    @Column(name = "mmr_lambda", nullable = false)
+    private double mmrLambda;
+
     @Column(length = 255)
     private String comment;
 
@@ -46,13 +50,14 @@ public class RecommendationWeightsVersion {
 
     public RecommendationWeightsVersion(double popularity, double itemCf, double graphSim,
                                         double semantic, double recency, double followedBonus,
-                                        String comment, User createdBy) {
+                                        double mmrLambda, String comment, User createdBy) {
         this.popularity = popularity;
         this.itemCf = itemCf;
         this.graphSim = graphSim;
         this.semantic = semantic;
         this.recency = recency;
         this.followedBonus = followedBonus;
+        this.mmrLambda = mmrLambda;
         this.comment = comment;
         this.createdBy = createdBy;
     }
@@ -67,4 +72,5 @@ public class RecommendationWeightsVersion {
     public String getComment() { return comment; }
     public User getCreatedBy() { return createdBy; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public double getMmrLambda() { return mmrLambda; }
 }

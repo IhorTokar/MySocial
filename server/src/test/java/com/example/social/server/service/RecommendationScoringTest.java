@@ -9,7 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 /** Формула гібридної оцінки (3.1) і свіжості — на числах з рис. 3.6 звіту. */
 class RecommendationScoringTest {
 
-    private static final Weights REPORT_WEIGHTS = new Weights(0.10, 0.35, 0.35, 0.10, 0.10, 0.3);
+    private static final Weights REPORT_WEIGHTS = new Weights(0.10, 0.35, 0.35, 0.10, 0.10, 0.3, 1.0);
 
     /** Пост #89 з рис. 3.6: компоненти й totalScore, які повернув /api/posts/feed/debug. */
     private static CandidateScores post89(boolean followed) {
@@ -30,7 +30,7 @@ class RecommendationScoringTest {
 
     @Test
     void zeroWeightsGiveZeroScore() {
-        Weights zero = new Weights(0, 0, 0, 0, 0, 0);
+        Weights zero = new Weights(0, 0, 0, 0, 0, 0, 1.0);
         assertEquals(0.0, post89(true).total(zero), 1e-12);
     }
 

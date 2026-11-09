@@ -79,18 +79,6 @@
 
         <!-- ===== Аналітичний модуль (Data Mining / ML) ===== -->
 
-        <!-- Apache Spark MLlib — рекомендації, кластеризація -->
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.13</artifactId>
-            <version>3.5.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-mllib_2.13</artifactId>
-            <version>3.5.1</version>
-        </dependency>
-
         <!-- Neo4j Java Driver — аналіз графу друзів/спільнот -->
         <dependency>
             <groupId>org.neo4j.driver</groupId>

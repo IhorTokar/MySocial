@@ -4,20 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.7">
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminEchoHistoryController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/EchoChart.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/admin_echo_history.fxml" afterDir="false" />
+    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.8">
+      <change afterPath="$PROJECT_DIR$/server/src/main/resources/db/migration/migration/V9__weights_mmr_lambda.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminPanelController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminPanelController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ProfileController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/AdminApiService.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/AdminApiService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/GraphApiService.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/GraphApiService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AdminFormat.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AdminFormat.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AppSettings.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AppSettings.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/admin.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/admin.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/profile.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/profile.fxml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminWeightsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/AdminWeightsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/server/pom.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/RecommendationWeightsVersion.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/entity/RecommendationWeightsVersion.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/RecommendationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/RecommendationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/RecommendationWeightsService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/RecommendationWeightsService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/resources/application.yml" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/resources/application.yml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/service/RecommendationScoringTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/service/RecommendationScoringTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/service/RecommendationWeightsServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/service/RecommendationWeightsServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/RecommendationWeightsDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/RecommendationWeightsDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/WeightsUpdateRequestDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/WeightsUpdateRequestDto.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -248,7 +247,6 @@
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="update 1.4" />
     <MESSAGE value="update 1.4&#10;feat: add Neo4j integration — driver config, graph sync service, stats endpoint, verified visually in Neo4j Browser" />
     <MESSAGE value="update 1.5" />
     <MESSAGE value="update 1.6" />
@@ -273,7 +271,8 @@
     <MESSAGE value="update 2.6.8" />
     <MESSAGE value="update 2.6.9" />
     <MESSAGE value="update 2.7" />
-    <option name="LAST_COMMIT_MESSAGE" value="update 2.7" />
+    <MESSAGE value="update 2.8" />
+    <option name="LAST_COMMIT_MESSAGE" value="update 2.8" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

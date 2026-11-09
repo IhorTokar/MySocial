@@ -16,7 +16,6 @@ import com.example.social.server.repository.UserRepository;
 import com.example.social.shared.dto.PostResponseDto;
 import com.example.social.shared.dto.RecommendationDto;
 import com.example.social.shared.dto.SimilarUserDto;
-import org.springframework.beans.factory.annotation.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -49,12 +48,16 @@ public class RecommendationService {
     /** MMR обирає зі стількох найрелевантніших кандидатів: limit × 3. */
     private static final int MMR_POOL_FACTOR = 3;
 
-    /** Вагові коефіцієнти гібридної оцінки. */
+    /**
+     * Вагові коефіцієнти гібридної оцінки (3.1) і λ для MMR-перестановки.
+     * mmrLambda на оцінку окремого поста не впливає — лише на порядок постів у стрічці.
+     */
     public record Weights(double popularity, double itemCf, double graphSim,
-                          double semantic, double recency, double followedBonus) {
+                          double semantic, double recency, double followedBonus,
+                          double mmrLambda) {
         public static final Weights DEFAULT = new Weights(
                 POPULARITY_WEIGHT, ITEM_CF_WEIGHT, GRAPH_SIM_WEIGHT,
-                SEMANTIC_WEIGHT, RECENCY_WEIGHT, FOLLOWED_BONUS);
+                SEMANTIC_WEIGHT, RECENCY_WEIGHT, FOLLOWED_BONUS, 1.0);
     }
 
     /** Нормалізовані оцінки компонентів для одного кандидата (до зважування). */
@@ -83,7 +86,6 @@ public class RecommendationService {
 
     private final RecommendationWeightsService weightsService;
     /** λ для MMR: 1 — без перестановки (чиста релевантність), менше — різноманітніша стрічка. */
-    private final double mmrLambda;
 
     public RecommendationService(PostRepository postRepository,
                                  PostLikeRepository postLikeRepository,
@@ -93,8 +95,7 @@ public class RecommendationService {
                                  UserSimilarityService userSimilarityService,
                                  PostEmbeddingRepository postEmbeddingRepository,
                                  PostService postService,
-                                 RecommendationWeightsService weightsService,
-                                 @Value("${recommendation.mmr.lambda:1.0}") double mmrLambda) {
+                                 RecommendationWeightsService weightsService) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
         this.commentRepository = commentRepository;
@@ -104,10 +105,6 @@ public class RecommendationService {
         this.postEmbeddingRepository = postEmbeddingRepository;
         this.postService = postService;
         this.weightsService = weightsService;
-        if (mmrLambda < 0 || mmrLambda > 1) {
-            throw new IllegalStateException("recommendation.mmr.lambda має бути в межах [0, 1]");
-        }
-        this.mmrLambda = mmrLambda;
     }
 
     /** Ваги, з якими зараз працює стрічка (з БД, а якщо там порожньо — з application.yml). */
@@ -132,10 +129,10 @@ public class RecommendationService {
         return getHybridFeedDebug(currentUserId, limit, null);
     }
 
-    /** @param mmrLambda λ лише для цього запиту (для порівняння); null — значення з application.yml */
+    /** @param mmrLambda λ лише для цього запиту (для порівняння); null — чинне значення з адмін-панелі */
     @Transactional(readOnly = true)
     public List<RecommendationDto> getHybridFeedDebug(Long currentUserId, int limit, Double mmrLambda) {
-        double lambda = mmrLambda != null ? mmrLambda : this.mmrLambda;
+        double lambda = mmrLambda != null ? mmrLambda : weightsService.current().mmrLambda();
         return computeScoredFeed(currentUserId, limit, lambda).stream()
                 .map(this::toDebugDto)
                 .collect(Collectors.toList());
@@ -147,7 +144,7 @@ public class RecommendationService {
     }
 
     private List<ScoredPost> computeScoredFeed(Long currentUserId, int limit) {
-        return computeScoredFeed(currentUserId, limit, mmrLambda);
+        return computeScoredFeed(currentUserId, limit, weightsService.current().mmrLambda());
     }
 
     /** Стрічка: ранжування за формулою (3.1), а при λ < 1 — ще й MMR-перестановка для різноманітності. */
