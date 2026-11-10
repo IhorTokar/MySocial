@@ -24,6 +24,10 @@
         <ComboBox fx:id="algorithmCombo" prefWidth="120.0" />
         <Label fx:id="summaryLabel" styleClass="secondary-label" />
         <Region HBox.hgrow="ALWAYS" />
+        <Button fx:id="resetScenarioButton" text="Прибрати тестові групи" onAction="#handleResetScenario"
+                styleClass="button, link-button" />
+        <Button fx:id="scenarioButton" text="Сценарій для звіту" onAction="#handleRunScenario"
+                styleClass="button, button-secondary" />
         <Button text="Оновити" onAction="#handleRefresh" styleClass="button, button-secondary" />
         <Button fx:id="snapshotButton" text="Зробити знімок" onAction="#handleSnapshot"
                 styleClass="button, button-primary" />

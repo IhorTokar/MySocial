@@ -65,10 +65,15 @@ public class PostController {
         return ResponseEntity.ok(recommendationService.getHybridFeedDebug(currentUser.getUserId(), limit, mmrLambda));
     }
 
+    /** Стрічка посторінково: offset — скільки постів клієнт уже показав. */
     @GetMapping("/feed")
     public ResponseEntity<?> getFeed(@AuthenticationPrincipal AuthenticatedUser currentUser,
-                                     @RequestParam(name = "limit", defaultValue = "30") int limit) {
-        return ResponseEntity.ok(recommendationService.getHybridFeed(currentUser.getUserId(), limit));
+                                     @RequestParam(name = "limit", defaultValue = "30") int limit,
+                                     @RequestParam(name = "offset", defaultValue = "0") int offset) {
+        if (limit < 1 || limit > 100 || offset < 0) {
+            throw new BadRequestException("limit має бути від 1 до 100, offset — не менше 0");
+        }
+        return ResponseEntity.ok(recommendationService.getHybridFeed(currentUser.getUserId(), limit, offset));
     }
 
     @DeleteMapping("/{postId}")

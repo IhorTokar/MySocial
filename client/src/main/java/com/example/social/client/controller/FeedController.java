@@ -4,18 +4,15 @@ import com.example.social.client.component.PostListCell;
 import com.example.social.client.service.ApiClient;
 import com.example.social.client.service.PostApiService;
 import com.example.social.client.util.SceneUtil;
-import com.example.social.client.util.SessionManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.stage.Stage;
 
-import java.io.IOException;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class FeedController {
 
@@ -28,14 +25,27 @@ public class FeedController {
     @FXML
     private Button refreshButton;
 
+    /** Скільки постів довантажується за раз. */
+    private static final int PAGE_SIZE = 20;
+    /** Довантаження починається, коли на екрані з'являється п'ятий пост від кінця. */
+    private static final int PREFETCH_DISTANCE = 5;
+
     private final PostApiService postApiService = new PostApiService(new ApiClient());
     private MainShellController shell;
+
+    private boolean loading;
+    private boolean hasMore = true;
+    /** Номер «покоління» стрічки: відповіді, що прийшли після «Оновити», відкидаються. */
+    private int generation;
 
     @FXML
     private void initialize() {
         postsListView.setCellFactory(list -> {
             PostListCell cell = new PostListCell(this::openProfile);
             cell.setOnEditRequested(this::openEditForm);
+            // ListView створює комірки лише для видимих рядків — тож зміна індексу комірки
+            // означає, що відповідний пост з'явився на екрані
+            cell.indexProperty().addListener((obs, old, index) -> maybeLoadMore(index.intValue()));
             return cell;
         });
         loadFeed();
@@ -77,25 +87,41 @@ public class FeedController {
 
 
     private void loadFeed() {
-        refreshButton.setDisable(true);
-        statusLabel.setText("Завантаження...");
+        loadPage(true);
+    }
+
+    private void maybeLoadMore(int visibleIndex) {
+        int size = postsListView.getItems().size();
+        if (hasMore && !loading && size > 0 && visibleIndex >= size - PREFETCH_DISTANCE) {
+            loadPage(false);
+        }
+    }
+
+    /** @param reset true — стрічка з початку («Оновити»), false — наступна сторінка */
+    private void loadPage(boolean reset) {
+        if (loading && !reset) {
+            return;
+        }
+        loading = true;
+        if (reset) {
+            generation++;
+            hasMore = true;
+            refreshButton.setDisable(true);
+        }
+        int requestGeneration = generation;
+        int offset = reset ? 0 : postsListView.getItems().size();
+        statusLabel.setText(reset ? "Завантаження..." : "Завантаження ще постів...");
 
         Thread.ofVirtual().start(() -> {
             try {
-                PostApiService.FeedResult result = postApiService.getFeed();
-
-                Platform.runLater(() -> {
-                    refreshButton.setDisable(false);
-
-                    if (result.success()) {
-                        postsListView.getItems().setAll(result.posts());
-                        statusLabel.setText("Постів у стрічці: " + result.posts().size());
-                    } else {
-                        statusLabel.setText(result.errorMessage());
-                    }
-                });
+                PostApiService.FeedResult result = postApiService.getFeed(offset, PAGE_SIZE);
+                Platform.runLater(() -> applyPage(result, reset, requestGeneration));
             } catch (Exception e) {
                 Platform.runLater(() -> {
+                    if (requestGeneration != generation) {
+                        return;
+                    }
+                    loading = false;
                     refreshButton.setDisable(false);
                     statusLabel.setText("Помилка з'єднання: " + e.getMessage());
                 });
@@ -103,5 +129,33 @@ public class FeedController {
         });
     }
 
+    private void applyPage(PostApiService.FeedResult result, boolean reset, int requestGeneration) {
+        if (requestGeneration != generation) {
+            return;   // поки сторінка вантажилась, користувач натиснув «Оновити»
+        }
+        loading = false;
+        refreshButton.setDisable(false);
+        if (!result.success()) {
+            statusLabel.setText(result.errorMessage());
+            return;
+        }
 
+        List<PostApiService.PostItem> page = result.posts();
+        int added;
+        if (reset) {
+            postsListView.getItems().setAll(page);
+            added = page.size();
+        } else {
+            // MMR може трохи переставити пости між сторінками — повтори не додаємо
+            Set<Long> shown = new HashSet<>();
+            postsListView.getItems().forEach(p -> shown.add(p.postId()));
+            List<PostApiService.PostItem> fresh = page.stream().filter(p -> shown.add(p.postId())).toList();
+            postsListView.getItems().addAll(fresh);
+            added = fresh.size();
+        }
+        hasMore = page.size() == PAGE_SIZE && added > 0;
+
+        int total = postsListView.getItems().size();
+        statusLabel.setText("Постів у стрічці: " + total + (hasMore ? "" : " · це все"));
+    }
 }

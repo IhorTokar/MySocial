@@ -3,6 +3,7 @@ package com.example.social.client.service;
 import com.example.social.shared.dto.AuditLogEntryDto;
 import com.example.social.shared.dto.RecommendationWeightsDto;
 import com.example.social.shared.dto.WeightsUpdateRequestDto;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +23,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -30,6 +32,9 @@ import java.util.List;
  * з текстом поля "error" з відповіді сервера.
  */
 public class AdminApiService {
+
+    /** Для операцій, що перераховують граф і спільноти: можуть тривати до кількох хвилин. */
+    private static final Duration LONG_OPERATION = Duration.ofMinutes(3);
 
     private final ApiClient apiClient;
     private final ObjectMapper mapper;
@@ -164,8 +169,30 @@ public class AdminApiService {
 
     /** Новий знімок: сервер оновлює граф, заново шукає спільноти й зберігає їх показники. */
     public EchoSnapshotDto takeEchoSnapshot(boolean leiden) throws IOException, InterruptedException, AdminApiException {
-        return read(apiClient.post("/api/admin/echo-history?leiden=" + leiden, null),
+        return read(apiClient.post("/api/admin/echo-history?leiden=" + leiden, null, LONG_OPERATION),
                 new TypeReference<EchoSnapshotDto>() {});
+    }
+
+    // ===== Сценарій ехо-камери (для звіту) =====
+
+    /** Результат кроку сценарію — лише поля, потрібні клієнту (решту Jackson пропускає). */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record ScenarioStep(int step, String title, EchoSnapshotDto snapshot,
+                               ScenarioGroup groupA, ScenarioGroup groupB) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record ScenarioGroup(Long community, int members, double echoChamberScore) {
+    }
+
+    public ScenarioStep runScenarioStep(int step) throws IOException, InterruptedException, AdminApiException {
+        return read(apiClient.post("/api/dev/echo-scenario/" + step, null, LONG_OPERATION),
+                new TypeReference<ScenarioStep>() {});
+    }
+
+    /** Видалити тестові групи echo_a / echo_b (якщо їх немає — нічого не станеться). */
+    public void resetScenario() throws IOException, InterruptedException, AdminApiException {
+        ensureSuccess(apiClient.delete("/api/dev/echo-scenario"));
     }
 
     /** Знімки від найстарішого до найновішого. */

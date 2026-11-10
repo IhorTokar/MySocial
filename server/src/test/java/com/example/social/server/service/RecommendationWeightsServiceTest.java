@@ -61,6 +61,7 @@ class RecommendationWeightsServiceTest {
         RecommendationWeightsService s = new RecommendationWeightsService(repository, userRepository, auditService,
                 YML.popularity(), YML.itemCf(), YML.graphSim(), YML.semantic(), YML.recency(), YML.followedBonus(),
                 YML.mmrLambda());
+        s.loadFromDatabase();
         return s;
     }
 

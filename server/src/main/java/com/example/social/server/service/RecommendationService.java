@@ -86,6 +86,10 @@ public class RecommendationService {
 
     private final RecommendationWeightsService weightsService;
     /** λ для MMR: 1 — без перестановки (чиста релевантність), менше — різноманітніша стрічка. */
+    /** Ваги, з якими зараз працює стрічка (з БД, а якщо там порожньо — з application.yml). */
+    public Weights currentWeights() {
+        return weightsService.current();
+    }
 
     public RecommendationService(PostRepository postRepository,
                                  PostLikeRepository postLikeRepository,
@@ -107,16 +111,23 @@ public class RecommendationService {
         this.weightsService = weightsService;
     }
 
-    /** Ваги, з якими зараз працює стрічка (з БД, а якщо там порожньо — з application.yml). */
-    public Weights currentWeights() {
-        return weightsService.current();
-    }
+
     @Transactional(readOnly = true)
     public List<PostResponseDto> getHybridFeed(Long currentUserId, int limit) {
-        List<Post> posts = computeScoredFeed(currentUserId, limit).stream()
+        return getHybridFeed(currentUserId, limit, 0);
+    }
+
+    /**
+     * Сторінка стрічки для нескінченного прокручування: ранжування (з MMR) рахується
+     * для перших offset + limit постів, і повертається лише їхній «хвіст» з позиції offset.
+     */
+    @Transactional(readOnly = true)
+    public List<PostResponseDto> getHybridFeed(Long currentUserId, int limit, int offset) {
+        List<ScoredPost> ranked = computeScoredFeed(currentUserId, offset + limit);
+        List<Post> page = ranked.subList(Math.min(offset, ranked.size()), ranked.size()).stream()
                 .map(ScoredPost::post)
                 .collect(Collectors.toList());
-        return postService.toDtos(posts, currentUserId);
+        return postService.toDtos(page, currentUserId);
     }
 
     @Transactional(readOnly = true)

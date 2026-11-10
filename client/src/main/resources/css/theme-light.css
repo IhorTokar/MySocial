@@ -1,9 +1,13 @@
+/*
+ * Світла тема. Фон вікна — світло-сірий, картки — білі з помітною рамкою:
+ * так інтерфейс не зливається з білим папером на скриншотах у друкованому звіті.
+ */
 .root {
-    -fx-primary-bg: #F9F9F9;
+    -fx-primary-bg: #E9EDF2;
     -fx-secondary-bg: #FFFFFF;
-    -fx-card-border: #EFF3F4;
+    -fx-card-border: #D0D7DE;
     -fx-primary-text: #0F1419;
-    -fx-secondary-text: #536471;
+    -fx-secondary-text: #4E5D6A;
     -fx-accent: #1D9BF0;
     -fx-accent-hover: #1A8CD8;
     -fx-button-primary-bg: #0F1419;
@@ -12,11 +16,11 @@
     -fx-like-color: #F91880;
     -fx-save-color: #1D9BF0;
     -fx-share-color: #00BA7C;
-    -fx-selection-bg: #E8F5FE;
+    -fx-selection-bg: #DCEEFC;
     -fx-button-primary-hover-bg: #272C30;
-    -fx-button-secondary-bg: #EFF3F4;
-    -fx-button-secondary-hover-bg: #E7E7E8;
-    -fx-input-bg: #F7F9F9;
-    -fx-input-border: #CFD9DE;
-    -fx-bubble-theirs-bg: #EFF3F4;
+    -fx-button-secondary-bg: #E1E7ED;
+    -fx-button-secondary-hover-bg: #D5DDE4;
+    -fx-input-bg: #F3F5F8;
+    -fx-input-border: #BCC6CF;
+    -fx-bubble-theirs-bg: #E1E7ED;
 }

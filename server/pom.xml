@@ -119,6 +119,30 @@
                     <parameters>true</parameters>
                 </configuration>
             </plugin>
+
+            <!-- Записує шлях до jar кожної залежності у властивість groupId:artifactId:jar (потрібно для -javaagent нижче) -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Mockito підключає агент Byte Buddy, щоб підміняти класи в тестах. Динамічне підключення агента
+                 під час роботи JVM на JDK 21 ненадійне й застаріле, тому агент завантажується явно при старті. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <argLine>-javaagent:${net.bytebuddy:byte-buddy-agent:jar}</argLine>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>

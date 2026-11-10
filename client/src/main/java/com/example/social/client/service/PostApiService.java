@@ -20,6 +20,11 @@ public class PostApiService {
         return fetchList("/api/posts/feed");
     }
 
+    /** Сторінка стрічки: limit постів, починаючи з позиції offset. */
+    public FeedResult getFeed(int offset, int limit) throws IOException, InterruptedException {
+        return fetchList("/api/posts/feed?offset=" + offset + "&limit=" + limit);
+    }
+
     public FeedResult getPostsByUser(Long userId) throws IOException, InterruptedException {
         return fetchList("/api/posts/user/" + userId);
     }

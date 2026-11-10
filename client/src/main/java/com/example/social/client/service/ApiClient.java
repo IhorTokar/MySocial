@@ -22,6 +22,8 @@ public class ApiClient {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
+    private static final Duration DEFAULT_TIMEOUT = Duration.ofSeconds(15);
+
     public ApiClient() {
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
@@ -35,30 +37,35 @@ public class ApiClient {
     }
 
     public ApiResponse post(String path, Object body) throws IOException, InterruptedException {
-        return send("POST", path, body, true);
+        return send("POST", path, body, true, DEFAULT_TIMEOUT);
+    }
+
+    /** POST для довгих операцій (знімок ехо-камер, сценарій): сервер може працювати понад 15 секунд. */
+    public ApiResponse post(String path, Object body, Duration timeout) throws IOException, InterruptedException {
+        return send("POST", path, body, true, timeout);
     }
 
     public ApiResponse postPublic(String path, Object body) throws IOException, InterruptedException {
-        return send("POST", path, body, false);
+        return send("POST", path, body, false, DEFAULT_TIMEOUT);
     }
 
     public ApiResponse put(String path, Object body) throws IOException, InterruptedException {
-        return send("PUT", path, body, true);
+        return send("PUT", path, body, true, DEFAULT_TIMEOUT);
     }
 
     public ApiResponse patch(String path, Object body) throws IOException, InterruptedException {
-        return send("PATCH", path, body, true);
+        return send("PATCH", path, body, true, DEFAULT_TIMEOUT);
     }
 
     public ApiResponse get(String path) throws IOException, InterruptedException {
-        return send("GET", path, null, true);
+        return send("GET", path, null, true, DEFAULT_TIMEOUT);
     }
 
     public ApiResponse delete(String path) throws IOException, InterruptedException {
-        return send("DELETE", path, null, true);
+        return send("DELETE", path, null, true, DEFAULT_TIMEOUT);
     }
 
-    private ApiResponse send(String method, String path, Object body, boolean withAuth)
+    private ApiResponse send(String method, String path, Object body, boolean withAuth, Duration timeout)
             throws IOException, InterruptedException {
 
         String json = body != null ? objectMapper.writeValueAsString(body) : "";
@@ -66,7 +73,7 @@ public class ApiClient {
         HttpRequest.Builder builder = HttpRequest.newBuilder()
                 .uri(URI.create(BASE_URL + path))
                 .header("Content-Type", "application/json")
-                .timeout(Duration.ofSeconds(15));
+                .timeout(timeout);
 
         if (withAuth && SessionManager.getInstance().isLoggedIn()) {
             builder.header("Authorization", "Bearer " + SessionManager.getInstance().getToken());
