@@ -62,6 +62,16 @@
                 </VBox>
             </VBox>
             <VBox styleClass="post-card" spacing="10.0">
+                <Label text="Контактні дані" styleClass="post-title" />
+                <Label fx:id="emailLabel" styleClass="secondary-label" />
+                <TextField fx:id="phoneField" promptText="Номер телефону, напр. +380 67 123 45 67" styleClass="text-field" />
+                <Label text="Необов'язково. Номер бачите лише ви та адміністратор — у профілі він не показується."
+                       styleClass="secondary-label" wrapText="true" />
+                <Label fx:id="phoneStatusLabel" wrapText="true" />
+                <Button fx:id="savePhoneButton" text="Зберегти номер" onAction="#handleSavePhone"
+                        styleClass="button, button-primary" />
+            </VBox>
+            <VBox styleClass="post-card" spacing="10.0">
                 <Label text="Зміна пароля" styleClass="post-title" />
                 <PasswordField fx:id="currentPasswordField" promptText="Поточний пароль" styleClass="password-field" />
                 <PasswordField fx:id="newPasswordField" promptText="Новий пароль" styleClass="password-field" />

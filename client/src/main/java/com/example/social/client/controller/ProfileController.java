@@ -12,6 +12,14 @@ import com.example.social.client.util.SessionManager;
 import com.example.social.client.util.EchoChart;
 import com.example.social.shared.dto.UserEchoPointDto;
 import com.example.social.client.util.AppSettings;
+import javafx.geometry.Orientation;
+import javafx.scene.Node;
+import javafx.scene.control.IndexedCell;
+import javafx.scene.control.ScrollBar;
+import javafx.scene.control.skin.VirtualFlow;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.chart.XYChart;
 
 import java.util.HashSet;
@@ -88,9 +96,73 @@ public class ProfileController {
     private Long profileUserId;
     private boolean isFollowing;
 
+    @FXML private VBox collapsibleHeader;
+    @FXML private Label compactNameLabel;
+
     @FXML
     private void initialize() {
         IdBadge.configure(userIdLabel);
+        setUpCollapsibleHeader();
+    }
+
+    // ===== Шапка, що згортається під час прокручування =====
+
+    private void setUpCollapsibleHeader() {
+        // без мінімальної висоти шапку можна стиснути до нуля; кліп обрізає вміст, що не вміщається
+        collapsibleHeader.setMinHeight(0);
+        Rectangle clip = new Rectangle();
+        clip.widthProperty().bind(collapsibleHeader.widthProperty());
+        clip.heightProperty().bind(collapsibleHeader.heightProperty());
+        collapsibleHeader.setClip(clip);
+
+        // смуга прокрутки з'являється разом зі скіном, коли список уперше показано
+        postsListView.skinProperty().addListener((obs, old, skin) -> {
+            if (skin != null) {
+                Platform.runLater(this::attachHeaderCollapse);
+            }
+        });
+    }
+
+    private void attachHeaderCollapse() {
+        for (Node node : postsListView.lookupAll(".scroll-bar")) {
+            if (node instanceof ScrollBar bar && bar.getOrientation() == Orientation.VERTICAL) {
+                bar.valueProperty().addListener((obs, old, value) -> updateHeaderCollapse());
+            }
+        }
+    }
+
+    /**
+     * Шапка згортається на стільки пікселів, на скільки прокручено список, і поступово зникає;
+     * натомість біля «←» з'являється коротке ім'я. Поки відкрита форма нового поста, шапка не згортається.
+     */
+    private void updateHeaderCollapse() {
+        double full = collapsibleHeader.prefHeight(collapsibleHeader.getWidth());
+        if (full <= 0) {
+            return;
+        }
+        double collapsed = createPostExpanded ? 0 : Math.min(scrolledPixels(), full);
+        double shown = full - collapsed;
+        double ratio = shown / full;
+
+        collapsibleHeader.setMaxHeight(collapsed <= 0 ? Region.USE_COMPUTED_SIZE : shown);
+        collapsibleHeader.setOpacity(ratio);
+        collapsibleHeader.setMouseTransparent(ratio < 0.05);
+        compactNameLabel.setOpacity(1 - ratio);
+    }
+
+    /** На скільки пікселів прокручено список від початку (поки видно перший пост; далі — «до кінця»). */
+    private double scrolledPixels() {
+        if (postsListView.lookup(".virtual-flow") instanceof VirtualFlow<?> flow) {
+            IndexedCell<?> first = flow.getFirstVisibleCell();
+            if (first == null) {
+                return 0;
+            }
+            if (first.getIndex() > 0) {
+                return Double.MAX_VALUE;
+            }
+            return Math.max(0, -first.getLayoutY());
+        }
+        return 0;
     }
 
     public void setShell(MainShellController shell) {
@@ -162,6 +234,7 @@ public class ProfileController {
 
     public void applyProfile(UserApiService.UserProfile profile) {
         displayNameLabel.setText(profile.displayNameOrUsername());
+        compactNameLabel.setText(profile.displayNameOrUsername());
         usernameHandleLabel.setText("@" + profile.username());
         IdBadge.set(userIdLabel, "ID " + profile.userId(), profile.userId());
         aboutMeLabel.setText(profile.aboutMe() != null && !profile.aboutMe().isBlank()
@@ -333,6 +406,8 @@ public class ProfileController {
             createPost.setVisible(true);
             createPost.setManaged(true);
             toggleCreatePostButton.setText("Скасувати");
+            updateHeaderCollapse();   // відкрита форма — шапка розгортається
+
         }
     }
 

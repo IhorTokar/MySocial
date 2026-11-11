@@ -7,6 +7,7 @@ import com.example.social.server.service.UserService;
 import com.example.social.shared.dto.ChangePasswordDto;
 import com.example.social.shared.dto.DeleteAccountDto;
 import com.example.social.shared.dto.UpdateProfileDto;
+import com.example.social.shared.dto.UpdatePhoneDto;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -55,6 +56,19 @@ public class UserController {
 
         String avatarUrl = fileStorageService.store(file);
         return ResponseEntity.ok(userService.updateAvatar(currentUser.getUserId(), avatarUrl));
+    }
+
+    /** Пошта й телефон — лише для власника (у публічному профілі їх немає). */
+    @GetMapping("/me/contact")
+    public ResponseEntity<?> getMyContactInfo(@AuthenticationPrincipal AuthenticatedUser currentUser) {
+        return ResponseEntity.ok(userService.getContactInfo(currentUser.getUserId()));
+    }
+
+    /** Номер телефону необов'язковий: порожнє значення видаляє його. */
+    @PutMapping("/me/phone")
+    public ResponseEntity<?> updateMyPhone(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                           @Valid @RequestBody UpdatePhoneDto dto) {
+        return ResponseEntity.ok(userService.updatePhone(currentUser.getUserId(), dto.phone()));
     }
 
     @PatchMapping("/me/password")

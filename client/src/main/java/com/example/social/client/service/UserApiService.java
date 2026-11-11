@@ -95,6 +95,33 @@ public class UserApiService {
         return fallback + " (код " + response.statusCode() + ")";
     }
 
+    // ===== Контактні дані (бачать лише власник і адмін) =====
+
+    public record ContactInfo(String email, String phone) {
+    }
+
+    public record ContactResult(boolean success, ContactInfo contact, String errorMessage) {
+    }
+
+    public ContactResult getContactInfo() throws IOException, InterruptedException {
+        return readContact(apiClient.get("/api/users/me/contact"), "Не вдалося завантажити контактні дані");
+    }
+
+    /** @param phone новий номер; порожній рядок — видалити номер */
+    public ContactResult updatePhone(String phone) throws IOException, InterruptedException {
+        Map<String, String> body = Map.of("phone", phone == null ? "" : phone);
+        return readContact(apiClient.put("/api/users/me/phone", body), "Не вдалося зберегти номер");
+    }
+
+    private ContactResult readContact(ApiClient.ApiResponse response, String fallback) throws IOException {
+        if (!response.isSuccess()) {
+            return new ContactResult(false, null, extractError(response, fallback));
+        }
+        JsonNode node = apiClient.getObjectMapper().readTree(response.body());
+        String phone = node.hasNonNull("phone") ? node.get("phone").asText() : null;
+        return new ContactResult(true, new ContactInfo(node.path("email").asText(), phone), null);
+    }
+
     public ActionResult changePassword(String currentPassword, String newPassword)
             throws IOException, InterruptedException {
 

@@ -117,7 +117,7 @@ public class MainShellController {
             Parent root = loader.load();
 
             Stage stage = (Stage) contentArea.getScene().getWindow();
-            stage.setScene(SceneUtil.create(root, 400, 400));
+            SceneUtil.switchScene(stage, root, 400, 400);
             stage.setTitle("Соціальна мережа");
         } catch (IOException e) {
             e.printStackTrace();

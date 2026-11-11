@@ -119,7 +119,7 @@ public class RegisterController {
             Parent root = loader.load();
 
             Stage stage = (Stage) registerButton.getScene().getWindow();
-            stage.setScene(SceneUtil.create(root, 400, 400));
+            SceneUtil.switchScene(stage, root, 400, 400);
             stage.setTitle("Соціальна мережа");
         } catch (IOException e) {
             errorLabel.setText("Помилка переходу: " + e.getMessage());

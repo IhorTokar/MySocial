@@ -7,6 +7,7 @@ import com.example.social.server.repository.*;
 import com.example.social.shared.dto.ChangePasswordDto;
 import com.example.social.shared.dto.UpdateProfileDto;
 import com.example.social.shared.dto.UserDto;
+import com.example.social.shared.dto.ContactInfoDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -134,6 +135,37 @@ public class UserService {
         user.setUserAvatarUrl(avatarUrl);
         userRepository.save(user);
         return getUserProfile(userId, userId);
+    }
+
+    /** Пошта й телефон власника акаунта. */
+    @Transactional(readOnly = true)
+    public ContactInfoDto getContactInfo(Long userId) {
+        UserPrivate p = privateOf(userId);
+        return new ContactInfoDto(p.getEmail(), p.getPhoneNum());
+    }
+
+    /** Додати, змінити або (порожнім значенням) видалити номер телефону. */
+    @Transactional
+    public ContactInfoDto updatePhone(Long userId, String rawPhone) {
+        UserPrivate p = privateOf(userId);
+        String phone = PhoneNumbers.normalize(rawPhone);
+        if (phone != null) {
+            userPrivateRepository.findByPhoneNum(phone)
+                    .filter(other -> !other.getUser().getUserId().equals(userId))
+                    .ifPresent(other -> {
+                        throw new ConflictException("Цей номер уже прив'язаний до іншого акаунта");
+                    });
+        }
+        p.setPhoneNum(phone);
+        log.info("Phone {} for user {}", phone == null ? "removed" : "updated", userId);
+        return new ContactInfoDto(p.getEmail(), p.getPhoneNum());
+    }
+
+    private UserPrivate privateOf(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
+        return userPrivateRepository.findByUser(user)
+                .orElseThrow(() -> new NotFoundException("Private data not found for user: " + userId));
     }
 
     @Transactional

@@ -14,7 +14,8 @@ public class ClientApplication extends Application {
         Parent root = loader.load();
 
         stage.setTitle("Соціальна мережа");
-        stage.setScene(SceneUtil.create(root, 400, 400));
+        SceneUtil.switchScene(stage, root, 400, 400);
+        SceneUtil.setUpMainWindow(stage);
         stage.show();
     }
 

@@ -29,6 +29,11 @@ import java.util.Optional;
 
 public class SettingsController {
 
+    @FXML private Label emailLabel;
+    @FXML private TextField phoneField;
+    @FXML private Button savePhoneButton;
+    @FXML private Label phoneStatusLabel;
+
     @FXML private PasswordField currentPasswordField;
     @FXML private PasswordField newPasswordField;
     @FXML private PasswordField confirmPasswordField;
@@ -68,6 +73,64 @@ public class SettingsController {
         bindSizeControls();
         bindThemeControls();
         bindAdminControls();
+        loadContactInfo();
+    }
+
+    // ===== Контактні дані =====
+
+    private void loadContactInfo() {
+        Thread.ofVirtual().start(() -> {
+            try {
+                UserApiService.ContactResult result = userApiService.getContactInfo();
+                Platform.runLater(() -> {
+                    if (result.success()) {
+                        showContact(result.contact());
+                    } else {
+                        showPhoneStatus(result.errorMessage(), true);
+                    }
+                });
+            } catch (Exception e) {
+                Platform.runLater(() -> showPhoneStatus("Помилка з'єднання: " + e.getMessage(), true));
+            }
+        });
+    }
+
+    @FXML
+    private void handleSavePhone() {
+        String phone = phoneField.getText() == null ? "" : phoneField.getText().trim();
+        savePhoneButton.setDisable(true);
+        showPhoneStatus("Збереження...", false);
+
+        Thread.ofVirtual().start(() -> {
+            try {
+                UserApiService.ContactResult result = userApiService.updatePhone(phone);
+                Platform.runLater(() -> {
+                    savePhoneButton.setDisable(false);
+                    if (result.success()) {
+                        showContact(result.contact());
+                        showPhoneStatus(result.contact().phone() == null ? "Номер видалено" : "Номер збережено", false);
+                    } else {
+                        showPhoneStatus(result.errorMessage(), true);
+                    }
+                });
+            } catch (Exception e) {
+                Platform.runLater(() -> {
+                    savePhoneButton.setDisable(false);
+                    showPhoneStatus("Помилка з'єднання: " + e.getMessage(), true);
+                });
+            }
+        });
+    }
+
+    /** Сервер повертає номер уже в єдиному вигляді (+380…), тож поле показує саме його. */
+    private void showContact(UserApiService.ContactInfo contact) {
+        emailLabel.setText("Пошта: " + contact.email());
+        phoneField.setText(contact.phone() == null ? "" : contact.phone());
+    }
+
+    private void showPhoneStatus(String message, boolean error) {
+        phoneStatusLabel.getStyleClass().setAll(error ? "error-label" : "secondary-label");
+        phoneStatusLabel.setText(message);
     }
 
     /** Блок «Адміністрування» бачить лише адмін. */
@@ -242,7 +305,7 @@ public class SettingsController {
             Parent root = loader.load();
 
             Stage stage = (Stage) deleteAccountButton.getScene().getWindow();
-            stage.setScene(SceneUtil.create(root, 400, 400));
+            SceneUtil.switchScene(stage, root, 400, 400);
             stage.setTitle("Соціальна мережа");
         } catch (IOException e) {
             e.printStackTrace();

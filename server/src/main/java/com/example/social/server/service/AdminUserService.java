@@ -188,7 +188,7 @@ public class AdminUserService {
                 .orElseThrow(() -> new NotFoundException("Private data not found for user: " + u.getUserId()));
         return new AdminUserDto(
                 u.getUserId(), u.getUid(), u.getUsername(), u.getDisplayName(), u.getAboutMe(),
-                u.getUserAvatarUrl(), p.getEmail(), p.getRole().name(),
+                u.getUserAvatarUrl(), p.getEmail(), p.getPhoneNum(), p.getRole().name(),
                 p.isBlocked(), p.getBlockedReason(), p.getBlockedAt(), u.getCreatedAt(),
                 postRepository.countByUser(u),
                 followersRepository.countByFollowing(u),

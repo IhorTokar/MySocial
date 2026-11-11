@@ -14,6 +14,7 @@ public interface UserPrivateRepository extends JpaRepository<UserPrivate, Long> 
     Optional<UserPrivate> findByEmail(String email);
     Optional<UserPrivate> findByUser(User user);
     boolean existsByEmail(String email);
+    Optional<UserPrivate> findByPhoneNum(String phoneNum);
 
     /** Роль користувача за його ID (без завантаження всього профілю). */
     @Query("select p.role from UserPrivate p where p.user.userId = :userId")

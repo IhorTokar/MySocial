@@ -4,12 +4,23 @@ import com.example.social.client.component.PostListCell;
 import com.example.social.client.service.ApiClient;
 import com.example.social.client.service.PostApiService;
 import com.example.social.client.util.SceneUtil;
+import com.example.social.client.util.SessionManager;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.Orientation;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.IndexedCell;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ScrollBar;
+import javafx.scene.control.skin.VirtualFlow;
+import javafx.stage.Stage;
 
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,10 +54,13 @@ public class FeedController {
         postsListView.setCellFactory(list -> {
             PostListCell cell = new PostListCell(this::openProfile);
             cell.setOnEditRequested(this::openEditForm);
-            // ListView створює комірки лише для видимих рядків — тож зміна індексу комірки
-            // означає, що відповідний пост з'явився на екрані
-            cell.indexProperty().addListener((obs, old, index) -> maybeLoadMore(index.intValue()));
             return cell;
+        });
+        // смуга прокрутки з'являється разом зі скіном, коли список уперше показано
+        postsListView.skinProperty().addListener((obs, old, skin) -> {
+            if (skin != null) {
+                Platform.runLater(this::attachScrollListener);
+            }
         });
         loadFeed();
     }
@@ -88,6 +102,28 @@ public class FeedController {
 
     private void loadFeed() {
         loadPage(true);
+    }
+
+    /**
+     * Довантаження за реальною позицією прокрутки. Індекси комірок для цього не годяться:
+     * ListView службово «приміряє» комірки до довільних рядків, щоб оцінити висоту списку.
+     */
+    private void attachScrollListener() {
+        for (Node node : postsListView.lookupAll(".scroll-bar")) {
+            if (node instanceof ScrollBar bar && bar.getOrientation() == Orientation.VERTICAL) {
+                bar.valueProperty().addListener((obs, old, value) -> checkLastVisible());
+            }
+        }
+    }
+
+    /** Останній видимий пост — чи пора довантажувати. */
+    private void checkLastVisible() {
+        if (postsListView.lookup(".virtual-flow") instanceof VirtualFlow<?> flow) {
+            IndexedCell<?> last = flow.getLastVisibleCell();
+            if (last != null) {
+                maybeLoadMore(last.getIndex());
+            }
+        }
     }
 
     private void maybeLoadMore(int visibleIndex) {
@@ -157,5 +193,7 @@ public class FeedController {
 
         int total = postsListView.getItems().size();
         statusLabel.setText("Постів у стрічці: " + total + (hasMore ? "" : " · це все"));
+        // якщо пости вмістилися на екрані без прокрутки — одразу перевірити, чи потрібна наступна сторінка
+        Platform.runLater(this::checkLastVisible);
     }
 }

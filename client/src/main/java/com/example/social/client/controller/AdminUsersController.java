@@ -128,6 +128,7 @@ public class AdminUsersController {
         nameLabel.setText(name);
         handleLabel.setText("@" + user.username());
         infoLabel.setText("ID " + user.userId() + " · uid " + user.uid() + " · " + user.email()
+                + (user.phone() != null ? " · тел. " + user.phone() : "")
                 + "\nРоль: " + user.role() + " · зареєстрований " + AdminFormat.dateTime(user.createdAt())
                 + "\nПостів: " + user.postsCount() + " · підписників: " + user.followersCount()
                 + " · підписок: " + user.followingCount());
