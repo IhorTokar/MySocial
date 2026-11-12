@@ -576,3 +576,10 @@
 .default-color1.chart-line-symbol {
     -fx-background-color: -fx-like-color, -fx-secondary-bg;
 }
+
+/* ===== Обкладинка профілю ===== */
+/* фон видно, поки зображення вантажиться, і в редакторі, коли обкладинки ще немає */
+.cover-pane {
+    -fx-background-color: linear-gradient(to right, derive(-fx-accent, 60%), derive(-fx-share-color, 60%));
+    -fx-background-radius: 10px;
+}

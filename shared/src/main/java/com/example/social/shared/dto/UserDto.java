@@ -8,13 +8,14 @@ public class UserDto {
     private String displayName;
     private String aboutMe;
     private String userAvatarUrl;
+    private String profilePictureUrl;
     private long postsCount;
     private long followersCount;
     private long followingCount;
     private boolean followedByCurrentUser;
 
     public UserDto(Long userId, String uid, String username, String displayName, String aboutMe,
-                   String userAvatarUrl, long postsCount, long followersCount,
+                   String userAvatarUrl, String profilePictureUrl, long postsCount, long followersCount,
                    long followingCount, boolean followedByCurrentUser) {
         this.userId = userId;
         this.uid = uid;
@@ -22,6 +23,7 @@ public class UserDto {
         this.displayName = displayName;
         this.aboutMe = aboutMe;
         this.userAvatarUrl = userAvatarUrl;
+        this.profilePictureUrl = profilePictureUrl;
         this.postsCount = postsCount;
         this.followersCount = followersCount;
         this.followingCount = followingCount;
@@ -34,6 +36,7 @@ public class UserDto {
     public String getDisplayName() { return displayName; }
     public String getAboutMe() { return aboutMe; }
     public String getUserAvatarUrl() { return userAvatarUrl; }
+    public String getProfilePictureUrl() { return profilePictureUrl; }
     public long getPostsCount() { return postsCount; }
     public long getFollowersCount() { return followersCount; }
     public long getFollowingCount() { return followingCount; }

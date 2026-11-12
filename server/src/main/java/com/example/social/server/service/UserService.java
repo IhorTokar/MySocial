@@ -104,6 +104,7 @@ public class UserService {
                 target.getDisplayName(),
                 target.getAboutMe(),
                 target.getUserAvatarUrl(),
+                target.getProfilePictureUrl(),
                 postsCount,
                 followersCount,
                 followingCount,
@@ -134,6 +135,17 @@ public class UserService {
 
         user.setUserAvatarUrl(avatarUrl);
         userRepository.save(user);
+        return getUserProfile(userId, userId);
+    }
+
+    /** @param coverUrl нова обкладинка або null — прибрати */
+    @Transactional
+    public UserDto updateCover(Long userId, String coverUrl) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
+
+        user.setProfilePictureUrl(coverUrl);
+        log.info("Cover {} for user {}", coverUrl == null ? "removed" : "updated", userId);
         return getUserProfile(userId, userId);
     }
 

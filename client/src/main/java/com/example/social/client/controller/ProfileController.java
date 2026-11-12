@@ -12,6 +12,7 @@ import com.example.social.client.util.SessionManager;
 import com.example.social.client.util.EchoChart;
 import com.example.social.shared.dto.UserEchoPointDto;
 import com.example.social.client.util.AppSettings;
+import com.example.social.client.component.CoverPane;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.IndexedCell;
@@ -74,6 +75,7 @@ public class ProfileController {
     private javafx.scene.layout.VBox communityCard;
     @FXML
     private Label communityInfoLabel;
+    @FXML private CoverPane coverPane;
     @FXML
     private javafx.scene.chart.LineChart<String, Number> communityHistoryChart;
     @FXML
@@ -102,6 +104,8 @@ public class ProfileController {
     @FXML
     private void initialize() {
         IdBadge.configure(userIdLabel);
+        // 3:1 на вузькому вікні, але не вище 200 px на широкому (зайве обрізається по центру)
+        coverPane.setHeightLimits(110, 200);
         setUpCollapsibleHeader();
     }
 
@@ -253,6 +257,7 @@ public class ProfileController {
         currentProfile = profile;
         avatarContainer.getChildren().setAll(
                 AvatarUtil.create(profile.displayNameOrUsername(), profile.userAvatarUrl(), 72));
+        showCover(profile.coverUrl());
 
         isFollowing = profile.followedByCurrentUser();
 
@@ -278,6 +283,13 @@ public class ProfileController {
             updateFollowButtonState();
         }
         loadCommunityInfo();
+    }
+
+    private void showCover(String coverUrl) {
+        boolean hasCover = coverUrl != null && !coverUrl.isBlank();
+        coverPane.setVisible(hasCover);
+        coverPane.setManaged(hasCover);
+        coverPane.load(coverUrl);
     }
 
     private void updateFollowButtonState() {
@@ -357,7 +369,7 @@ public class ProfileController {
 
             javafx.stage.Stage editStage = new javafx.stage.Stage();
             editStage.setTitle("Редагувати профіль");
-            editStage.setScene(SceneUtil.create(root, 400, 450));
+            editStage.setScene(SceneUtil.create(root, 460, 720));
             editStage.initModality(javafx.stage.Modality.APPLICATION_MODAL);
             editStage.initOwner(editProfileButton.getScene().getWindow());
             editStage.showAndWait();

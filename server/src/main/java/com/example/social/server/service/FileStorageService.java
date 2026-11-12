@@ -19,24 +19,36 @@ public class FileStorageService {
 
     public String store(MultipartFile file) {
         try {
-            Path uploadPath = Paths.get(uploadDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
-            }
-
             String originalName = file.getOriginalFilename();
             String extension = "";
             if (originalName != null && originalName.contains(".")) {
                 extension = originalName.substring(originalName.lastIndexOf('.'));
             }
 
-            String storedFilename = UUID.randomUUID() + extension;
-            Path targetPath = uploadPath.resolve(storedFilename);
+            Path targetPath = newFile(extension);
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-
-            return "/media/" + storedFilename;
+            return "/media/" + targetPath.getFileName();
         } catch (IOException e) {
             throw new RuntimeException("Failed to store file: " + e.getMessage(), e);
         }
+    }
+
+    /** Зберегти вже оброблений вміст (напр. обкладинку після обрізки). @param extension з крапкою: ".jpg" */
+    public String store(byte[] content, String extension) {
+        try {
+            Path targetPath = newFile(extension);
+            Files.write(targetPath, content);
+            return "/media/" + targetPath.getFileName();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store file: " + e.getMessage(), e);
+        }
+    }
+
+    private Path newFile(String extension) throws IOException {
+        Path uploadPath = Paths.get(uploadDir);
+        if (!Files.exists(uploadPath)) {
+            Files.createDirectories(uploadPath);
+        }
+        return uploadPath.resolve(UUID.randomUUID() + extension);
     }
 }

@@ -8,6 +8,8 @@ import com.example.social.shared.dto.ChangePasswordDto;
 import com.example.social.shared.dto.DeleteAccountDto;
 import com.example.social.shared.dto.UpdateProfileDto;
 import com.example.social.shared.dto.UpdatePhoneDto;
+import com.example.social.server.service.CoverImages;
+import java.io.IOException;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -56,6 +58,28 @@ public class UserController {
 
         String avatarUrl = fileStorageService.store(file);
         return ResponseEntity.ok(userService.updateAvatar(currentUser.getUserId(), avatarUrl));
+    }
+
+    /**
+     * Обкладинка профілю. Сервер сам приводить зображення до 3:1 (обрізка по центру)
+     * і зменшує до 1500×500, тож у базі завжди однаковий формат.
+     */
+    @PostMapping("/me/cover")
+    public ResponseEntity<?> updateCover(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                         @RequestParam("file") MultipartFile file) throws IOException {
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new BadRequestException("Дозволені лише зображення");
+        }
+
+        byte[] cover = CoverImages.normalize(file.getBytes());
+        String coverUrl = fileStorageService.store(cover, ".jpg");
+        return ResponseEntity.ok(userService.updateCover(currentUser.getUserId(), coverUrl));
+    }
+
+    @DeleteMapping("/me/cover")
+    public ResponseEntity<?> removeCover(@AuthenticationPrincipal AuthenticatedUser currentUser) {
+        return ResponseEntity.ok(userService.updateCover(currentUser.getUserId(), null));
     }
 
     /** Пошта й телефон — лише для власника (у публічному профілі їх немає). */

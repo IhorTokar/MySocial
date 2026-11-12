@@ -1,11 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import com.example.social.client.component.CoverPane?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -17,6 +20,32 @@
     </padding>
 
     <Label text="Редагувати профіль" styleClass="title-label" />
+
+    <!-- Обкладинка: попередній перегляд показує рівно ту частину, що буде збережена (3:1) -->
+    <VBox spacing="6.0">
+        <HBox alignment="CENTER_LEFT" spacing="8.0">
+            <Label text="Обкладинка" styleClass="post-author-name" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button fx:id="chooseCoverButton" text="Обрати зображення…" onAction="#handleChooseCover"
+                    styleClass="button, button-secondary" />
+            <Button fx:id="removeCoverButton" text="Прибрати" onAction="#handleRemoveCover"
+                    styleClass="button, link-button" />
+        </HBox>
+        <CoverPane fx:id="coverPreview" />
+        <Label fx:id="coverHint" styleClass="secondary-label" wrapText="true"
+               text="Формат 3:1, рекомендовано 1500×500 (мінімум 600×200). Інше зображення буде обрізано." />
+        <VBox fx:id="coverPendingBox" spacing="6.0" visible="false" managed="false">
+            <HBox fx:id="coverFocusBox" alignment="CENTER_LEFT" spacing="8.0">
+                <Label fx:id="coverFocusLabel" styleClass="secondary-label" />
+                <Slider fx:id="coverFocusSlider" min="0" max="1" value="0.5" HBox.hgrow="ALWAYS" />
+            </HBox>
+            <HBox spacing="8.0">
+                <Button fx:id="saveCoverButton" text="Зберегти обкладинку" onAction="#handleSaveCover"
+                        styleClass="button, button-primary" />
+                <Button text="Скасувати" onAction="#handleCancelCover" styleClass="button, button-secondary" />
+            </HBox>
+        </VBox>
+    </VBox>
 
     <HBox alignment="CENTER_LEFT" spacing="16.0">
         <StackPane fx:id="avatarPreview" />

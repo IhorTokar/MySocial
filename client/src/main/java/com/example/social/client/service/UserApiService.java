@@ -37,6 +37,7 @@ public class UserApiService {
                 node.has("displayName") && !node.get("displayName").isNull() ? node.get("displayName").asText() : null,
                 node.has("aboutMe") && !node.get("aboutMe").isNull() ? node.get("aboutMe").asText() : null,
                 node.has("userAvatarUrl") && !node.get("userAvatarUrl").isNull() ? node.get("userAvatarUrl").asText() : null,
+                node.hasNonNull("profilePictureUrl") ? node.get("profilePictureUrl").asText() : null,
                 node.get("postsCount").asLong(),
                 node.get("followersCount").asLong(),
                 node.get("followingCount").asLong(),
@@ -45,7 +46,7 @@ public class UserApiService {
     }
 
     public record UserProfile(Long userId, String username, String displayName, String aboutMe,
-                              String userAvatarUrl, long postsCount, long followersCount,
+                              String userAvatarUrl, String coverUrl, long postsCount, long followersCount,
                               long followingCount, boolean followedByCurrentUser) {
 
         public String displayNameOrUsername() {
@@ -79,6 +80,23 @@ public class UserApiService {
         ApiClient.ApiResponse response = apiClient.postMultipart("/api/users/me/avatar", "file", file);
         if (!response.isSuccess()) {
             return UserProfileResult.fail(extractError(response, "Не вдалося завантажити фото"));
+        }
+        return UserProfileResult.ok(parseProfile(response.body()));
+    }
+
+    /** Обкладинка: файл уже обрізаний до 3:1 (сервер однаково перевіряє й нормалізує). */
+    public UserProfileResult uploadCover(java.nio.file.Path file) throws IOException, InterruptedException {
+        ApiClient.ApiResponse response = apiClient.postMultipart("/api/users/me/cover", "file", file);
+        if (!response.isSuccess()) {
+            return UserProfileResult.fail(extractError(response, "Не вдалося завантажити обкладинку"));
+        }
+        return UserProfileResult.ok(parseProfile(response.body()));
+    }
+
+    public UserProfileResult removeCover() throws IOException, InterruptedException {
+        ApiClient.ApiResponse response = apiClient.delete("/api/users/me/cover");
+        if (!response.isSuccess()) {
+            return UserProfileResult.fail(extractError(response, "Не вдалося прибрати обкладинку"));
         }
         return UserProfileResult.ok(parseProfile(response.body()));
     }
