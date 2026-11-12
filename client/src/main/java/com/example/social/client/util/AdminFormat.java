@@ -10,17 +10,24 @@ public final class AdminFormat {
 
     private static final DateTimeFormatter DATE_TIME = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm");
 
-    private static final Map<String, String> ACTIONS = Map.of(
-            "WEIGHTS_UPDATE", "Зміна ваг",
-            "WEIGHTS_RESTORE", "Відновлення ваг",
-            "USER_BLOCK", "Блокування",
-            "USER_UNBLOCK", "Розблокування",
-            "USER_ROLE_CHANGE", "Зміна ролі",
-            "USER_PROFILE_EDIT", "Редагування профілю",
-            "USER_PASSWORD_RESET", "Скидання пароля",
-            "POST_DELETE", "Видалення поста",
-            "COMMENT_DELETE", "Видалення коментаря",
-            "ECHO_SNAPSHOT", "Знімок ехо-камер");
+    // Map.ofEntries, бо Map.of приймає не більше 10 пар
+    private static final Map<String, String> ACTIONS = Map.ofEntries(
+            Map.entry("WEIGHTS_UPDATE", "Зміна ваг"),
+            Map.entry("WEIGHTS_RESTORE", "Відновлення ваг"),
+            Map.entry("USER_BLOCK", "Блокування"),
+            Map.entry("USER_UNBLOCK", "Розблокування"),
+            Map.entry("USER_ROLE_CHANGE", "Зміна ролі"),
+            Map.entry("USER_PROFILE_EDIT", "Редагування профілю"),
+            Map.entry("USER_PASSWORD_RESET", "Скидання пароля"),
+            Map.entry("POST_DELETE", "Видалення поста"),
+            Map.entry("COMMENT_DELETE", "Видалення коментаря"),
+            Map.entry("ECHO_SNAPSHOT", "Знімок ехо-камер"),
+            Map.entry("PASSWORD_REQUEST_REJECT", "Відхилення заявки на пароль"));
+
+    private static final Map<String, String> REQUEST_STATUSES = Map.of(
+            "pending", "нова",
+            "resolved", "пароль скинуто",
+            "rejected", "відхилено");
 
     private static final Map<String, String> TARGETS = Map.of(
             "WEIGHTS", "ваги",
@@ -58,6 +65,11 @@ public final class AdminFormat {
 
     public static String percent(Double value) {
         return value == null ? "—" : String.format(Locale.ROOT, "%.0f%%", value * 100);
+    }
+
+    /** Стан заявки «Забув пароль». */
+    public static String requestStatus(String code) {
+        return REQUEST_STATUSES.getOrDefault(code, code);
     }
 
     public static String action(String code) {

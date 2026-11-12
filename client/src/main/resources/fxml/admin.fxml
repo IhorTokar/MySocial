@@ -32,6 +32,9 @@
         <Tab fx:id="echoTab" text="Історія ехо-камер">
             <fx:include fx:id="echoHistory" source="admin_echo_history.fxml" />
         </Tab>
+        <Tab fx:id="passwordRequestsTab" text="Заявки на пароль">
+            <fx:include fx:id="passwordRequests" source="admin_password_requests.fxml" />
+        </Tab>
         <Tab fx:id="auditTab" text="Журнал дій">
             <fx:include fx:id="audit" source="admin_audit.fxml" />
         </Tab>

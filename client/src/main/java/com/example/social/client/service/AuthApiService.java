@@ -46,6 +46,23 @@ public class AuthApiService {
         return RegisterResult.ok();
     }
 
+    /**
+     * Заявка «Забув пароль». Сервер навмисно відповідає однаково, чи існує такий акаунт, чи ні.
+     * @return null — заявку прийнято, інакше текст помилки
+     */
+    public String requestPasswordReset(String login, String contact, String message)
+            throws IOException, InterruptedException {
+        Map<String, String> body = Map.of(
+                "login", login,
+                "contact", contact == null ? "" : contact,
+                "message", message == null ? "" : message);
+        ApiClient.ApiResponse response = apiClient.postPublic("/api/auth/password-reset-requests", body);
+        if (response.isSuccess()) {
+            return null;
+        }
+        JsonNode node = apiClient.getObjectMapper().readTree(response.body());
+        return node.has("error") ? node.get("error").asText() : "Не вдалося надіслати заявку (" + response.statusCode() + ")";
+    }
 
     public record LoginResult(boolean success, String token, Long userId, String username, String role,
                               String errorMessage) {

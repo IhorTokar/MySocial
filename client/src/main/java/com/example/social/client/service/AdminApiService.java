@@ -18,6 +18,7 @@ import com.example.social.shared.dto.GraphDataDto;
 import com.example.social.shared.dto.GraphSyncResultDto;
 import com.example.social.shared.dto.EchoSnapshotDetailDto;
 import com.example.social.shared.dto.EchoSnapshotDto;
+import com.example.social.shared.dto.PasswordResetRequestAdminDto;
 import java.util.ArrayList;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -206,6 +207,34 @@ public class AdminApiService {
             throws IOException, InterruptedException, AdminApiException {
         return read(apiClient.get("/api/admin/echo-history/" + snapshotId),
                 new TypeReference<EchoSnapshotDetailDto>() {});
+    }
+
+    // ===== Заявки «Забув пароль» =====
+
+    /** @param onlyPending true — лише нові, false — усі (останні 200) */
+    public List<PasswordResetRequestAdminDto> getPasswordRequests(boolean onlyPending)
+            throws IOException, InterruptedException, AdminApiException {
+        return read(apiClient.get("/api/admin/password-requests?status=" + (onlyPending ? "pending" : "all")),
+                new TypeReference<List<PasswordResetRequestAdminDto>>() {});
+    }
+
+    public long countPendingPasswordRequests() throws IOException, InterruptedException, AdminApiException {
+        ApiClient.ApiResponse response = apiClient.get("/api/admin/password-requests/count");
+        ensureSuccess(response);
+        return mapper.readTree(response.body()).path("pending").asLong();
+    }
+
+    public PasswordResetRequestAdminDto resolvePasswordRequest(long requestId, String newPassword)
+            throws IOException, InterruptedException, AdminApiException {
+        return read(apiClient.post("/api/admin/password-requests/" + requestId + "/resolve",
+                        new AdminPasswordResetDto(newPassword)),
+                new TypeReference<PasswordResetRequestAdminDto>() {});
+    }
+
+    public PasswordResetRequestAdminDto rejectPasswordRequest(long requestId)
+            throws IOException, InterruptedException, AdminApiException {
+        return read(apiClient.post("/api/admin/password-requests/" + requestId + "/reject", null),
+                new TypeReference<PasswordResetRequestAdminDto>() {});
     }
 
     // ===== Журнал =====

@@ -12,6 +12,7 @@ public class AdminPanelController {
     @FXML private Tab graphTab;
     @FXML private Tab auditTab;
     @FXML private Tab echoTab;
+    @FXML private Tab passwordRequestsTab;
 
     /** Контролери вкладених FXML: ім'я поля = fx:id включення + "Controller". */
     @FXML private AdminWeightsController weightsController;
@@ -20,6 +21,7 @@ public class AdminPanelController {
     @FXML private AdminGraphController graphController;
     @FXML private AdminAuditController auditController;
     @FXML private AdminEchoHistoryController echoHistoryController;
+    @FXML private AdminPasswordRequestsController passwordRequestsController;
 
     private MainShellController shell;
 
@@ -45,6 +47,17 @@ public class AdminPanelController {
         echoTab.selectedProperty().addListener((obs, wasSelected, selected) -> {
             if (selected) {
                 echoHistoryController.onShown();
+            }
+        });
+
+        // кількість нових заявок видно в назві вкладки одразу після відкриття адмін-панелі
+        passwordRequestsController.setOnPendingCount(count ->
+                passwordRequestsTab.setText(count > 0 ? "Заявки на пароль (" + count + ")" : "Заявки на пароль"));
+        passwordRequestsController.setOnOpenUser(this::openUser);
+        passwordRequestsController.refreshCount();
+        passwordRequestsTab.selectedProperty().addListener((obs, wasSelected, selected) -> {
+            if (selected) {
+                passwordRequestsController.refresh();
             }
         });
     }

@@ -18,6 +18,7 @@
 
     <TextField fx:id="usernameField" promptText="Ім'я користувача" maxWidth="300.0" />
     <PasswordField fx:id="passwordField" promptText="Пароль" maxWidth="300.0" />
+    <Button text="Забули пароль?" onAction="#handleForgotPassword" styleClass="button, link-button" />
 
     <Label fx:id="errorLabel" styleClass="error-label" wrapText="true" maxWidth="300.0" />
 

@@ -82,6 +82,22 @@ public class LoginController {
         }
     }
 
+    @FXML
+    private void handleForgotPassword() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/forgot_password.fxml"));
+            Parent root = loader.load();
+            ForgotPasswordController controller = loader.getController();
+            controller.setLogin(usernameField.getText());   // уже введений логін переноситься у форму
+
+            Stage stage = (Stage) loginButton.getScene().getWindow();
+            com.example.social.client.util.SceneUtil.switchScene(stage, root, 420, 520);
+            stage.setTitle("Відновлення доступу");
+        } catch (IOException e) {
+            errorLabel.setText("Помилка переходу: " + e.getMessage());
+        }
+    }
+
     private void goToFeed() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/main_shell.fxml"));
