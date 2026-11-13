@@ -4,32 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.8.10">
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/NotificationBell.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/PostViewDialog.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/NotificationApiService.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/AppConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/TimeAgo.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/client/src/main/resources/app.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/NotificationController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/NotificationRepository.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/resources/db/migration/migration/V11__notifications_seen_at.sql" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/integration/NotificationIntegrationTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/NotificationDto.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tools/report/charts.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tools/report/demo.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/tools/report/mysocial_api.py" afterDir="false" />
+    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 3 Added tests">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/ClientApplication.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/ClientApplication.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/PostListCell.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/PostListCell.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ForgotPasswordController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ForgotPasswordController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/LoginController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/MainShellController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/MainShellController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/RegisterController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/RegisterController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/SettingsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/SettingsController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/login.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/login.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/main_shell.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/main_shell.fxml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -114,7 +90,7 @@
       <recent name="" />
     </key>
   </component>
-  <component name="RunManager" selected="Maven.Run Client (JavaFX)">
+  <component name="RunManager" selected="Application.ServerApplication">
     <configuration name="ServerApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.example.social.server.ServerApplication" />
       <module name="server" />
@@ -272,7 +248,6 @@
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="update 2.3&#10;Добавлення тестів" />
     <MESSAGE value="update 2.4&#10;Остайня обнова" />
     <MESSAGE value="update 2.4&#10;&quot;Set recommendation weights to 0.10/0.35/0.35/0.10/0.10 per offline evaluation&quot;" />
     <MESSAGE value="update 2.5&#10;&quot;Set recommendation weights to 0.10/0.35/0.35/0.10/0.10 per offline evaluation&quot;" />
@@ -297,7 +272,8 @@
     <MESSAGE value="update 2.8.8" />
     <MESSAGE value="update 2.8.9" />
     <MESSAGE value="update 2.8.10" />
-    <option name="LAST_COMMIT_MESSAGE" value="update 2.8.10" />
+    <MESSAGE value="update 3 Added tests" />
+    <option name="LAST_COMMIT_MESSAGE" value="update 3 Added tests" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
