@@ -41,8 +41,7 @@ public class MainShellController {
     private javafx.scene.control.Button navAdminButton;
     @FXML
     private StackPane headerAvatar;
-    @FXML
-    private StackPane headerAvatar;
+
     @FXML
     private ScrollPane discoverSidebar;
     @FXML
@@ -163,43 +162,7 @@ public class MainShellController {
         menu.show(headerAvatar, Side.BOTTOM, 0, 6);
     }
 
-    // ===== Аватар у шапці =====
 
-    private void loadHeaderAvatar() {
-        SessionManager session = SessionManager.getInstance();
-        headerAvatar.getChildren().setAll(AvatarUtil.create(session.getUsername(), null, 34));   // поки вантажиться
-        Thread.ofVirtual().start(() -> {
-            try {
-                UserApiService.UserProfileResult result = new UserApiService(new ApiClient()).getMyProfile();
-                if (result.success()) {
-                    Platform.runLater(() -> updateHeaderAvatar(result.profile()));
-                }
-            } catch (Exception ignored) {
-                // лишається аватар із літерою — не критично
-            }
-        });
-    }
-
-    /** Викликається й після зміни фото / імені в профілі, щоб шапка одразу оновилась. */
-    public void updateHeaderAvatar(UserApiService.UserProfile profile) {
-        headerAvatar.getChildren().setAll(
-                AvatarUtil.create(profile.displayNameOrUsername(), profile.userAvatarUrl(), 34));
-    }
-
-    @FXML
-    private void handleHeaderAvatarClick(MouseEvent event) {
-        MenuItem who = new MenuItem("@" + SessionManager.getInstance().getUsername());
-        who.setDisable(true);
-        MenuItem profile = new MenuItem("Мій профіль", new FontIcon("fas-user"));
-        profile.setOnAction(e -> showMyProfile());
-        MenuItem settings = new MenuItem("Налаштування", new FontIcon("fas-cog"));
-        settings.setOnAction(e -> showSettings());
-        MenuItem logout = new MenuItem("Вийти", new FontIcon("fas-sign-out-alt"));
-        logout.setOnAction(e -> handleLogout());
-
-        ContextMenu menu = new ContextMenu(who, new SeparatorMenuItem(), profile, settings, new SeparatorMenuItem(), logout);
-        menu.show(headerAvatar, Side.BOTTOM, 0, 6);
-    }
     @FXML
     private void handleShowFeed() {
         showFeed();

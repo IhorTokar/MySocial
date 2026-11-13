@@ -1,11 +1,6 @@
 package com.example.social.client.component;
 
 import com.example.social.client.service.ApiClient;
-import javafx.geometry.Orientation;
-import javafx.geometry.Rectangle2D;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
-import com.example.social.client.service.ApiClient;
 import com.example.social.client.util.ImageCrops;
 import javafx.geometry.Orientation;
 import javafx.geometry.Rectangle2D;
@@ -15,17 +10,6 @@ import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
 
 import java.io.IOException;
-import java.nio.file.Path;
-import javafx.scene.layout.Region;
-import javafx.scene.shape.Rectangle;
-
-import javax.imageio.ImageIO;
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.RenderingHints;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**

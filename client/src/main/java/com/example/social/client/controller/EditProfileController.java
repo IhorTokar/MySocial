@@ -25,7 +25,8 @@ import java.nio.file.Path;
 
 public class EditProfileController {
 
-    private static final long MAX_AVATAR_BYTES = 5L * 1024 * 1024;
+    /** Обмеження для вихідного фото; на сервер іде вже обрізаний PNG до 512×512. */
+    private static final long MAX_AVATAR_BYTES = 20L * 1024 * 1024;
     private static final long MAX_COVER_BYTES = 20L * 1024 * 1024;
 
     @FXML private StackPane avatarPreview;
@@ -46,8 +47,7 @@ public class EditProfileController {
     @FXML private Button saveCoverButton;
 
     private final UserApiService userApiService = new UserApiService(new ApiClient());
-    /** Обмеження для вихідного фото; на сервер іде вже обрізаний PNG до 512×512. */
-    private static final long MAX_AVATAR_BYTES = 20L * 1024 * 1024;
+
     private ProfileController parentProfileController;
     private UserApiService.UserProfile profile;
     /** Обране, але ще не збережене зображення обкладинки. */

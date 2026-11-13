@@ -70,6 +70,7 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
     private final Label titleLabel = new Label();
     private final Label textLabel = new Label();
     private final ImageView imageView = new ImageView();
+    /** Повна адреса фото поточного поста — для перегляду на весь екран. */
     private String imageUrl;
     private final FlowPane tagsPane = new FlowPane(6, 4);
     private final Button likeButton = new Button();
@@ -237,13 +238,16 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
             try {
                 String fullUrl = media.startsWith("http") ? media : ApiClient.BASE_URL + media;
                 imageView.setImage(new Image(fullUrl, 900, 0, true, true, true));
+                imageUrl = fullUrl;
                 show(imageView, true);
             } catch (Exception e) {
                 imageView.setImage(null);
+                imageUrl = null;
                 show(imageView, false);
             }
         } else {
             imageView.setImage(null);
+            imageUrl = null;
             show(imageView, false);
         }
 
