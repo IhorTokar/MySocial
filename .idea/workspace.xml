@@ -4,22 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.8.4">
-      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/component/CoverPane.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/PasswordResetRequestController.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/CoverImages.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/service/CoverImagesTest.java" afterDir="false" />
+    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 2.8.7">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/EditProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/EditProfileController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ProfileController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/ProfileController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/UserApiService.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/UserApiService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/css/styles.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/edit_profile.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/edit_profile.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/client/src/main/resources/fxml/profile.fxml" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/resources/fxml/profile.fxml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/UserController.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/FileStorageService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/FileStorageService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/UserService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/UserDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/shared/src/main/java/com/example/social/shared/dto/UserDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/SceneUtil.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/SceneUtil.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -262,7 +249,6 @@
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="update 1.7&#10;Updated Logic" />
     <MESSAGE value="update 1.8&#10;Updated" />
     <MESSAGE value="update 2.2&#10;Closer to diplome" />
     <MESSAGE value="update 2.2&#10;UI ще не до кінця готовий но близьки до завершення" />
@@ -287,7 +273,8 @@
     <MESSAGE value="update 2.8.2" />
     <MESSAGE value="update 2.8.3" />
     <MESSAGE value="update 2.8.4" />
-    <option name="LAST_COMMIT_MESSAGE" value="update 2.8.4" />
+    <MESSAGE value="update 2.8.7" />
+    <option name="LAST_COMMIT_MESSAGE" value="update 2.8.7" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
