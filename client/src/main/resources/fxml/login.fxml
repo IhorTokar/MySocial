@@ -14,7 +14,8 @@
         <Insets bottom="40.0" left="40.0" right="40.0" top="40.0" />
     </padding>
 
-    <Label text="Вхід у соціальну мережу" styleClass="title-label" />
+    <Label fx:id="logoLabel" styleClass="app-logo, app-logo-large" />
+    <Label text="Вхід" styleClass="title-label" />
 
     <TextField fx:id="usernameField" promptText="Ім'я користувача" maxWidth="300.0" />
     <PasswordField fx:id="passwordField" promptText="Пароль" maxWidth="300.0" />

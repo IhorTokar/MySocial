@@ -13,7 +13,7 @@ public class ClientApplication extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
         Parent root = loader.load();
 
-        stage.setTitle("Соціальна мережа");
+        stage.setTitle(com.example.social.client.util.AppConfig.name());
         SceneUtil.switchScene(stage, root, 400, 400);
         SceneUtil.setUpMainWindow(stage);
         stage.show();

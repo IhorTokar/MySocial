@@ -31,6 +31,9 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
 import org.kordamp.ikonli.javafx.FontIcon;
+import javafx.scene.control.ButtonBase;
+import javafx.scene.control.TextInputControl;
+import javafx.scene.input.MouseButton;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -85,6 +88,8 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
     private boolean commentsExpanded;
 
     private Integer renderedKey;
+    /** true — картка вже у вікні поста: повторно не відкривається, коментарі розгорнуті одразу. */
+    private boolean inDialog;
 
     public PostListCell() {
         this(null);
@@ -100,6 +105,13 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
 
     public void setOnEditRequested(Consumer<PostApiService.PostItem> handler) {
         this.onEditRequested = handler;
+    }
+
+    /** Режим вікна поста (PostViewDialog). */
+    public PostListCell inDialog() {
+        this.inDialog = true;
+        card.setCursor(Cursor.DEFAULT);
+        return this;
     }
 
     private void buildCard() {
@@ -189,6 +201,46 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
         errorLabel.managedProperty().bind(errorLabel.visibleProperty());
 
         card.getChildren().addAll(header, titleLabel, textLabel, imageView, tagsPane, actions, errorLabel);
+
+        // клік по «порожньому» місцю картки — пост в окремому вікні з коментарями (як у вебверсії)
+        card.setCursor(Cursor.HAND);
+        card.setOnMouseClicked(e -> {
+            if (!inDialog && e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1
+                    && !isInteractive(e.getTarget())) {
+                openInDialog();
+            }
+        });
+    }
+
+    private void openInDialog() {
+        PostApiService.PostItem post = getItem();
+        if (post == null || getScene() == null) {
+            return;
+        }
+        ListView<PostApiService.PostItem> list = getListView();
+        PostViewDialog.show(getScene().getWindow(), post,
+                userId -> {
+                    if (onOpenProfile != null) {
+                        onOpenProfile.accept(userId);
+                    }
+                },
+                // лайк / коментар / збереження у вікні — одразу видно й у стрічці під ним
+                updated -> updateInList(list, updated.postId(), p -> updated));
+    }
+
+    /** Кнопки, поля, теги, фото, автор, мітки id і коментарі мають власну дію — вікно поста не відкриваємо. */
+    private boolean isInteractive(Object target) {
+        Node node = target instanceof Node n ? n : null;
+        while (node != null && node != card) {
+            if (node instanceof ButtonBase || node instanceof TextInputControl
+                    || node == avatarHolder || node == nameLabel || node == imageView
+                    || node == tagsPane || node == commentThread
+                    || node.getStyleClass().contains("id-badge")) {
+                return true;
+            }
+            node = node.getParent();
+        }
+        return false;
     }
 
     @Override
@@ -209,6 +261,10 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
             renderedKey = key;
         }
         renderActions(post);
+
+        if (inDialog && !commentsExpanded) {
+            handleComments();   // у вікні поста коментарі видно одразу
+        }
 
         setText(null);
         setGraphic(cardWrapper);

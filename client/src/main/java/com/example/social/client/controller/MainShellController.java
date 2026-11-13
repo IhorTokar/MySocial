@@ -26,6 +26,10 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.control.ScrollPane;
 import javafx.beans.binding.Bindings;
 import javafx.scene.control.Label;
+import com.example.social.client.component.NotificationBell;
+import com.example.social.client.component.PostViewDialog;
+import com.example.social.client.service.PostApiService;
+
 
 import java.io.IOException;
 
@@ -40,7 +44,13 @@ public class MainShellController {
     @FXML
     private javafx.scene.control.Button navAdminButton;
     @FXML
+    private Label logoLabel;
+    @FXML
     private StackPane headerAvatar;
+    @FXML
+    private StackPane notificationHolder;
+
+    private NotificationBell notificationBell;
 
     @FXML
     private ScrollPane discoverSidebar;
@@ -83,7 +93,13 @@ public class MainShellController {
         navAdminButton.setVisible(admin);
         navAdminButton.setManaged(admin);
 
+        logoLabel.setText(com.example.social.client.util.AppConfig.name());
+        logoLabel.setTooltip(new javafx.scene.control.Tooltip(com.example.social.client.util.AppConfig.tagline()));
+
         loadHeaderAvatar();
+
+        notificationBell = new NotificationBell(this::showProfile, this::showPost);
+        notificationHolder.getChildren().setAll(notificationBell);
 
         discoverSidebarController.setShell(this);
         discoverSidebar.managedProperty().bind(discoverSidebar.visibleProperty());
@@ -163,6 +179,26 @@ public class MainShellController {
         menu.show(headerAvatar, Side.BOTTOM, 0, 6);
     }
 
+    /** Пост зі сповіщення — в окремому вікні поверх поточної сторінки. */
+    public void showPost(Long postId) {
+        Thread.ofVirtual().start(() -> {
+            try {
+                PostApiService.PostItem post = new PostApiService(new ApiClient()).getPost(postId);
+                if (post != null) {
+                    Platform.runLater(() ->
+                            PostViewDialog.show(contentArea.getScene().getWindow(), post, this::showProfile));
+                }
+            } catch (Exception ignored) {
+                // пост могли видалити — просто нічого не відкриваємо
+            }
+        });
+    }
+
+    /** Клік по логотипу — на стрічку, як у вебверсії. */
+    @FXML
+    private void handleLogoClick() {
+        showFeed();
+    }
 
     @FXML
     private void handleShowFeed() {
@@ -191,6 +227,9 @@ public class MainShellController {
         ChatConnection chat = ChatConnection.getInstance();
         chat.removeListener(badgeListener);
         chat.disconnect();
+        if (notificationBell != null) {
+            notificationBell.stop();   // інакше опитування сервера тривало б і після виходу
+        }
         UnreadCounter.getInstance().reset();
 
         try {
@@ -199,7 +238,7 @@ public class MainShellController {
 
             Stage stage = (Stage) contentArea.getScene().getWindow();
             SceneUtil.switchScene(stage, root, 400, 400);
-            stage.setTitle("Соціальна мережа");
+            stage.setTitle(com.example.social.client.util.AppConfig.name());
         } catch (IOException e) {
             e.printStackTrace();
         }

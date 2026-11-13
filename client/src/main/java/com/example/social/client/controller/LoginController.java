@@ -28,8 +28,17 @@ public class LoginController {
 
     @FXML
     private Button loginButton;
+    @FXML
+    private Label logoLabel;
 
     private final AuthApiService authApiService = new AuthApiService(new ApiClient());
+
+    @FXML
+    private void initialize() {
+        logoLabel.setText(com.example.social.client.util.AppConfig.name());
+    }
+
+
 
     @FXML
     private void handleLogin() {
@@ -105,7 +114,7 @@ public class LoginController {
 
             Stage stage = (Stage) loginButton.getScene().getWindow();
             stage.setScene(com.example.social.client.util.SceneUtil.create(root, 1000, 650));
-            stage.setTitle("Соціальна мережа");
+            stage.setTitle(com.example.social.client.util.AppConfig.name());
         } catch (IOException e) {
             errorLabel.setText("Помилка завантаження: " + e.getMessage());
         }

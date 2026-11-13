@@ -693,3 +693,73 @@
 .composer-prompt:hover {
     -fx-border-color: -fx-accent;
 }
+
+/* ===== Сповіщення ===== */
+.notification-bell .ikonli-font-icon {
+    -fx-icon-size: 18px;
+}
+
+.notifications-popup {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-background-radius: 12px;
+    -fx-border-color: -fx-card-border;
+    -fx-border-radius: 12px;
+    -fx-padding: 12px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 18, 0.2, 0, 4);
+}
+
+.notification-row {
+    -fx-background-radius: 8px;
+    -fx-padding: 8px;
+}
+
+.notification-row:hover {
+    -fx-background-color: -fx-primary-bg;
+}
+
+.notification-unread {
+    -fx-background-color: -fx-selection-bg;
+}
+
+.notification-name {
+    -fx-fill: -fx-primary-text;
+    -fx-font-weight: bold;
+}
+
+.notification-text {
+    -fx-fill: -fx-primary-text;
+}
+
+.notification-dot {
+    -fx-fill: -fx-accent;
+}
+
+.notification-icon {
+    -fx-icon-size: 12px;
+    -fx-icon-color: -fx-accent;
+}
+
+.notification-icon-like {
+    -fx-icon-color: -fx-like-color;
+}
+
+.notification-icon-follow {
+    -fx-icon-color: -fx-share-color;
+}
+
+/* ===== Логотип (назва — у app.properties) ===== */
+.app-logo {
+    -fx-font-size: 22px;
+    -fx-font-weight: 800;
+    -fx-text-fill: linear-gradient(to right, -fx-accent, derive(-fx-accent, -35%));
+    -fx-cursor: hand;
+}
+
+.app-logo:hover {
+    -fx-opacity: 0.85;
+}
+
+.app-logo-large {
+    -fx-font-size: 30px;
+    -fx-cursor: default;
+}

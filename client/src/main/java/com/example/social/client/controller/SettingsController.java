@@ -306,7 +306,7 @@ public class SettingsController {
 
             Stage stage = (Stage) deleteAccountButton.getScene().getWindow();
             SceneUtil.switchScene(stage, root, 400, 400);
-            stage.setTitle("Соціальна мережа");
+            stage.setTitle(com.example.social.client.util.AppConfig.name());
         } catch (IOException e) {
             e.printStackTrace();
         }

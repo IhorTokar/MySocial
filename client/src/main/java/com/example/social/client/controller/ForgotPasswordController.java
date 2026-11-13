@@ -80,7 +80,7 @@ public class ForgotPasswordController {
             Parent root = loader.load();
             Stage stage = (Stage) submitButton.getScene().getWindow();
             SceneUtil.switchScene(stage, root, 400, 400);
-            stage.setTitle("Соціальна мережа");
+            stage.setTitle(com.example.social.client.util.AppConfig.name());
         } catch (IOException e) {
             errorLabel.setText("Помилка переходу: " + e.getMessage());
         }

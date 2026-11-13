@@ -18,11 +18,14 @@
 
     <top>
             <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="app-header">
-                <Label styleClass="title-label" text="Соціальна мережа" />
+                <!-- логотип: назва з app.properties, клік — на стрічку -->
+                <Label fx:id="logoLabel" styleClass="app-logo" onMouseClicked="#handleLogoClick" />
                 <Region HBox.hgrow="ALWAYS" />
                 <TextField fx:id="searchField" promptText="Пошук людей і постів..."
                            onAction="#handleSearch" maxWidth="320.0" styleClass="text-field" />
                 <Button onAction="#handleSearch" text="Пошук" styleClass="button, button-secondary" />
+                <!-- дзвіночок сповіщень (NotificationBell додається з коду) -->
+                <StackPane fx:id="notificationHolder" maxWidth="-Infinity" maxHeight="-Infinity" />
                 <!-- аватар поточного користувача: клік — меню (профіль, налаштування, вихід) -->
                 <StackPane fx:id="headerAvatar" styleClass="header-avatar" onMouseClicked="#handleHeaderAvatarClick"
                            maxWidth="-Infinity" maxHeight="-Infinity" />
