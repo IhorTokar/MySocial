@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
+
+<!-- Права колонка: гарячі теми та кого почитати -->
+<ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="discover-sidebar"
+            xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="com.example.social.client.controller.DiscoverSidebarController">
+    <VBox spacing="14.0" prefWidth="300.0">
+        <padding>
+            <Insets top="16.0" right="16.0" bottom="16.0" left="12.0" />
+        </padding>
+
+        <VBox styleClass="discover-card" spacing="4.0">
+            <HBox alignment="CENTER_LEFT" spacing="8.0">
+                <FontIcon iconLiteral="fas-fire" styleClass="discover-icon" />
+                <Label text="Гарячі теми" styleClass="post-title" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button onAction="#refresh" styleClass="button, link-button">
+                    <graphic>
+                        <FontIcon iconLiteral="fas-sync-alt" />
+                    </graphic>
+                </Button>
+            </HBox>
+            <VBox fx:id="trendsBox" spacing="2.0" />
+        </VBox>
+
+        <VBox styleClass="discover-card" spacing="4.0">
+            <HBox alignment="CENTER_LEFT" spacing="8.0">
+                <FontIcon iconLiteral="fas-user-plus" styleClass="discover-icon" />
+                <Label text="Кого почитати" styleClass="post-title" />
+            </HBox>
+            <VBox fx:id="peopleBox" spacing="2.0" />
+        </VBox>
+    </VBox>
+</ScrollPane>

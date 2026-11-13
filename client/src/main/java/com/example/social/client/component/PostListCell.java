@@ -70,6 +70,7 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
     private final Label titleLabel = new Label();
     private final Label textLabel = new Label();
     private final ImageView imageView = new ImageView();
+    private String imageUrl;
     private final FlowPane tagsPane = new FlowPane(6, 4);
     private final Button likeButton = new Button();
     private final Button commentsButton = new Button();
@@ -154,6 +155,14 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
             clip.setHeight(bounds.getHeight());
         });
         imageView.setClip(clip);
+        // клік по фото — перегляд на весь екран з масштабуванням
+        imageView.setCursor(Cursor.HAND);
+        imageView.setOnMouseClicked(e -> {
+            if (imageUrl != null && getScene() != null) {
+                ImageViewer.show(getScene().getWindow(), imageUrl);
+                e.consume();
+            }
+        });
 
         likeButton.setGraphic(likeIcon);
         likeButton.getStyleClass().add("action-button");

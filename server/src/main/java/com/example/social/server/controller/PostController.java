@@ -76,6 +76,17 @@ public class PostController {
         return ResponseEntity.ok(recommendationService.getHybridFeed(currentUser.getUserId(), limit, offset));
     }
 
+    /** Вкладка «Відстежувані»: пости підписок від найновіших, без рекомендацій. */
+    @GetMapping("/feed/following")
+    public ResponseEntity<?> getFollowingFeed(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                              @RequestParam(name = "limit", defaultValue = "30") int limit,
+                                              @RequestParam(name = "offset", defaultValue = "0") int offset) {
+        if (limit < 1 || limit > 100 || offset < 0) {
+            throw new BadRequestException("limit має бути від 1 до 100, offset — не менше 0");
+        }
+        return ResponseEntity.ok(postService.getFollowingFeed(currentUser.getUserId(), limit, offset));
+    }
+
     @DeleteMapping("/{postId}")
     public ResponseEntity<?> deletePost(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                         @PathVariable("postId") Long postId) {

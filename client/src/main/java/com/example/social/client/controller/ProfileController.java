@@ -258,6 +258,9 @@ public class ProfileController {
         avatarContainer.getChildren().setAll(
                 AvatarUtil.create(profile.displayNameOrUsername(), profile.userAvatarUrl(), 72));
         showCover(profile.coverUrl());
+        if (shell != null && profile.userId().equals(SessionManager.getInstance().getUserId())) {
+            shell.updateHeaderAvatar(profile);   // нове фото / ім'я одразу видно й у шапці
+        }
 
         isFollowing = profile.followedByCurrentUser();
 

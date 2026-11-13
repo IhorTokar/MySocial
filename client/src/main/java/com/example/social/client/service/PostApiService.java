@@ -25,6 +25,11 @@ public class PostApiService {
         return fetchList("/api/posts/feed?offset=" + offset + "&limit=" + limit);
     }
 
+    /** Вкладка «Відстежувані»: пости підписок від найновіших. */
+    public FeedResult getFollowingFeed(int offset, int limit) throws IOException, InterruptedException {
+        return fetchList("/api/posts/feed/following?offset=" + offset + "&limit=" + limit);
+    }
+
     public FeedResult getPostsByUser(Long userId) throws IOException, InterruptedException {
         return fetchList("/api/posts/user/" + userId);
     }

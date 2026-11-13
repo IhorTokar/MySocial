@@ -164,6 +164,11 @@ public class AdminUserService {
             changed.add("avatar removed");
         }
 
+        if (dto.removeCover() && user.getProfilePictureUrl() != null) {
+            user.setProfilePictureUrl(null);
+            changed.add("cover removed");
+        }
+
         if (!changed.isEmpty()) {
             auditService.log(adminId, AuditAction.USER_PROFILE_EDIT, TARGET_USER, userId, String.join(", ", changed));
         }
@@ -188,7 +193,7 @@ public class AdminUserService {
                 .orElseThrow(() -> new NotFoundException("Private data not found for user: " + u.getUserId()));
         return new AdminUserDto(
                 u.getUserId(), u.getUid(), u.getUsername(), u.getDisplayName(), u.getAboutMe(),
-                u.getUserAvatarUrl(), p.getEmail(), p.getPhoneNum(), p.getRole().name(),
+                u.getUserAvatarUrl(), u.getProfilePictureUrl(), p.getEmail(), p.getPhoneNum(), p.getRole().name(),
                 p.isBlocked(), p.getBlockedReason(), p.getBlockedAt(), u.getCreatedAt(),
                 postRepository.countByUser(u),
                 followersRepository.countByFollowing(u),

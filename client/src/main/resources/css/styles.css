@@ -583,3 +583,94 @@
     -fx-background-color: linear-gradient(to right, derive(-fx-accent, 60%), derive(-fx-share-color, 60%));
     -fx-background-radius: 10px;
 }
+
+/* ===== Права колонка: гарячі теми, кого почитати ===== */
+.discover-sidebar,
+.discover-sidebar > .viewport {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.discover-card {
+    -fx-background-color: -fx-secondary-bg;
+    -fx-background-radius: 12px;
+    -fx-border-color: -fx-card-border;
+    -fx-border-radius: 12px;
+    -fx-border-width: 1px;
+    -fx-padding: 12px;
+}
+
+.discover-row {
+    -fx-background-radius: 8px;
+    -fx-padding: 6px 6px;
+}
+
+.discover-row:hover {
+    -fx-background-color: -fx-primary-bg;
+}
+
+.discover-tag {
+    -fx-text-fill: -fx-primary-text;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.discover-meta {
+    -fx-text-fill: -fx-secondary-text;
+    -fx-font-size: 11px;
+}
+
+.discover-reason {
+    -fx-text-fill: -fx-accent;
+    -fx-font-size: 11px;
+}
+
+.discover-icon {
+    -fx-icon-color: -fx-accent;
+}
+
+.discover-follow {
+    -fx-padding: 4px 12px;
+    -fx-font-size: 12px;
+}
+
+
+/* ===== Вкладки стрічки «Для вас» / «Відстежувані» ===== */
+.feed-tabs {
+    -fx-spacing: 4px;
+}
+
+.feed-tab {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-secondary-text;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-padding: 8px 16px;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 3px 0;
+    -fx-cursor: hand;
+}
+
+.feed-tab:hover {
+    -fx-background-color: -fx-primary-bg;
+}
+
+.feed-tab:selected {
+    -fx-text-fill: -fx-primary-text;
+    -fx-border-color: -fx-accent;
+}
+
+/* ===== Аватар у шапці ===== */
+.header-avatar {
+    -fx-cursor: hand;
+    -fx-padding: 2px;
+    -fx-background-radius: 50%;
+    -fx-border-radius: 50%;
+    -fx-border-color: transparent;
+    -fx-border-width: 2px;
+}
+
+.header-avatar:hover {
+    -fx-border-color: -fx-accent;
+}

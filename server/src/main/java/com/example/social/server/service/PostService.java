@@ -122,6 +122,12 @@ public class PostService {
         return toDtos(postRepository.findByUserInOrderByCreatedDateDesc(followedUsers), currentUserId);
     }
 
+    /** Вкладка «Відстежувані»: без рекомендацій — просто пости підписок за часом. */
+    @Transactional(readOnly = true)
+    public List<PostResponseDto> getFollowingFeed(Long currentUserId, int limit, int offset) {
+        return toDtos(postRepository.findFollowingFeed(currentUserId, limit, offset), currentUserId);
+    }
+
     @Transactional(readOnly = true)
     public List<PostResponseDto> getPostsByUser(Long userId, Long currentUserId) {
         User user = userRepository.findById(userId)

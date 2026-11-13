@@ -507,6 +507,13 @@ public class DialogsController {
             clip.setHeight(bounds.getHeight());
         });
         iv.setClip(clip);
+        // клік по фото в повідомленні — перегляд на весь екран
+        iv.setCursor(javafx.scene.Cursor.HAND);
+        iv.setOnMouseClicked(e -> {
+            if (iv.getScene() != null) {
+                com.example.social.client.component.ImageViewer.show(iv.getScene().getWindow(), fullUrl);
+            }
+        });
         return iv;
     }
 

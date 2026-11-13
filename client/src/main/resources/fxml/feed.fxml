@@ -7,6 +7,8 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.ToggleGroup?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -14,7 +16,16 @@
 
     <top>
         <HBox alignment="CENTER_LEFT" spacing="12.0" styleClass="app-header">
-            <Label text="Стрічка" styleClass="title-label" />
+            <!-- «Для вас» — рекомендації (гібридна модель + MMR), «Відстежувані» — пости підписок за часом -->
+            <HBox styleClass="feed-tabs">
+                <fx:define>
+                    <ToggleGroup fx:id="feedTabs" />
+                </fx:define>
+                <ToggleButton fx:id="forYouTab" text="Для вас" toggleGroup="$feedTabs" selected="true"
+                              styleClass="feed-tab" />
+                <ToggleButton fx:id="followingTab" text="Відстежувані" toggleGroup="$feedTabs"
+                              styleClass="feed-tab" />
+            </HBox>
             <Region HBox.hgrow="ALWAYS" />
             <Button fx:id="refreshButton" text="⟳" onAction="#handleRefresh" styleClass="action-button" />
         </HBox>

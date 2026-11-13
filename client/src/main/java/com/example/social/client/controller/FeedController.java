@@ -12,6 +12,8 @@ import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Button;
 import javafx.scene.control.IndexedCell;
 import javafx.scene.control.Label;
@@ -35,6 +37,18 @@ public class FeedController {
 
     @FXML
     private Button refreshButton;
+
+    @FXML
+    private ToggleGroup feedTabs;
+
+    @FXML
+    private ToggleButton forYouTab;
+
+    @FXML
+    private ToggleButton followingTab;
+
+    /** Обрана вкладка запам'ятовується, поки працює застосунок (повернення зі сторінки профілю тощо). */
+    private static boolean followingSelected;
 
     /** Скільки постів довантажується за раз. */
     private static final int PAGE_SIZE = 20;
@@ -61,6 +75,15 @@ public class FeedController {
             if (skin != null) {
                 Platform.runLater(this::attachScrollListener);
             }
+        });
+        (followingSelected ? followingTab : forYouTab).setSelected(true);
+        feedTabs.selectedToggleProperty().addListener((obs, old, selected) -> {
+            if (selected == null) {
+                old.setSelected(true);   // клік по вже активній вкладці не повинен лишати жодної обраної
+                return;
+            }
+            followingSelected = selected == followingTab;
+            loadFeed();
         });
         loadFeed();
     }
@@ -150,7 +173,9 @@ public class FeedController {
 
         Thread.ofVirtual().start(() -> {
             try {
-                PostApiService.FeedResult result = postApiService.getFeed(offset, PAGE_SIZE);
+                PostApiService.FeedResult result = followingSelected
+                        ? postApiService.getFollowingFeed(offset, PAGE_SIZE)
+                        : postApiService.getFeed(offset, PAGE_SIZE);
                 Platform.runLater(() -> applyPage(result, reset, requestGeneration));
             } catch (Exception e) {
                 Platform.runLater(() -> {
@@ -192,7 +217,11 @@ public class FeedController {
         hasMore = page.size() == PAGE_SIZE && added > 0;
 
         int total = postsListView.getItems().size();
-        statusLabel.setText("Постів у стрічці: " + total + (hasMore ? "" : " · це все"));
+        if (total == 0 && followingSelected) {
+            statusLabel.setText("Ви ще нікого не читаєте — знайдіть людей у колонці «Кого почитати» праворуч");
+        } else {
+            statusLabel.setText("Постів у стрічці: " + total + (hasMore ? "" : " · це все"));
+        }
         // якщо пости вмістилися на екрані без прокрутки — одразу перевірити, чи потрібна наступна сторінка
         Platform.runLater(this::checkLastVisible);
     }

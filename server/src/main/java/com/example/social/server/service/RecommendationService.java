@@ -120,14 +120,43 @@ public class RecommendationService {
     /**
      * Сторінка стрічки для нескінченного прокручування: ранжування (з MMR) рахується
      * для перших offset + limit постів, і повертається лише їхній «хвіст» з позиції offset.
+     * Коли рекомендовані пости закінчуються, стрічка продовжується рештою постів за датою
+     * (від найновіших), тож прокручування не впирається в порожнечу.
      */
     @Transactional(readOnly = true)
     public List<PostResponseDto> getHybridFeed(Long currentUserId, int limit, int offset) {
         List<ScoredPost> ranked = computeScoredFeed(currentUserId, offset + limit);
         List<Post> page = ranked.subList(Math.min(offset, ranked.size()), ranked.size()).stream()
                 .map(ScoredPost::post)
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        ChronoSlice slice = chronoSlice(ranked.size(), offset, limit);
+        if (slice.take() > 0) {
+            // ranked коротший за offset + limit — отже, це ВСІ кандидати; їх у хронології пропускаємо
+            List<Long> recommendedIds = ranked.stream().map(s -> s.post().getPostId()).collect(Collectors.toList());
+            if (recommendedIds.isEmpty()) {
+                recommendedIds = List.of(-1L);   // NOT IN () — синтаксична помилка в SQL
+            }
+            page.addAll(postRepository.findChronologicalExcluding(
+                    currentUserId, recommendedIds, slice.take(), slice.skip()));
+        }
         return postService.toDtos(page, currentUserId);
+    }
+
+    /** Яку частину хронологічного «продовження» взяти: skip — пропустити, take — взяти. */
+    record ChronoSlice(int skip, int take) {}
+
+    /**
+     * Стрічка = [рекомендовані 0..R) + [хронологічні]. Сторінка [offset, offset + limit):
+     * усе, що за межею R, береться з хронології з позиції (offset − R).
+     */
+    static ChronoSlice chronoSlice(int recommendedCount, int offset, int limit) {
+        int end = offset + limit;
+        if (recommendedCount >= end) {
+            return new ChronoSlice(0, 0);
+        }
+        int start = Math.max(offset, recommendedCount);
+        return new ChronoSlice(start - recommendedCount, end - start);
     }
 
     @Transactional(readOnly = true)

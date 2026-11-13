@@ -23,6 +23,9 @@
                 <TextField fx:id="searchField" promptText="Пошук людей і постів..."
                            onAction="#handleSearch" maxWidth="320.0" styleClass="text-field" />
                 <Button onAction="#handleSearch" text="Пошук" styleClass="button, button-secondary" />
+                <!-- аватар поточного користувача: клік — меню (профіль, налаштування, вихід) -->
+                <StackPane fx:id="headerAvatar" styleClass="header-avatar" onMouseClicked="#handleHeaderAvatarClick"
+                           maxWidth="-Infinity" maxHeight="-Infinity" />
             </HBox>
     </top>
 
@@ -92,5 +95,10 @@
     <center>
         <StackPane fx:id="contentArea" />
     </center>
+
+    <!-- гарячі теми й кого почитати; ховається на вузькому вікні та в повідомленнях / налаштуваннях / адмінці -->
+    <right>
+        <fx:include fx:id="discoverSidebar" source="discover_sidebar.fxml" />
+    </right>
 
 </BorderPane>

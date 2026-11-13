@@ -70,7 +70,10 @@
                            styleClass="text-field" />
                 <TextArea fx:id="aboutMeField" promptText="Про себе (порожнє — прибрати)" prefRowCount="3"
                           wrapText="true" styleClass="text-area" />
-                <CheckBox fx:id="removeAvatarCheck" text="Прибрати аватар" />
+                <HBox spacing="16.0">
+                    <CheckBox fx:id="removeAvatarCheck" text="Прибрати аватар" />
+                    <CheckBox fx:id="removeCoverCheck" text="Прибрати обкладинку" />
+                </HBox>
                 <Button fx:id="profileButton" text="Зберегти профіль" onAction="#handleSaveProfile"
                         styleClass="button, button-secondary" />
 

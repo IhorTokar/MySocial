@@ -15,6 +15,7 @@ import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import com.example.social.client.component.AvatarCropDialog;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 
@@ -45,6 +46,8 @@ public class EditProfileController {
     @FXML private Button saveCoverButton;
 
     private final UserApiService userApiService = new UserApiService(new ApiClient());
+    /** Обмеження для вихідного фото; на сервер іде вже обрізаний PNG до 512×512. */
+    private static final long MAX_AVATAR_BYTES = 20L * 1024 * 1024;
     private ProfileController parentProfileController;
     private UserApiService.UserProfile profile;
     /** Обране, але ще не збережене зображення обкладинки. */
@@ -77,24 +80,44 @@ public class EditProfileController {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Оберіть фото профілю");
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
-                "Зображення", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp"));
+                "Зображення", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp"));
 
         File file = chooser.showOpenDialog(changeAvatarButton.getScene().getWindow());
         if (file == null) {
             return;
         }
         if (file.length() > MAX_AVATAR_BYTES) {
-            showError("Файл завеликий (максимум 5 МБ)");
+            showError("Файл завеликий (максимум 20 МБ)");
             return;
         }
 
         changeAvatarButton.setDisable(true);
-        statusLabel.getStyleClass().setAll("secondary-label");
-        statusLabel.setText("Завантаження фото...");
+        showInfo("Відкриття зображення...");
+        Thread.ofVirtual().start(() -> {
+            Image image = new Image(file.toURI().toString());
+            Platform.runLater(() -> {
+                changeAvatarButton.setDisable(false);
+                if (image.isError() || image.getWidth() <= 0) {
+                    showError("Не вдалося відкрити зображення (підтримуються PNG, JPEG, GIF, BMP)");
+                    return;
+                }
+                statusLabel.setText("");
+                // кадрування: користувач обирає, яка частина фото потрапить у круглий аватар
+                Path cropped = AvatarCropDialog.show(changeAvatarButton.getScene().getWindow(), image);
+                if (cropped != null) {
+                    uploadAvatar(cropped);
+                }
+            });
+        });
+    }
+
+    private void uploadAvatar(Path cropped) {
+        changeAvatarButton.setDisable(true);
+        showInfo("Завантаження фото...");
 
         Thread.ofVirtual().start(() -> {
             try {
-                UserApiService.UserProfileResult result = userApiService.uploadAvatar(file.toPath());
+                UserApiService.UserProfileResult result = userApiService.uploadAvatar(cropped);
 
                 Platform.runLater(() -> {
                     changeAvatarButton.setDisable(false);
@@ -115,6 +138,8 @@ public class EditProfileController {
                     changeAvatarButton.setDisable(false);
                     showError("Помилка з'єднання: " + e.getMessage());
                 });
+            } finally {
+                deleteQuietly(cropped);
             }
         });
     }

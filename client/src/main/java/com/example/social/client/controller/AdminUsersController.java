@@ -53,6 +53,7 @@ public class AdminUsersController {
     @FXML private CheckBox removeAvatarCheck;
     @FXML private PasswordField newPasswordField;
     @FXML private Label statusLabel;
+    @FXML private CheckBox removeCoverCheck;
 
     private final AdminApiService api = new AdminApiService(new ApiClient());
     private MainShellController shell;
@@ -152,6 +153,8 @@ public class AdminUsersController {
         aboutMeField.setText(user.aboutMe() == null ? "" : user.aboutMe());
         removeAvatarCheck.setSelected(false);
         removeAvatarCheck.setDisable(user.avatarUrl() == null);
+        removeCoverCheck.setSelected(false);
+        removeCoverCheck.setDisable(user.coverUrl() == null);
         newPasswordField.clear();
 
         // Власний акаунт: блокування й зміну ролі сервер однаково не дозволить
@@ -213,7 +216,8 @@ public class AdminUsersController {
             return;
         }
         AdminProfileUpdateDto request = new AdminProfileUpdateDto(
-                displayNameField.getText(), aboutMeField.getText(), removeAvatarCheck.isSelected());
+                displayNameField.getText(), aboutMeField.getText(),
+                removeAvatarCheck.isSelected(), removeCoverCheck.isSelected());
         runAction("Профіль збережено.", () -> api.updateProfile(user.userId(), request));
     }
 

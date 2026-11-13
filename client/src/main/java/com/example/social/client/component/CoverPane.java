@@ -5,8 +5,17 @@ import javafx.geometry.Orientation;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.image.PixelFormat;
-import javafx.scene.image.PixelReader;
+import com.example.social.client.service.ApiClient;
+import com.example.social.client.util.ImageCrops;
+import javafx.geometry.Orientation;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.Region;
+import javafx.scene.shape.Rectangle;
+
+import java.io.IOException;
+import java.nio.file.Path;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
 
@@ -166,37 +175,7 @@ public class CoverPane extends Region {
      * і записати в тимчасовий PNG для завантаження на сервер.
      */
     public static Path exportCrop(Image image, double focus) throws IOException {
-        PixelReader reader = image.getPixelReader();
-        if (reader == null) {
-            throw new IOException("Зображення ще не завантажилось");
-        }
-        Rectangle2D crop = viewport(image.getWidth(), image.getHeight(), RATIO, focus);
-        int sx = (int) Math.round(crop.getMinX());
-        int sy = (int) Math.round(crop.getMinY());
-        int sw = Math.min((int) crop.getWidth(), (int) image.getWidth() - sx);
-        int sh = Math.min((int) crop.getHeight(), (int) image.getHeight() - sy);
-
-        int[] pixels = new int[sw * sh];
-        reader.getPixels(sx, sy, sw, sh, PixelFormat.getIntArgbInstance(), pixels, 0, sw);
-        BufferedImage source = new BufferedImage(sw, sh, BufferedImage.TYPE_INT_ARGB);
-        source.setRGB(0, 0, sw, sh, pixels, 0, sw);
-
-        int outW = Math.min(OUTPUT_WIDTH, sw);
-        int outH = (int) Math.round(outW / RATIO);
-        BufferedImage out = new BufferedImage(outW, outH, BufferedImage.TYPE_INT_RGB);
-        Graphics2D g = out.createGraphics();
-        try {
-            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-            g.setColor(Color.WHITE);
-            g.fillRect(0, 0, outW, outH);
-            g.drawImage(source, 0, 0, outW, outH, null);
-        } finally {
-            g.dispose();
-        }
-
-        Path file = Files.createTempFile("cover-", ".png");
-        ImageIO.write(out, "png", file.toFile());
-        return file;
+        return ImageCrops.toPng(image, viewport(image.getWidth(), image.getHeight(), RATIO, focus),
+                OUTPUT_WIDTH, "cover-");
     }
 }
