@@ -9,6 +9,7 @@ import com.example.social.client.util.SceneUtil;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
+import javafx.scene.Node;
 import javafx.scene.control.ListView;
 
 public class SearchController {
@@ -20,6 +21,11 @@ public class SearchController {
     @FXML private Label postsHeaderLabel;
     @FXML private ListView<PostApiService.PostItem> postsListView;
 
+    /** Висота рядка користувача (аватар 40 + відступи) — щоб список займав рівно стільки місця, скільки рядків. */
+    private static final double USER_ROW_HEIGHT = 64;
+    /** Більше рядків — з'являється прокрутка всередині списку. */
+    private static final int MAX_VISIBLE_USERS = 4;
+
     private final SearchApiService searchApiService = new SearchApiService(new ApiClient());
     private MainShellController shell;
 
@@ -30,6 +36,7 @@ public class SearchController {
     @FXML
     private void initialize() {
         usersListView.setCellFactory(list -> new UserSearchCell(this::openProfile));
+        usersListView.setFixedCellSize(USER_ROW_HEIGHT);
         postsListView.setCellFactory(list -> {
             PostListCell cell = new PostListCell(this::openProfile);
             cell.setOnEditRequested(this::openEditForm);
@@ -42,6 +49,9 @@ public class SearchController {
         statusLabel.setText("Пошук...");
         usersListView.getItems().clear();
         postsListView.getItems().clear();
+        // поки йде пошук, порожні секції не показуються
+        showSection(false, usersHeaderLabel, usersListView);
+        showSection(false, postsHeaderLabel, postsListView);
 
         Thread.ofVirtual().start(() -> {
             try {
@@ -51,10 +61,15 @@ public class SearchController {
                     if (result.success()) {
                         usersListView.getItems().setAll(result.users());
                         postsListView.getItems().setAll(result.posts());
-                        usersHeaderLabel.setText(query.startsWith("#")
-                                ? "Користувачі (пошук за тегом не застосовується)"
-                                : "Користувачі (" + result.users().size() + ")");
+                        usersHeaderLabel.setText("Користувачі (" + result.users().size() + ")");
                         postsHeaderLabel.setText("Пости (" + result.posts().size() + ")");
+
+                        // секція користувачів — лише якщо когось знайдено (пошук за #тегом людей не шукає),
+                        // і рівно під кількість рядків, а не фіксовані 220 px
+                        int users = result.users().size();
+                        usersListView.setPrefHeight(Math.min(users, MAX_VISIBLE_USERS) * USER_ROW_HEIGHT + 2);
+                        showSection(users > 0, usersHeaderLabel, usersListView);
+                        showSection(!result.posts().isEmpty(), postsHeaderLabel, postsListView);
                         statusLabel.setText(result.users().isEmpty() && result.posts().isEmpty()
                                 ? "Нічого не знайдено" : "");
                     } else {
@@ -69,6 +84,13 @@ public class SearchController {
                 });
             }
         });
+    }
+
+    private static void showSection(boolean visible, Node... nodes) {
+        for (Node node : nodes) {
+            node.setVisible(visible);
+            node.setManaged(visible);
+        }
     }
 
     private void openProfile(Long userId) {

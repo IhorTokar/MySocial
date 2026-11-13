@@ -11,6 +11,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
+import java.util.function.Consumer;
 
 import java.io.File;
 import java.nio.file.Path;
@@ -35,6 +36,8 @@ public class CreatePostController {
     private final PostApiService postApiService = new PostApiService(new ApiClient());
     private Runnable onPublished;
     private Runnable onCancelled;
+    /** Отримує id щойно створеного поста (не викликається при редагуванні). */
+    private Consumer<Long> onPostPublished;
 
     private Long editingPostId;
     private Path selectedImagePath;
@@ -45,6 +48,20 @@ public class CreatePostController {
 
     public void setOnCancelled(Runnable onCancelled) {
         this.onCancelled = onCancelled;
+    }
+
+    public void setOnPostPublished(Consumer<Long> onPostPublished) {
+        this.onPostPublished = onPostPublished;
+    }
+
+    /** Курсор — одразу в поле тексту (поле «Що у вас нового?» у стрічці). */
+    public void focusText() {
+        textArea.requestFocus();
+    }
+
+    /** Відкрити вибір фото без натискання «Додати фото» (кнопка-іконка в згорнутому полі). */
+    public void chooseImage() {
+        handleChooseImage();
     }
 
     public void setEditMode(PostApiService.PostItem post) {
@@ -127,6 +144,7 @@ public class CreatePostController {
         statusLabel.setText(editingPostId != null ? "Збереження..." : "Публікація...");
 
         Path imageToUpload = selectedImagePath;
+        boolean creating = editingPostId == null;
 
         Thread.ofVirtual().start(() -> {
             try {
@@ -168,6 +186,9 @@ public class CreatePostController {
                         onPublished.run();
                     }
                     resetForm();
+                    if (creating && onPostPublished != null) {
+                        onPostPublished.accept(targetPostId);
+                    }
                 });
             } catch (Exception e) {
                 Platform.runLater(() -> {

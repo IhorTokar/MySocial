@@ -1,6 +1,11 @@
 package com.example.social.client.controller;
 
+import com.example.social.client.component.PostComposer;
 import com.example.social.client.component.PostListCell;
+import com.example.social.client.util.AppSettings;
+import javafx.beans.binding.Bindings;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import com.example.social.client.service.ApiClient;
 import com.example.social.client.service.PostApiService;
 import com.example.social.client.util.SceneUtil;
@@ -47,6 +52,11 @@ public class FeedController {
     @FXML
     private ToggleButton followingTab;
 
+    @FXML
+    private HBox composerRow;
+
+    private final PostComposer composer = new PostComposer();
+
     /** Обрана вкладка запам'ятовується, поки працює застосунок (повернення зі сторінки профілю тощо). */
     private static boolean followingSelected;
 
@@ -62,6 +72,8 @@ public class FeedController {
     private boolean hasMore = true;
     /** Номер «покоління» стрічки: відповіді, що прийшли після «Оновити», відкидаються. */
     private int generation;
+    /** Скільки власних нових постів додано вгору вручну — вони не з серверної стрічки й не зсувають offset. */
+    private int insertedOnTop;
 
     @FXML
     private void initialize() {
@@ -76,6 +88,14 @@ public class FeedController {
                 Platform.runLater(this::attachScrollListener);
             }
         });
+        // поле «Що у вас нового?» — тієї ж ширини, що й картки постів
+        composer.prefWidthProperty().bind(Bindings.min(
+                postsListView.widthProperty().subtract(26),
+                AppSettings.getInstance().cardWidthProperty()));
+        composer.setMaxWidth(Region.USE_PREF_SIZE);
+        composer.setOnPublished(this::showPublished);
+        composerRow.getChildren().setAll(composer);
+
         (followingSelected ? followingTab : forYouTab).setSelected(true);
         feedTabs.selectedToggleProperty().addListener((obs, old, selected) -> {
             if (selected == null) {
@@ -115,6 +135,31 @@ public class FeedController {
 
     public void setShell(com.example.social.client.controller.MainShellController shell) {
         this.shell = shell;
+    }
+
+    /** Кнопка «Новий пост» у меню відкриває поле одразу розгорнутим. */
+    public void openComposer() {
+        composer.expand(false);
+    }
+
+    /** Щойно опублікований пост — вгорі стрічки (сама стрічка власних постів не показує). */
+    private void showPublished(Long postId) {
+        statusLabel.setText("Пост опубліковано");
+        Thread.ofVirtual().start(() -> {
+            try {
+                PostApiService.PostItem post = postApiService.getPost(postId);
+                if (post != null) {
+                    Platform.runLater(() -> {
+                        postsListView.getItems().removeIf(p -> p.postId().equals(postId));
+                        postsListView.getItems().add(0, post);
+                        insertedOnTop++;
+                        postsListView.scrollTo(0);
+                    });
+                }
+            } catch (Exception ignored) {
+                // пост однаково є в профілі
+            }
+        });
     }
 
     @FXML
@@ -165,10 +210,11 @@ public class FeedController {
         if (reset) {
             generation++;
             hasMore = true;
+            insertedOnTop = 0;
             refreshButton.setDisable(true);
         }
         int requestGeneration = generation;
-        int offset = reset ? 0 : postsListView.getItems().size();
+        int offset = reset ? 0 : postsListView.getItems().size() - insertedOnTop;
         statusLabel.setText(reset ? "Завантаження..." : "Завантаження ще постів...");
 
         Thread.ofVirtual().start(() -> {

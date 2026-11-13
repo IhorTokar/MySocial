@@ -9,6 +9,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.VBox?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -32,7 +33,15 @@
     </top>
 
     <center>
-        <ListView fx:id="postsListView" styleClass="list-view" />
+        <VBox>
+            <!-- поле «Що у вас нового?» (PostComposer додається з коду) — тієї ж ширини, що й картки постів -->
+            <HBox fx:id="composerRow" alignment="CENTER">
+                <padding>
+                    <Insets top="10.0" />
+                </padding>
+            </HBox>
+            <ListView fx:id="postsListView" styleClass="list-view" VBox.vgrow="ALWAYS" />
+        </VBox>
     </center>
 
     <bottom>

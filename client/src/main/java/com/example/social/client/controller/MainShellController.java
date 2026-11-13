@@ -97,12 +97,13 @@ public class MainShellController {
         showFeed();
     }
 
-    public void showFeed() {
+    public FeedController showFeed() {
         FeedController controller = loadIntoContent("/fxml/feed.fxml");
         if (controller != null) {
             controller.setShell(this);
         }
         discoverSidebarController.refresh();   // теми й пропозиції оновлюються при кожному поверненні до стрічки
+        return controller;
     }
 
     public void showProfile(Long userId) {
@@ -179,7 +180,11 @@ public class MainShellController {
     }
     @FXML
     private void handleNewPost() {
-        showMyProfile();
+        // «Новий пост» — стрічка з уже розгорнутим полем «Що у вас нового?»
+        FeedController controller = showFeed();
+        if (controller != null) {
+            controller.openComposer();
+        }
     }
     @FXML
     private void handleLogout() {

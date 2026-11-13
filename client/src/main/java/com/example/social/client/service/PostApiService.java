@@ -30,6 +30,15 @@ public class PostApiService {
         return fetchList("/api/posts/feed/following?offset=" + offset + "&limit=" + limit);
     }
 
+    /** Один пост за id (напр. щойно опублікований — щоб показати його вгорі стрічки); null — не знайдено. */
+    public PostItem getPost(Long postId) throws IOException, InterruptedException {
+        ApiClient.ApiResponse response = apiClient.get("/api/posts/" + postId);
+        if (!response.isSuccess()) {
+            return null;
+        }
+        return parsePost(apiClient.getObjectMapper().readTree(response.body()));
+    }
+
     public FeedResult getPostsByUser(Long userId) throws IOException, InterruptedException {
         return fetchList("/api/posts/user/" + userId);
     }

@@ -674,3 +674,22 @@
 .header-avatar:hover {
     -fx-border-color: -fx-accent;
 }
+
+/* ===== Поле «Що у вас нового?» над стрічкою ===== */
+.composer-bar {
+    -fx-padding: 12px 16px;
+}
+
+.composer-prompt {
+    -fx-background-color: -fx-input-bg;
+    -fx-border-color: -fx-input-border;
+    -fx-background-radius: 20px;
+    -fx-border-radius: 20px;
+    -fx-padding: 10px 16px;
+    -fx-text-fill: -fx-secondary-text;
+    -fx-font-size: 14px;
+}
+
+.composer-prompt:hover {
+    -fx-border-color: -fx-accent;
+}
