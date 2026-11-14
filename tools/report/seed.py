@@ -14,6 +14,8 @@
   python seed.py --admin medoko --users 400 --days 60   # більша мережа
   python seed.py --admin medoko --cleanup               # видалити все згенероване
   python seed.py --admin medoko --cleanup --users 300   # перегенерувати з нуля
+  python seed.py --admin medoko --only-nlp              # лише кроки 2–5 для наявних постів
+                                                        # (напр. після зміни моделі тональності)
 
 Усі згенеровані акаунти мають email @seed.nexus.local і пароль password123 —
 під будь-яким із них можна увійти в клієнт.
@@ -52,6 +54,8 @@ def main():
     parser.add_argument("--cleanup", action="store_true", help="спершу видалити раніше згенероване")
     parser.add_argument("--only-cleanup", action="store_true", help="лише видалити згенероване й вийти")
     parser.add_argument("--skip-nlp", action="store_true", help="не рахувати вектори й тональність")
+    parser.add_argument("--only-nlp", action="store_true",
+                        help="не генерувати дані — лише вектори, тональність, node2vec і знімок")
     parser.add_argument("--out", default="report-data", help="куди зберегти підсумок генерації")
 
     model = parser.add_argument_group("параметри мережі")
@@ -86,23 +90,11 @@ def main():
             if args.only_cleanup:
                 return
 
-        step(f"Генерація: {args.users} користувачів, {args.communities} спільнот, {args.days} днів")
-        params = {
-            "users": args.users, "communities": args.communities, "days": args.days,
-            "avgPosts": args.avg_posts, "avgFollows": args.avg_follows, "avgLikes": args.avg_likes,
-            "homophily": args.homophily, "narrowShare": args.narrow_share, "bridgeShare": args.bridge_share,
-            "commentRate": args.comment_rate, "replyRate": args.reply_rate, "saveRate": args.save_rate,
-            "seed": args.seed,
-        }
-        summary, sec = timed(lambda: admin.post("/api/dev/seed-realistic", timeout=LONG, **params))
-        for key in ("usersCreated", "postsCreated", "followsCreated", "likesCreated",
-                    "commentsCreated", "repliesCreated", "savesCreated", "followsWithinCommunityShare"):
-            print(f"  {key:30} {summary.get(key)}")
-        print("  спільноти:")
-        for c in summary.get("communities", []):
-            print(f"    #{c['index']} {c['type']:8} тон {c['tone']:+.1f}  {c['members']:3} осіб  {', '.join(c['topics'])}")
-        print(f"  граф: {summary.get('graphSync')}")
-        print(f"  ({sec:.1f} с)")
+        params = summary = None
+        if args.only_nlp:
+            print("Генерацію пропущено (--only-nlp).")
+        else:
+            params, summary = generate(admin, args)
 
         if not args.skip_nlp:
             step("Семантичні вектори постів")
@@ -130,16 +122,39 @@ def main():
         except ApiError as e:
             print(f"  пропущено: {e}")
 
-        os.makedirs(args.out, exist_ok=True)
-        path = os.path.join(args.out, "seed-summary.json")
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump({"params": params, "summary": summary}, f, ensure_ascii=False, indent=2)
-        print(f"\nПідсумок збережено: {path}")
+        if summary is not None:
+            os.makedirs(args.out, exist_ok=True)
+            path = os.path.join(args.out, "seed-summary.json")
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump({"params": params, "summary": summary}, f, ensure_ascii=False, indent=2)
+            print(f"\nПідсумок збережено: {path}")
         print("Далі: python demo.py --admin", args.admin, "--experiments --scenario && python charts.py")
     except ApiError as e:
         sys.exit(f"\nПомилка сервера: {e}")
     except OSError as e:
         sys.exit(f"\nНемає зв'язку із сервером: {e}")
+
+
+def generate(admin, args):
+    """Крок 1: згенерувати мережу; повертає (параметри, підсумок сервера)."""
+    step(f"Генерація: {args.users} користувачів, {args.communities} спільнот, {args.days} днів")
+    params = {
+        "users": args.users, "communities": args.communities, "days": args.days,
+        "avgPosts": args.avg_posts, "avgFollows": args.avg_follows, "avgLikes": args.avg_likes,
+        "homophily": args.homophily, "narrowShare": args.narrow_share, "bridgeShare": args.bridge_share,
+        "commentRate": args.comment_rate, "replyRate": args.reply_rate, "saveRate": args.save_rate,
+        "seed": args.seed,
+    }
+    summary, sec = timed(lambda: admin.post("/api/dev/seed-realistic", timeout=LONG, **params))
+    for key in ("usersCreated", "postsCreated", "followsCreated", "likesCreated",
+                "commentsCreated", "repliesCreated", "savesCreated", "followsWithinCommunityShare"):
+        print(f"  {key:30} {summary.get(key)}")
+    print("  спільноти:")
+    for c in summary.get("communities", []):
+        print(f"    #{c['index']} {c['type']:8} тон {c['tone']:+.1f}  {c['members']:3} осіб  {', '.join(c['topics'])}")
+    print(f"  граф: {summary.get('graphSync')}")
+    print(f"  ({sec:.1f} с)")
+    return params, summary
 
 
 if __name__ == "__main__":
