@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 3.5 fix" />
+    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 3.6&#10;Повна зміна моделі тональності текстів">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -250,7 +252,6 @@
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="update 2.6.4" />
     <MESSAGE value="update 2.6.5" />
     <MESSAGE value="update 2.6.6" />
     <MESSAGE value="update 2.6.7" />
@@ -275,7 +276,8 @@
     <MESSAGE value="update 3.4" />
     <MESSAGE value="update 3.5" />
     <MESSAGE value="update 3.5 fix" />
-    <option name="LAST_COMMIT_MESSAGE" value="update 3.5 fix" />
+    <MESSAGE value="update 3.6&#10;Повна зміна моделі тональності текстів" />
+    <option name="LAST_COMMIT_MESSAGE" value="update 3.6&#10;Повна зміна моделі тональності текстів" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
