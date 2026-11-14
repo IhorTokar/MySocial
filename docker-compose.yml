@@ -7,8 +7,10 @@ services:
       POSTGRES_DB: social_network
       POSTGRES_USER: ${DB_USERNAME:-social_app}
       POSTGRES_PASSWORD: ${DB_PASSWORD:?Вкажіть DB_PASSWORD у файлі .env}
+    # 127.0.0.1 — порт доступний лише з цього комп'ютера. Без префікса Docker відкриває його
+    # для всієї мережі й обходить фаєрвол (ufw / firewalld).
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - social-pg-data:/var/lib/postgresql/data
     healthcheck:
@@ -25,7 +27,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?Вкажіть PGADMIN_PASSWORD у файлі .env}
     ports:
-      - "5050:80"
+      - "127.0.0.1:5050:80"
     depends_on:
       postgres:
         condition: service_healthy
@@ -45,8 +47,8 @@ services:
       NEO4J_dbms_security_procedures_unrestricted: gds.*
       NEO4J_dbms_security_procedures_allowlist: gds.*
     ports:
-      - "7474:7474"
-      - "7687:7687"
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"
     volumes:
       - social-neo4j-data:/data
     healthcheck:
@@ -60,8 +62,12 @@ services:
       context: ./nlp-service
     container_name: social-nlp
     restart: unless-stopped
+    # NLP-сервіс без авторизації — тим паче лише локально
     ports:
-      - "8001:8000"
+      - "127.0.0.1:8001:8000"
+    volumes:
+      # кеш моделей Hugging Face (~2 ГБ): не завантажуються заново при кожному перестворенні контейнера
+      - social-hf-cache:/root/.cache/huggingface
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 10s
@@ -73,3 +79,4 @@ volumes:
   social-pg-data:
   social-pgadmin-data:
   social-neo4j-data:
+  social-hf-cache:
