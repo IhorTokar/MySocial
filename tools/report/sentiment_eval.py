@@ -22,6 +22,7 @@ LABELS = ["negative", "neutral", "positive"]
 MODELS = [
     "lxyuan/distilbert-base-multilingual-cased-sentiments-student",   # поточна
     "cardiffnlp/twitter-xlm-roberta-base-sentiment",
+    "cardiffnlp/twitter-xlm-roberta-base-sentiment-multilingual",
     "tabularisai/multilingual-sentiment-analysis",
 ]
 EMBEDDING_MODEL = "paraphrase-multilingual-mpnet-base-v2"   # уже використовується сервісом
@@ -107,6 +108,41 @@ def anchors_predict(texts):
     return predictions, seconds
 
 
+def centroids_cv_predict(texts, gold, folds=5, seed=42):
+    """
+    Прототипи класів, усереднені з розмічених прикладів (а не з написаних вручну фраз).
+    Оцінка — стратифікована k-кратна крос-валідація: текст ніколи не класифікується
+    прототипом, у який він сам входив.
+    """
+    import random
+    import numpy as np
+    from sentence_transformers import SentenceTransformer
+    model = SentenceTransformer(EMBEDDING_MODEL)
+    started = time.time()
+    vectors = model.encode(texts, normalize_embeddings=True)
+    seconds = (time.time() - started) / len(texts)
+
+    fold_of = [0] * len(texts)
+    rnd = random.Random(seed)
+    for label in LABELS:
+        idx = [i for i, g in enumerate(gold) if g == label]
+        rnd.shuffle(idx)
+        for k, i in enumerate(idx):
+            fold_of[i] = k % folds
+
+    predictions = [None] * len(texts)
+    for k in range(folds):
+        prototypes = {}
+        for label in LABELS:
+            train = [vectors[i] for i in range(len(texts)) if fold_of[i] != k and gold[i] == label]
+            mean = np.mean(train, axis=0)
+            prototypes[label] = mean / np.linalg.norm(mean)
+        for i in range(len(texts)):
+            if fold_of[i] == k:
+                predictions[i] = max(prototypes, key=lambda label: float(vectors[i] @ prototypes[label]))
+    return predictions, seconds
+
+
 def metrics(gold, predicted):
     confusion = {g: {p: 0 for p in LABELS} for g in LABELS}
     for g, p in zip(gold, predicted):
@@ -139,14 +175,15 @@ def main():
 
     candidates = [(name, lambda n=name: classifier_predict(n, texts)) for name in MODELS]
     candidates.append((f"anchors:{EMBEDDING_MODEL}", lambda: anchors_predict(texts)))
+    candidates.append((f"centroids-cv5:{EMBEDDING_MODEL}", lambda: centroids_cv_predict(texts, gold)))
 
     results = []
-    print(f"{'модель':58} {'точн.':>6} {'F1':>6} {'neg':>5} {'neu':>5} {'pos':>5} {'мс/текст':>9}")
+    print(f"{'модель':62} {'точн.':>6} {'F1':>6} {'neg':>5} {'neu':>5} {'pos':>5} {'мс/текст':>9}")
     for name, predict in candidates:
         try:
             predicted, seconds = predict()
         except Exception as e:   # модель не завантажилась — решту все одно порівнюємо
-            print(f"{name:58} помилка: {e}")
+            print(f"{name:62} помилка: {str(e).splitlines()[0][:160]}")
             continue
         m = metrics(gold, predicted)
         m.update(model=name, msPerText=round(seconds * 1000, 1),
@@ -154,7 +191,7 @@ def main():
                          for t, g, p in zip(texts, gold, predicted) if g != p])
         results.append(m)
         r = m["recall"]
-        print(f"{name:58} {m['accuracy']:6.2f} {m['macroF1']:6.2f} {r['negative']:5.2f} "
+        print(f"{name:62} {m['accuracy']:6.2f} {m['macroF1']:6.2f} {r['negative']:5.2f} "
               f"{r['neutral']:5.2f} {r['positive']:5.2f} {m['msPerText']:9.1f}")
 
     with open(args.out, "w", encoding="utf-8") as f:
