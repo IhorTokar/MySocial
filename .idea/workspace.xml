@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 3.1">
-      <change beforePath="$PROJECT_DIR$/shared/src/main/resources/content.json" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/resources/content.json" afterDir="false" />
+    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 3.2">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/report/seed.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/report/seed.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,6 +86,10 @@
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/server/src/main/resources/seed" />
+      <recent name="$PROJECT_DIR$/server/src/main/resources" />
     </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="" />
@@ -248,7 +253,6 @@
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="update 2.4&#10;&quot;Set recommendation weights to 0.10/0.35/0.35/0.10/0.10 per offline evaluation&quot;" />
     <MESSAGE value="update 2.5&#10;&quot;Set recommendation weights to 0.10/0.35/0.35/0.10/0.10 per offline evaluation&quot;" />
     <MESSAGE value="update 2.5&#10; Cold start Bug fix" />
     <MESSAGE value="update 2.6" />
@@ -273,7 +277,8 @@
     <MESSAGE value="update 2.8.10" />
     <MESSAGE value="update 3 Added tests" />
     <MESSAGE value="update 3.1" />
-    <option name="LAST_COMMIT_MESSAGE" value="update 3.1" />
+    <MESSAGE value="update 3.2" />
+    <option name="LAST_COMMIT_MESSAGE" value="update 3.2" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

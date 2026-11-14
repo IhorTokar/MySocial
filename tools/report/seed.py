@@ -75,7 +75,7 @@ def main():
         admin = Api(args.url).login(args.admin, password)
     except (ApiError, OSError) as e:
         sys.exit(f"Не вдалося увійти: {e}")
-    if admin.role != "ADMIN":
+    if (admin.role or "").lower() != "admin":
         sys.exit(f"{args.admin} не адміністратор (роль {admin.role})")
 
     try:
