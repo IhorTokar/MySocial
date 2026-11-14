@@ -40,18 +40,44 @@ class CommunityAnalysisMathTest {
     }
 
     @Test
-    void stdDevOfConstantIsZero() {
-        assertEquals(0.0, CommunityAnalysisService.computeStdDev(List.of(0.3, 0.3, 0.3), 0.3), 1e-9);
+    void samePolarityIsFullySentimentHomogeneous() {
+        // різна впевненість моделі, але той самий клас — однорідність повна
+        assertEquals(1.0, CommunityAnalysisService.computeSentimentHomogeneity(List.of(0.6, 0.95, 0.4, 0.99)), 1e-9);
     }
 
     @Test
-    void stdDevOfMinusOneAndOneIsOne() {
-        assertEquals(1.0, CommunityAnalysisService.computeStdDev(List.of(-1.0, 1.0), 0.0), 1e-9);
+    void threePolaritiesInEqualSharesGiveZero() {
+        assertEquals(0.0, CommunityAnalysisService.computeSentimentHomogeneity(
+                List.of(0.9, 0.0, -0.8, 0.7, 0.0, -0.6)), 1e-9);
     }
 
     @Test
-    void stdDevOfSingleValueIsZero() {
-        assertEquals(0.0, CommunityAnalysisService.computeStdDev(List.of(0.5), 0.5), 1e-9);
+    void sentimentHomogeneityMatchesHandCalculation() {
+        // 3 позитивні + 1 негативний: H = -(0.75·ln 0.75 + 0.25·ln 0.25) = 0.5623, S = 1 - 0.5623 / ln 3 = 0.488
+        assertEquals(0.488, CommunityAnalysisService.computeSentimentHomogeneity(List.of(0.9, 0.8, 0.7, -0.9)), 1e-3);
+    }
+
+    @Test
+    void enthusiasticMajorityIsMoreHomogeneousThanEvenMix() {
+        // саме цей випадок ламав стару формулу «1 − розкид»: більшість у захваті + кілька критиків
+        double evenMix = CommunityAnalysisService.computeSentimentHomogeneity(
+                List.of(0.9, 0.9, 0.0, 0.0, -0.9, -0.9));
+        double majority = CommunityAnalysisService.computeSentimentHomogeneity(
+                List.of(0.9, 0.9, 0.0, 0.0, -0.9, -0.9, 0.95, 0.95, 0.95, 0.95, 0.95, 0.95, 0.95, 0.95, 0.95));
+        assertTrue(majority > evenMix, "більшість однієї полярності має бути однорідніша за рівну суміш");
+    }
+
+    @Test
+    void smallLexiconScoresCountAsNeutral() {
+        assertEquals(0, CommunityAnalysisService.polarity(0.05));
+        assertEquals(0, CommunityAnalysisService.polarity(-0.1));
+        assertEquals(1, CommunityAnalysisService.polarity(0.34));
+        assertEquals(-1, CommunityAnalysisService.polarity(-0.5));
+    }
+
+    @Test
+    void noSentimentsGiveZero() {
+        assertEquals(0.0, CommunityAnalysisService.computeSentimentHomogeneity(List.of()), 1e-9);
     }
 
     @Test

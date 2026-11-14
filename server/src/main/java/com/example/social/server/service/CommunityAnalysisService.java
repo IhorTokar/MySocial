@@ -30,6 +30,12 @@ public class CommunityAnalysisService {
     // для навчального проєкту достатньо репрезентативної вибірки
     private static final int MAX_POSTS_FOR_COHESION = 60;
     private static final int TOP_TAGS_LIMIT = 5;
+    /**
+     * Тональність ближче до нуля, ніж цей поріг, вважається нейтральною. Модель повертає
+     * клас × впевненість (нейтральний клас — рівно 0, інші — щонайменше ≈ 0.33 за модулем),
+     * тож поріг потрібен лише для словникового запасного варіанта, що дає проміжні значення.
+     */
+    static final double NEUTRAL_BAND = 0.1;
 
     private final CommunityDetectionService communityDetectionService;
     private final UserRepository userRepository;
@@ -136,10 +142,8 @@ public class CommunityAnalysisService {
                 .collect(Collectors.toList());
 
         double avgSentiment = sentiments.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-        double sentimentStdDev = computeStdDev(sentiments, avgSentiment);
-        // stdDev у сентименті лежить приблизно в [0, 1] (діапазон значень [-1,1]) —
-        // однорідність = 1 - stdDev, чим менший розкид тональності, тим вища однорідність
-        double sentimentHomogeneity = Math.max(0.0, 1.0 - sentimentStdDev);
+        // --- 3. Однорідність тональності: ентропія розподілу полярностей (як і для тем) ---
+        double sentimentHomogeneity = computeSentimentHomogeneity(sentiments);
 
         // --- Зведений показник "ехо-камери" ---
         double cohesionForScore = semanticCohesion != null ? semanticCohesion : 0.0;
@@ -208,14 +212,38 @@ public class CommunityAnalysisService {
         return 1.0 - normalizedEntropy;
     }
 
-    static double computeStdDev(List<Double> values, double mean) {
-        if (values.size() < 2) {
+    /**
+     * Однорідність тональності: 1 - (ентропія розподілу полярностей / log 3).
+     * Кожен пост — позитивний, нейтральний або негативний (за знаком тональності з порогом
+     * {@link #NEUTRAL_BAND}); 1.0 = усі пости однієї полярності, 0.0 = три полярності порівну.
+     *
+     * <p>На відміну від тем, нормування завжди на 3 класи: полярностей рівно три, незалежно від того,
+     * скільки з них трапилось у спільноті. Формула та сама, що й для тематичної однорідності, тож обидві
+     * складові echo-score вимірюють одне — наскільки розподіл зосереджений на одному значенні.
+     */
+    static double computeSentimentHomogeneity(List<Double> sentiments) {
+        if (sentiments.isEmpty()) {
             return 0.0;
         }
-        double variance = values.stream()
-                .mapToDouble(v -> Math.pow(v - mean, 2))
-                .average()
-                .orElse(0.0);
-        return Math.sqrt(variance);
+        long[] counts = new long[3];   // негатив, нейтраль, позитив
+        for (double s : sentiments) {
+            counts[polarity(s) + 1]++;
+        }
+        double entropy = 0.0;
+        for (long count : counts) {
+            if (count > 0) {
+                double p = (double) count / sentiments.size();
+                entropy -= p * Math.log(p);
+            }
+        }
+        return 1.0 - entropy / Math.log(3);
+    }
+
+    /** -1 — негатив, 0 — нейтраль, 1 — позитив. */
+    static int polarity(double sentiment) {
+        if (sentiment > NEUTRAL_BAND) {
+            return 1;
+        }
+        return sentiment < -NEUTRAL_BAND ? -1 : 0;
     }
 }
