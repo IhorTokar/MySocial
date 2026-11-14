@@ -33,7 +33,8 @@ public class MessageService {
     @Transactional
     public MessageDto sendMessage(Long senderId, Long receiverId, String text, String photoUrl, Long parentMessageId) {
         boolean hasText = text != null && !text.isBlank();
-        boolean hasPhoto = photoUrl != null && !photoUrl.isBlank();
+        String localPhoto = MediaFiles.requireLocalUrl(photoUrl);   // лише файли, завантажені на цей сервер
+        boolean hasPhoto = localPhoto != null;
 
         if (!hasText && !hasPhoto) {
             throw new IllegalArgumentException("Message must contain text or a photo");
@@ -57,7 +58,7 @@ public class MessageService {
         message.setSender(sender);
         message.setReceiver(receiver);
         message.setMessage(trimmed);
-        message.setMessageFileContent(hasPhoto ? photoUrl.trim() : null);
+        message.setMessageFileContent(localPhoto);
 
         if (parentMessageId != null) {
             Message parent = messageRepository.findById(parentMessageId)

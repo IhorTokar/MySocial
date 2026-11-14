@@ -53,6 +53,8 @@ public abstract class IntegrationTestBase {
         registry.add("nlp-service.base-url", () -> "http://localhost:8999");
         registry.add("echo-history.cron", () -> "-");
         registry.add("spring.jpa.show-sql", () -> "false");
+        // завантажені в тестах файли — у тимчасову теку, а не в uploads/ робочого сервера
+        registry.add("app.upload.dir", () -> System.getProperty("java.io.tmpdir") + "/mysocial-test-uploads");
         // Відповіді в UTF-8, щоб кирилиця в повідомленнях про помилки порівнювалась коректно
         registry.add("server.servlet.encoding.force-response", () -> "true");
     }

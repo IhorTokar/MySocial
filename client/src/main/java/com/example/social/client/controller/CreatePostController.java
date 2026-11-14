@@ -92,7 +92,7 @@ public class CreatePostController {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Оберіть зображення");
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
-                "Зображення", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp"));
+                "Зображення", "*.png", "*.jpg", "*.jpeg", "*.gif"));
 
         File file = chooser.showOpenDialog(chooseImageButton.getScene().getWindow());
         if (file == null) {

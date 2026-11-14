@@ -1,6 +1,5 @@
 package com.example.social.server.controller;
 
-import com.example.social.server.exception.BadRequestException;
 import com.example.social.server.exception.ForbiddenException;
 import com.example.social.server.security.AuthenticatedUser;
 import com.example.social.server.service.FileStorageService;
@@ -46,12 +45,8 @@ public class PostController {
             throw new ForbiddenException("You can only edit your own posts");
         }
 
-        String contentType = file.getContentType();
-        if (contentType == null || !(contentType.startsWith("image/") || contentType.startsWith("video/"))) {
-            throw new BadRequestException("Only image or video files are allowed");
-        }
-
-        String mediaUrl = fileStorageService.store(file);
+        // тип файлу перевіряється за вмістом у storeImage — Content-Type від клієнта не враховується
+        String mediaUrl = fileStorageService.storeImage(file);
         return ResponseEntity.ok(postService.updatePostMedia(postId, mediaUrl));
     }
 

@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 @Service
@@ -17,20 +16,18 @@ public class FileStorageService {
     @Value("${app.upload.dir}")
     private String uploadDir;
 
-    public String store(MultipartFile file) {
+    /**
+     * Зберегти зображення від клієнта. Тип і розширення визначаються за вмістом файлу
+     * ({@link MediaFiles#imageExtension}), а не за іменем чи Content-Type, які надсилає клієнт.
+     */
+    public String storeImage(MultipartFile file) {
+        byte[] content;
         try {
-            String originalName = file.getOriginalFilename();
-            String extension = "";
-            if (originalName != null && originalName.contains(".")) {
-                extension = originalName.substring(originalName.lastIndexOf('.'));
-            }
-
-            Path targetPath = newFile(extension);
-            Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
-            return "/media/" + targetPath.getFileName();
+            content = file.getBytes();
         } catch (IOException e) {
-            throw new RuntimeException("Failed to store file: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to read uploaded file: " + e.getMessage(), e);
         }
+        return store(content, MediaFiles.imageExtension(content));
     }
 
     /** Зберегти вже оброблений вміст (напр. обкладинку після обрізки). @param extension з крапкою: ".jpg" */

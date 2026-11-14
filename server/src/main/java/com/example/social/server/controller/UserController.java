@@ -1,6 +1,5 @@
 package com.example.social.server.controller;
 
-import com.example.social.server.exception.BadRequestException;
 import com.example.social.server.security.AuthenticatedUser;
 import com.example.social.server.service.FileStorageService;
 import com.example.social.server.service.UserService;
@@ -51,12 +50,8 @@ public class UserController {
     @PostMapping("/me/avatar")
     public ResponseEntity<?> updateAvatar(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                           @RequestParam("file") MultipartFile file) {
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new BadRequestException("Дозволені лише зображення");
-        }
-
-        String avatarUrl = fileStorageService.store(file);
+        // тип файлу перевіряється за вмістом у storeImage — Content-Type від клієнта не враховується
+        String avatarUrl = fileStorageService.storeImage(file);
         return ResponseEntity.ok(userService.updateAvatar(currentUser.getUserId(), avatarUrl));
     }
 
@@ -67,11 +62,7 @@ public class UserController {
     @PostMapping("/me/cover")
     public ResponseEntity<?> updateCover(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                          @RequestParam("file") MultipartFile file) throws IOException {
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new BadRequestException("Дозволені лише зображення");
-        }
-
+        // CoverImages сам перевіряє, що це зображення, — за вмістом, а не за Content-Type
         byte[] cover = CoverImages.normalize(file.getBytes());
         String coverUrl = fileStorageService.store(cover, ".jpg");
         return ResponseEntity.ok(userService.updateCover(currentUser.getUserId(), coverUrl));

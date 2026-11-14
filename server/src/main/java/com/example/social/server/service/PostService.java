@@ -71,7 +71,7 @@ public class PostService {
         post.setUser(user);
         post.setLabel(dto.getLabel());
         post.setText(dto.getText());
-        post.setMediaUrl(dto.getMediaUrl());
+        post.setMediaUrl(MediaFiles.requireLocalUrl(dto.getMediaUrl()));
 
         if (dto.getTags() != null && !dto.getTags().isEmpty()) {
             post.setTags(resolveTags(dto.getTags()));

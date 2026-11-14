@@ -1,6 +1,5 @@
 package com.example.social.server.controller;
 
-import com.example.social.server.exception.BadRequestException;
 import com.example.social.server.security.AuthenticatedUser;
 import com.example.social.server.service.FileStorageService;
 import com.example.social.server.service.MessageService;
@@ -44,11 +43,8 @@ public class MessageController {
     @PostMapping("/upload")
     public ResponseEntity<?> uploadPhoto(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                          @RequestParam("file") MultipartFile file) {
-        String contentType = file.getContentType();
-        if (contentType == null || !contentType.startsWith("image/")) {
-            throw new BadRequestException("Дозволені лише зображення");
-        }
-        String url = fileStorageService.store(file);
+        // тип файлу перевіряється за вмістом у storeImage — Content-Type від клієнта не враховується
+        String url = fileStorageService.storeImage(file);
         return ResponseEntity.ok(Map.of("url", url));
     }
 }
