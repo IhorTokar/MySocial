@@ -8,11 +8,14 @@ import com.example.social.shared.dto.ChangePasswordDto;
 import com.example.social.shared.dto.UpdateProfileDto;
 import com.example.social.shared.dto.UserDto;
 import com.example.social.shared.dto.ContactInfoDto;
+import com.example.social.server.websocket.ChatSessionRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.util.List;
 import java.util.UUID;
@@ -31,6 +34,7 @@ public class UserService {
     private final CommentRepository commentRepository;
     private final SavedPostRepository savedPostRepository;
     private final MessageRepository messageRepository;
+    private final ChatSessionRegistry chatSessionRegistry;
 
     public UserService(UserRepository userRepository,
                        UserPrivateRepository userPrivateRepository,
@@ -40,7 +44,8 @@ public class UserService {
                        PostLikeRepository postLikeRepository,
                        CommentRepository commentRepository,
                        SavedPostRepository savedPostRepository,
-                       MessageRepository messageRepository) {
+                       MessageRepository messageRepository,
+                       ChatSessionRegistry chatSessionRegistry) {
         this.userRepository = userRepository;
         this.userPrivateRepository = userPrivateRepository;
         this.passwordEncoder = passwordEncoder;
@@ -50,6 +55,7 @@ public class UserService {
         this.commentRepository = commentRepository;
         this.savedPostRepository = savedPostRepository;
         this.messageRepository = messageRepository;
+        this.chatSessionRegistry = chatSessionRegistry;
     }
 
     @Transactional
@@ -180,8 +186,14 @@ public class UserService {
                 .orElseThrow(() -> new NotFoundException("Private data not found for user: " + userId));
     }
 
+    /**
+     * Зміна пароля завершує всі інші сесії: версія токенів зростає, тож старі токени
+     * (на інших пристроях чи вкрадені) перестають діяти, а відкриті чати закриваються.
+     *
+     * @return нова версія токенів — з нею контролер видає свіжий токен поточному клієнту
+     */
     @Transactional
-    public void changePassword(Long userId, ChangePasswordDto dto) {
+    public int changePassword(Long userId, ChangePasswordDto dto) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found: " + userId));
         UserPrivate userPrivate = userPrivateRepository.findByUser(user)
@@ -192,8 +204,11 @@ public class UserService {
         }
 
         userPrivate.setPasswordHash(passwordEncoder.encode(dto.getNewPassword()));
+        userPrivate.incrementTokenVersion();
         userPrivateRepository.save(userPrivate);
-        log.info("Password changed for user {}", userId);
+        afterCommit(() -> chatSessionRegistry.closeAll(userId));
+        log.info("Password changed for user {}, other sessions revoked", userId);
+        return userPrivate.getTokenVersion();
     }
 
     /**
@@ -243,7 +258,17 @@ public class UserService {
         // 7. Приватні дані й сам акаунт
         userPrivateRepository.delete(userPrivate);
         userRepository.delete(user);
+        afterCommit(() -> chatSessionRegistry.closeAll(userId));
 
         log.info("Account deleted: userId={}", userId);
+    }
+    /** Дія, яку треба виконати лише після успішного коміту (закриття WebSocket-сесій). */
+    private static void afterCommit(Runnable action) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                action.run();
+            }
+        });
     }
 }

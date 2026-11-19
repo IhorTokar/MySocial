@@ -8,6 +8,7 @@ public class SessionManager {
     private Long userId;
     private String username;
     private String role;
+    private volatile boolean tokenRefreshing;
 
     private SessionManager() {
     }
@@ -24,6 +25,23 @@ public class SessionManager {
         this.userId = userId;
         this.username = username;
         this.role = role;
+    }
+
+    /** Новий токен після зміни пароля: решта сесії (користувач, роль) не змінюється. */
+    public void updateToken(String token) {
+        this.token = token;
+    }
+
+    /**
+     * Поки йде зміна пароля, інші запити зі старим токеном можуть отримати 401 —
+     * це не кінець сесії, а заміна токена, тож вихід на екран входу пропускається.
+     */
+    public void setTokenRefreshing(boolean refreshing) {
+        this.tokenRefreshing = refreshing;
+    }
+
+    public boolean isTokenRefreshing() {
+        return tokenRefreshing;
     }
 
     public void clear() {

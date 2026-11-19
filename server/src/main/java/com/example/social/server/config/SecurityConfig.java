@@ -1,6 +1,10 @@
 package com.example.social.server.config;
 
+import com.example.social.server.exception.ErrorResponse;
 import com.example.social.server.security.JwtAuthFilter;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.http.MediaType;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,9 +24,11 @@ import org.springframework.http.HttpMethod;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final ObjectMapper objectMapper;
 
-    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter, ObjectMapper objectMapper) {
         this.jwtAuthFilter = jwtAuthFilter;
+        this.objectMapper = objectMapper;
     }
 
     @Bean
@@ -48,8 +54,22 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
 
                 )
+                // Без дійсного входу (немає токена, прострочений, відкликаний, акаунт заблоковано) — 401,
+                // щоб клієнт відрізнив «увійдіть знову» від «немає прав» (403 для ролі user).
+                .exceptionHandling(e -> e.authenticationEntryPoint(unauthorizedEntryPoint()))
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    /** Відповідь 401 у тому ж JSON-форматі, що й решта помилок API. */
+    private AuthenticationEntryPoint unauthorizedEntryPoint() {
+        return (request, response, exception) -> {
+            response.setStatus(401);
+            response.setCharacterEncoding("UTF-8");
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            objectMapper.writeValue(response.getWriter(), ErrorResponse.of(401,
+                    "Потрібно увійти: сесія завершилась або токен недійсний", request.getRequestURI()));
+        };
     }
 }

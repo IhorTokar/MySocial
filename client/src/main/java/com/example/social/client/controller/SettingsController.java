@@ -7,6 +7,7 @@ import com.example.social.client.service.UserApiService;
 import com.example.social.client.util.AppSettings;
 import com.example.social.client.util.SceneUtil;
 import com.example.social.client.util.SessionManager;
+import com.example.social.client.util.SessionEvents;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -296,6 +297,10 @@ public class SettingsController {
     }
 
     private void performLogout() {
+        if (SessionEvents.logout("Акаунт видалено")) {
+            return;
+        }
+        // запасний шлях, якщо головного вікна чомусь немає
         ChatConnection.getInstance().disconnect();
         UnreadCounter.getInstance().reset();
         SessionManager.getInstance().clear();

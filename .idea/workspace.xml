@@ -4,8 +4,19 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 3.6&#10;Повна зміна моделі тональності текстів">
+    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 4.2">
+      <change afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/SessionEvents.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/LoginController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/LoginController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/MainShellController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/MainShellController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/SettingsController.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/controller/SettingsController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/ApiClient.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/ApiClient.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/UserApiService.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/service/UserApiService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/SessionManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/client/src/main/java/com/example/social/client/util/SessionManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/config/SecurityConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/config/SecurityConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/UserController.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/controller/UserController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/UserService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/UserService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/integration/SecurityIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/integration/SecurityIntegrationTest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -94,7 +105,7 @@
       <recent name="" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.ServerApplication">
+  <component name="RunManager" selected="Maven.Run Client (JavaFX)">
     <configuration name="ServerApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.example.social.server.ServerApplication" />
       <module name="server" />
@@ -252,9 +263,6 @@
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="update 2.6.5" />
-    <MESSAGE value="update 2.6.6" />
-    <MESSAGE value="update 2.6.7" />
     <MESSAGE value="update 2.6.8" />
     <MESSAGE value="update 2.6.9" />
     <MESSAGE value="update 2.7" />
@@ -277,7 +285,10 @@
     <MESSAGE value="update 3.5" />
     <MESSAGE value="update 3.5 fix" />
     <MESSAGE value="update 3.6&#10;Повна зміна моделі тональності текстів" />
-    <option name="LAST_COMMIT_MESSAGE" value="update 3.6&#10;Повна зміна моделі тональності текстів" />
+    <MESSAGE value="update 4 start of last fixes" />
+    <MESSAGE value="update 4.1" />
+    <MESSAGE value="update 4.2" />
+    <option name="LAST_COMMIT_MESSAGE" value="update 4.2" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

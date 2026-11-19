@@ -1,6 +1,7 @@
 package com.example.social.client.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.example.social.client.util.SessionManager;
 
 import java.io.IOException;
 import java.util.Map;
@@ -144,12 +145,23 @@ public class UserApiService {
             throws IOException, InterruptedException {
 
         Map<String, String> body = Map.of("currentPassword", currentPassword, "newPassword", newPassword);
-        ApiClient.ApiResponse response = apiClient.patch("/api/users/me/password", body);
-
-        if (!response.isSuccess()) {
-            return ActionResult.fail(extractError(response, "Не вдалося змінити пароль"));
+        SessionManager session = SessionManager.getInstance();
+        // сервер відкликає старі токени — паралельні запити зі старим токеном не мають «викидати» з програми
+        session.setTokenRefreshing(true);
+        try {
+            ApiClient.ApiResponse response = apiClient.patch("/api/users/me/password", body);
+            if (!response.isSuccess()) {
+                return ActionResult.fail(extractError(response, "Не вдалося змінити пароль"));
+            }
+            // інші пристрої вийшли; цей клієнт продовжує з новим токеном (чат перепідключиться сам)
+            String token = apiClient.getObjectMapper().readTree(response.body()).path("token").asText(null);
+            if (token != null) {
+                session.updateToken(token);
+            }
+            return ActionResult.ok();
+        } finally {
+            session.setTokenRefreshing(false);
         }
-        return ActionResult.ok();
     }
 
     public ActionResult deleteAccount(String password) throws IOException, InterruptedException {

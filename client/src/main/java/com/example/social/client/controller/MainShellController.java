@@ -10,6 +10,7 @@ import javafx.stage.Modality;
 import com.example.social.client.service.ApiClient;
 import com.example.social.client.service.UserApiService;
 import com.example.social.client.util.AvatarUtil;
+import com.example.social.client.util.SessionEvents;
 import javafx.application.Platform;
 import javafx.geometry.Side;
 import javafx.scene.control.ContextMenu;
@@ -65,6 +66,8 @@ public class MainShellController {
 
     @FXML
     private void initialize() {
+        // 401 від сервера (сесія завершилась) і видалення акаунта ведуть сюди ж, що й кнопка «Вийти»
+        SessionEvents.setLogoutHandler(this::logout);
         ChatConnection chat = ChatConnection.getInstance();
         chat.connect();
 
@@ -224,6 +227,12 @@ public class MainShellController {
     }
     @FXML
     private void handleLogout() {
+        logout(null);
+    }
+
+    /** Вихід: зупинити фонові задачі, забути токен і показати екран входу (з поясненням, якщо є). */
+    private void logout(String message) {
+        SessionEvents.clearLogoutHandler();
         ChatConnection chat = ChatConnection.getInstance();
         chat.removeListener(badgeListener);
         chat.disconnect();
@@ -231,10 +240,14 @@ public class MainShellController {
             notificationBell.stop();   // інакше опитування сервера тривало б і після виходу
         }
         UnreadCounter.getInstance().reset();
+        SessionManager.getInstance().clear();
 
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login.fxml"));
             Parent root = loader.load();
+            if (message != null) {
+                ((LoginController) loader.getController()).showMessage(message);
+            }
 
             Stage stage = (Stage) contentArea.getScene().getWindow();
             SceneUtil.switchScene(stage, root, 400, 400);

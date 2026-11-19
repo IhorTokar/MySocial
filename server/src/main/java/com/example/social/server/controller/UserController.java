@@ -1,6 +1,7 @@
 package com.example.social.server.controller;
 
 import com.example.social.server.security.AuthenticatedUser;
+import com.example.social.server.security.JwtTokenProvider;
 import com.example.social.server.service.FileStorageService;
 import com.example.social.server.service.UserService;
 import com.example.social.shared.dto.ChangePasswordDto;
@@ -23,10 +24,13 @@ public class UserController {
 
     private final UserService userService;
     private final FileStorageService fileStorageService;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public UserController(UserService userService, FileStorageService fileStorageService) {
+    public UserController(UserService userService, FileStorageService fileStorageService,
+                          JwtTokenProvider jwtTokenProvider) {
         this.userService = userService;
         this.fileStorageService = fileStorageService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     @GetMapping("/{userId}")
@@ -86,11 +90,16 @@ public class UserController {
         return ResponseEntity.ok(userService.updatePhone(currentUser.getUserId(), dto.phone()));
     }
 
+    /**
+     * Зміна пароля завершує всі інші сесії. Поточний клієнт отримує новий токен у відповіді
+     * й продовжує роботу без повторного входу.
+     */
     @PatchMapping("/me/password")
     public ResponseEntity<?> changePassword(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                             @Valid @RequestBody ChangePasswordDto dto) {
-        userService.changePassword(currentUser.getUserId(), dto);
-        return ResponseEntity.ok(Map.of("status", "password changed"));
+        int tokenVersion = userService.changePassword(currentUser.getUserId(), dto);
+        String token = jwtTokenProvider.generateToken(currentUser.getUserId(), currentUser.getUsername(), tokenVersion);
+        return ResponseEntity.ok(Map.of("status", "password changed", "token", token));
     }
 
     @DeleteMapping("/me")

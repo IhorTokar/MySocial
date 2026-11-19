@@ -1,5 +1,6 @@
 package com.example.social.client.service;
 
+import com.example.social.client.util.SessionEvents;
 import com.example.social.client.util.SessionManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -75,8 +76,9 @@ public class ApiClient {
                 .header("Content-Type", "application/json")
                 .timeout(timeout);
 
-        if (withAuth && SessionManager.getInstance().isLoggedIn()) {
-            builder.header("Authorization", "Bearer " + SessionManager.getInstance().getToken());
+        String token = withAuth ? SessionManager.getInstance().getToken() : null;
+        if (token != null) {
+            builder.header("Authorization", "Bearer " + token);
         }
 
         switch (method) {
@@ -88,6 +90,19 @@ public class ApiClient {
         }
 
         HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+        return finish(response, token);
+    }
+
+    /**
+     * 401 на запит, надісланий із поточним токеном, означає, що сесія завершилась
+     * (токен прострочений чи відкликаний, акаунт заблоковано) — клієнт повертається на екран входу.
+     */
+    private static ApiResponse finish(HttpResponse<String> response, String sentToken) {
+        SessionManager session = SessionManager.getInstance();
+        if (response.statusCode() == 401 && sentToken != null
+                && sentToken.equals(session.getToken()) && !session.isTokenRefreshing()) {
+            SessionEvents.sessionExpired();
+        }
         return new ApiResponse(response.statusCode(), response.body());
     }
 
@@ -134,12 +149,13 @@ public class ApiClient {
                 .timeout(Duration.ofSeconds(60))
                 .POST(HttpRequest.BodyPublishers.ofByteArray(body.toByteArray()));
 
-        if (SessionManager.getInstance().isLoggedIn()) {
-            builder.header("Authorization", "Bearer " + SessionManager.getInstance().getToken());
+        String token = SessionManager.getInstance().getToken();
+        if (token != null) {
+            builder.header("Authorization", "Bearer " + token);
         }
 
         HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-        return new ApiResponse(response.statusCode(), response.body());
+        return finish(response, token);
     }
 
     public ApiResponse deleteWithBody(String path, Object body) throws IOException, InterruptedException {
@@ -151,11 +167,12 @@ public class ApiClient {
                 .timeout(Duration.ofSeconds(15))
                 .method("DELETE", HttpRequest.BodyPublishers.ofString(json));
 
-        if (SessionManager.getInstance().isLoggedIn()) {
-            builder.header("Authorization", "Bearer " + SessionManager.getInstance().getToken());
+        String token = SessionManager.getInstance().getToken();
+        if (token != null) {
+            builder.header("Authorization", "Bearer " + token);
         }
 
         HttpResponse<String> response = httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
-        return new ApiResponse(response.statusCode(), response.body());
+        return finish(response, token);
     }
 }

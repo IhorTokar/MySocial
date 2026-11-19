@@ -38,7 +38,10 @@ public class LoginController {
         logoLabel.setText(com.example.social.client.util.AppConfig.name());
     }
 
-
+    /** Пояснення, чому знову показано екран входу (напр. «Сесія завершилась»). */
+    public void showMessage(String message) {
+        errorLabel.setText(message);
+    }
 
     @FXML
     private void handleLogin() {

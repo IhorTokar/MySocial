@@ -1,11 +1,13 @@
 package com.example.social.server.integration;
 
 import com.example.social.server.entity.UserRole;
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -27,8 +29,12 @@ class SecurityIntegrationTest extends IntegrationTestBase {
     // ===== Хто має доступ до адмінки =====
 
     @Test
-    void anonymousRequestToAdminApiIsForbidden() throws Exception {
-        mvc.perform(get(WEIGHTS)).andExpect(status().isForbidden());
+    void anonymousRequestRequiresLogin() throws Exception {
+        // 401 (а не 403): клієнт за цим кодом повертає користувача на екран входу
+        mvc.perform(get(WEIGHTS))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.path").value(WEIGHTS));
     }
 
     @Test
@@ -65,7 +71,7 @@ class SecurityIntegrationTest extends IntegrationTestBase {
     @Test
     void invalidTokenIsTreatedAsAnonymous() throws Exception {
         mvc.perform(get(ME).header("Authorization", "Bearer not-a-real-token"))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isUnauthorized());
     }
 
     // ===== Зміни діють одразу, без повторного входу =====
@@ -92,7 +98,7 @@ class SecurityIntegrationTest extends IntegrationTestBase {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.blocked").value(true));
 
-        mvc.perform(get(ME).header("Authorization", user.bearer())).andExpect(status().isForbidden());
+        mvc.perform(get(ME).header("Authorization", user.bearer())).andExpect(status().isUnauthorized());
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                         .content(loginJson(user.username(), PASSWORD)))
                 .andExpect(status().isForbidden())
@@ -115,7 +121,7 @@ class SecurityIntegrationTest extends IntegrationTestBase {
                 .andExpect(status().isOk());
 
         // старий токен більше не діє, старий пароль теж
-        mvc.perform(get(ME).header("Authorization", user.bearer())).andExpect(status().isForbidden());
+        mvc.perform(get(ME).header("Authorization", user.bearer())).andExpect(status().isUnauthorized());
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                         .content(loginJson(user.username(), PASSWORD)))
                 .andExpect(status().isUnauthorized());
@@ -125,6 +131,23 @@ class SecurityIntegrationTest extends IntegrationTestBase {
                         .content(loginJson(user.username(), "brandnew123")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").isString());
+    }
+
+    @Test
+    void ownPasswordChangeRevokesOtherSessionsButKeepsCurrentClient() throws Exception {
+        TestUser user = createUser(UserRole.user);
+        String body = "{\"currentPassword\":\"" + PASSWORD + "\",\"newPassword\":\"brandnew123\"}";
+
+        String json = mvc.perform(patch(ME + "/password").header("Authorization", user.bearer())
+                        .contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isString())
+                .andReturn().getResponse().getContentAsString();
+        String newToken = JsonPath.read(json, "$.token");
+
+        // старий токен (інший пристрій чи вкрадений) більше не діє, новий — діє
+        mvc.perform(get(ME).header("Authorization", user.bearer())).andExpect(status().isUnauthorized());
+        mvc.perform(get(ME).header("Authorization", "Bearer " + newToken)).andExpect(status().isOk());
     }
 
     // ===== Вхід =====
