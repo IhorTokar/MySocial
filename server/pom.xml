@@ -27,6 +27,13 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
+        <!-- Перевірка @Valid (@NotBlank, @Size, @Email …) у DTO з модуля shared.
+     Без реалізації Bean Validation (Hibernate Validator) Spring мовчки ігнорує ці анотації. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
         <!-- WebSocket (стрічка новин у реальному часі) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

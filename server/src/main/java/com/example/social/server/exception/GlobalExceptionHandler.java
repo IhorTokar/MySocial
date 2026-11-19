@@ -75,13 +75,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     /**
-     * Власні повідомлення в DTO написані українською й уже називають поле («заголовок — щонайбільше
-     * 255 символів») — їх клієнт показує як є. Стандартним англійським («must not be blank»)
-     * додається назва поля, інакше незрозуміло, про що мова.
+     * Власні повідомлення в DTO (message = "заголовок — щонайбільше 255 символів") уже називають поле —
+     * їх клієнт показує як є. До стандартних («must not be blank», «розмір має бути між 8 і 100» —
+     * мова залежить від локалі JVM) додається назва поля, інакше незрозуміло, про що мова.
+     * Стандартне повідомлення впізнається за шаблоном у фігурних дужках: {jakarta.validation...}.
      */
     private static String describe(org.springframework.validation.FieldError error) {
         String message = error.getDefaultMessage() != null ? error.getDefaultMessage() : "некоректне значення";
-        boolean ownMessage = message.chars().anyMatch(c -> Character.UnicodeBlock.of(c) == Character.UnicodeBlock.CYRILLIC);
+        boolean ownMessage = false;
+        if (error.contains(jakarta.validation.ConstraintViolation.class)) {
+            String template = error.unwrap(jakarta.validation.ConstraintViolation.class).getMessageTemplate();
+            ownMessage = template != null && !template.startsWith("{");
+        }
         return ownMessage ? message : error.getField() + ": " + message;
     }
 
