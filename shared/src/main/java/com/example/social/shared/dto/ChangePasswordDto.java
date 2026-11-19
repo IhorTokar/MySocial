@@ -9,7 +9,7 @@ public class ChangePasswordDto {
     private String currentPassword;
 
     @NotBlank
-    @Size(min = 8, message = "Password must be at least 8 characters")
+    @Size(min = 8, max = 100, message = "Password must be 8–100 characters")
     private String newPassword;
 
     public String getCurrentPassword() { return currentPassword; }

@@ -1,18 +1,26 @@
 package com.example.social.shared.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
 import java.util.List;
 
+/** Межі відповідають колонкам БД (label, media_url — VARCHAR(255), tags.name — VARCHAR(50)). */
 public class PostCreateDto {
 
+    @Size(max = 255, message = "заголовок — щонайбільше 255 символів")
     private String label;
 
-    @NotBlank
+    @NotBlank(message = "текст поста не може бути порожнім")
+    @Size(max = 5000, message = "текст поста — щонайбільше 5000 символів")
     private String text;
 
+    @Size(max = 255, message = "посилання на медіа — щонайбільше 255 символів")
     private String mediaUrl;
 
-    private List<String> tags;
+    @Size(max = 10, message = "щонайбільше 10 тегів")
+    private List<@NotBlank(message = "тег не може бути порожнім")
+    @Size(max = 50, message = "тег — щонайбільше 50 символів") String> tags;
 
     public String getLabel() {
         return label;

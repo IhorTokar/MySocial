@@ -63,13 +63,26 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                                   HttpStatusCode status,
                                                                   WebRequest request) {
         String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
+                .map(GlobalExceptionHandler::describe)
+                .distinct()
                 .collect(Collectors.joining("; "));
         if (message.isEmpty()) {
             message = "Некоректні дані запиту";
         }
+        message = Character.toUpperCase(message.charAt(0)) + message.substring(1);
         return ResponseEntity.status(status)
                 .body(ErrorResponse.of(status.value(), message, pathOf(request)));
+    }
+
+    /**
+     * Власні повідомлення в DTO написані українською й уже називають поле («заголовок — щонайбільше
+     * 255 символів») — їх клієнт показує як є. Стандартним англійським («must not be blank»)
+     * додається назва поля, інакше незрозуміло, про що мова.
+     */
+    private static String describe(org.springframework.validation.FieldError error) {
+        String message = error.getDefaultMessage() != null ? error.getDefaultMessage() : "некоректне значення";
+        boolean ownMessage = message.chars().anyMatch(c -> Character.UnicodeBlock.of(c) == Character.UnicodeBlock.CYRILLIC);
+        return ownMessage ? message : error.getField() + ": " + message;
     }
 
     /** Стандартні помилки Spring (неправильний JSON, невідома адреса, завеликий файл) — у нашому форматі. */
