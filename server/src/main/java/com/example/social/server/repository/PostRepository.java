@@ -26,6 +26,10 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     /** Для backfill: без тональності або з тональністю від вказаного джерела (наприклад, lexicon). */
     List<Post> findBySentimentIsNullOrSentimentSource(String sentimentSource);
 
+    /** Скільки різних тегів використано в постах усієї мережі — «словник» для тематичної однорідності. */
+    @Query(value = "SELECT COUNT(DISTINCT tag_id) FROM post_tags", nativeQuery = true)
+    long countDistinctUsedTags();
+
     /** Вкладка «Відстежувані»: пости тих, кого читає користувач, від найновіших. */
     @Query(value = "SELECT p.* FROM posts p JOIN followers f ON f.following_id = p.user_id " +
             "WHERE f.follower_id = :userId " +

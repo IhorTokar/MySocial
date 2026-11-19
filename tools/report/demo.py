@@ -252,18 +252,37 @@ class Demo:
                 f"готово за {time.time() - started:.0f} с")
 
     def scenario(self):
-        self.step("Сценарій ехо-камери: 3 кроки",
-                  "Дві групи → одна замикається в ехо-камеру → з'являється «міст» між групами.")
+        self.step("Сценарій ехо-камери: 4 кроки",
+                  "Дві групи → одна замикається в ехо-камеру → «міст» між групами → різноманіття контенту.")
         steps = []
-        for n in (1, 2, 3):
-            r = self.admin.post(f"/api/dev/echo-scenario/{n}", timeout=LONG)
-            steps.append(r)
-            a, b = r.get("groupA") or {}, r.get("groupB") or {}
-            self.info(f"· крок {n} «{r['title']}»: A={a.get('echoChamberScore', 0):.3f}, "
-                      f"B={b.get('echoChamberScore', 0):.3f}, спільнота A={a.get('community')}, B={b.get('community')}")
-        self.save("echo-scenario.json", steps)
-        self.admin.delete("/api/dev/echo-scenario")
-        self.ok("тестові групи сценарію видалено")
+        try:
+            for n in (1, 2, 3, 4):
+                r = self.admin.post(f"/api/dev/echo-scenario/{n}", timeout=LONG)
+                steps.append(r)
+                a, b = r.get("groupA") or {}, r.get("groupB") or {}
+                self.info(f"· крок {n} «{r['title']}»: A={a.get('echoChamberScore', 0):.3f}, "
+                          f"B={b.get('echoChamberScore', 0):.3f}, спільнота A={a.get('community')}, B={b.get('community')}")
+            self.save("echo-scenario.json", steps)
+            self.scenario_trajectory(steps)
+        finally:
+            # прибираємо й тоді, коли крок упав, — інакше наступний запуск зупиниться на «сценарій уже запущено»
+            self.admin.delete("/api/dev/echo-scenario")
+            self.ok("тестові групи сценарію видалено")
+
+    def scenario_trajectory(self, steps):
+        """Траєкторія echo_a1 по знімках сценарію — береться до видалення тестових груп."""
+        user_id = self.anon.login("echo_a1", "password123").user_id
+        points = self.admin.get(f"/api/graph/community/{user_id}/history")
+        self.save("trajectory-scenario.json", {
+            "userId": user_id,
+            "username": "echo_a1",
+            "steps": [{"step": s["step"], "title": s["title"], "snapshotId": s["snapshot"]["snapshotId"]}
+                      for s in steps],
+            "points": points,
+        })
+        for p in sorted(points, key=lambda p: p["createdAt"]):
+            self.info(f"· знімок #{p['snapshotId']}: спільнота {p['memberCount']} осіб, "
+                      f"echo-score {p['echoChamberScore']:.3f} (мережа {p['networkEchoScore']:.3f})")
 
     def cleanup(self):
         self.step("Прибирання: видалення демо-користувачів")

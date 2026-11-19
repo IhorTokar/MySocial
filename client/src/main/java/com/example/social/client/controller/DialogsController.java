@@ -302,7 +302,7 @@ public class DialogsController {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Оберіть фото");
         chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter(
-                "Зображення", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.webp"));
+                "Зображення", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp"));
 
         File file = chooser.showOpenDialog(photoButton.getScene().getWindow());
         if (file == null) {

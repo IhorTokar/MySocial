@@ -116,7 +116,7 @@ public class CommunityAnalysisService {
                 .map(Tag::getName)
                 .collect(Collectors.groupingBy(name -> name, Collectors.counting()));
 
-        double topicHomogeneity = computeTopicHomogeneity(tagCounts);
+        double topicHomogeneity = computeTopicHomogeneity(tagCounts, postRepository.countDistinctUsedTags());
 
         List<CommunityAnalysisDto.TagCount> topTags = tagCounts.entrySet().stream()
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
@@ -188,16 +188,23 @@ public class CommunityAnalysisService {
     }
 
     /**
-     * Нормалізована однорідність розподілу тегів: 1 - (ентропія Шеннона / максимальна можлива ентропія).
-     * 1.0 = усі пости про одну тему (одна ідеальна ехо-камера), 0.0 = теги розподілені рівномірно.
+     * Тематична однорідність: 1 - (ентропія Шеннона розподілу тегів спільноти / log₂ N),
+     * де N — кількість різних тегів у всій мережі (vocabularySize).
+     * 1.0 = усі пости про одну тему, 0.0 = спільнота рівномірно охоплює всі теми мережі.
+     *
+     * <p>Нормування на словник мережі, а не на кількість тем самої спільноти: інакше спільнота, що пише
+     * лише про 2 теми порівну, отримала б 0 — як і та, що охоплює всі 20. Так само тональність
+     * нормується на всі 3 можливі класи ({@link #computeSentimentHomogeneity}).
      */
-    static double computeTopicHomogeneity(Map<String, Long> tagCounts) {
+    static double computeTopicHomogeneity(Map<String, Long> tagCounts, long vocabularySize) {
         if (tagCounts.isEmpty()) {
             return 0.0;
         }
         if (tagCounts.size() == 1) {
             return 1.0;
         }
+        // словник не менший за кількість тем самої спільноти (захист від неузгоджених даних)
+        long vocabulary = Math.max(vocabularySize, tagCounts.size());
 
         long total = tagCounts.values().stream().mapToLong(Long::longValue).sum();
         double entropy = 0.0;
@@ -206,7 +213,7 @@ public class CommunityAnalysisService {
             entropy -= p * (Math.log(p) / Math.log(2));
         }
 
-        double maxEntropy = Math.log(tagCounts.size()) / Math.log(2);
+        double maxEntropy = Math.log(vocabulary) / Math.log(2);
         double normalizedEntropy = maxEntropy > 0 ? entropy / maxEntropy : 0.0;
 
         return 1.0 - normalizedEntropy;

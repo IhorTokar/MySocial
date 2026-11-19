@@ -12,31 +12,47 @@ class CommunityAnalysisMathTest {
 
     @Test
     void singleTagIsFullyHomogeneous() {
-        assertEquals(1.0, CommunityAnalysisService.computeTopicHomogeneity(Map.of("a", 10L)), 1e-9);
+        assertEquals(1.0, CommunityAnalysisService.computeTopicHomogeneity(Map.of("a", 10L), 20), 1e-9);
     }
 
     @Test
     void noTagsGiveZero() {
-        assertEquals(0.0, CommunityAnalysisService.computeTopicHomogeneity(Map.of()), 1e-9);
+        assertEquals(0.0, CommunityAnalysisService.computeTopicHomogeneity(Map.of(), 20), 1e-9);
     }
 
     @Test
-    void uniformTagsGiveZero() {
+    void uniformOverWholeVocabularyGivesZero() {
         Map<String, Long> uniform = Map.of("a", 5L, "b", 5L, "c", 5L, "d", 5L);
-        assertEquals(0.0, CommunityAnalysisService.computeTopicHomogeneity(uniform), 1e-9);
+        assertEquals(0.0, CommunityAnalysisService.computeTopicHomogeneity(uniform, 4), 1e-9);
     }
 
     @Test
     void skewedDistributionMatchesHandCalculation() {
-        // p = 0.9 / 0.1: H = 0.469 біт, Hmax = 1 біт, T = 1 - 0.469 = 0.531
-        assertEquals(0.531, CommunityAnalysisService.computeTopicHomogeneity(Map.of("a", 9L, "b", 1L)), 1e-3);
+        // p = 0.9 / 0.1, словник 2: H = 0.469 біт, Hmax = 1 біт, T = 1 - 0.469 = 0.531
+        assertEquals(0.531, CommunityAnalysisService.computeTopicHomogeneity(Map.of("a", 9L, "b", 1L), 2), 1e-3);
     }
 
     @Test
-    void knownLimitation_twoEqualTagsLookAsDiverseAsTwentyEqualTags() {
-        // фіксує поточну поведінку: нормалізація йде на число спостережених тегів
+    void twoEqualTopicsOutOfTwentyAreNarrow() {
+        // H = 1 біт, Hmax = log2 20 = 4.322 біт, T = 1 - 1 / 4.322 = 0.769
         Map<String, Long> two = Map.of("a", 5L, "b", 5L);
-        assertEquals(0.0, CommunityAnalysisService.computeTopicHomogeneity(two), 1e-9);
+        assertEquals(0.769, CommunityAnalysisService.computeTopicHomogeneity(two, 20), 1e-3);
+    }
+
+    @Test
+    void twentyEqualTopicsOutOfTwentyGiveZero() {
+        Map<String, Long> twenty = new java.util.HashMap<>();
+        for (int i = 0; i < 20; i++) {
+            twenty.put("t" + i, 3L);
+        }
+        assertEquals(0.0, CommunityAnalysisService.computeTopicHomogeneity(twenty, 20), 1e-9);
+    }
+
+    @Test
+    void vocabularySmallerThanCommunityTopicsFallsBackToCommunity() {
+        // словник не може бути меншим за кількість тем спільноти — береться більше з двох
+        Map<String, Long> two = Map.of("a", 5L, "b", 5L);
+        assertEquals(0.0, CommunityAnalysisService.computeTopicHomogeneity(two, 0), 1e-9);
     }
 
     @Test

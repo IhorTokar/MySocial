@@ -4,10 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 4.4">
+    <list default="true" id="79691a80-a6aa-4282-8576-90d5858b723b" name="Changes" comment="update 4.4 FIX">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/pom.xml" beforeDir="false" afterPath="$PROJECT_DIR$/server/pom.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/exception/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/exception/GlobalExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/PostRepository.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/repository/PostRepository.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/CommunityAnalysisService.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/main/java/com/example/social/server/service/CommunityAnalysisService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/service/CommunityAnalysisMathTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/test/java/com/example/social/server/service/CommunityAnalysisMathTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/tools/report/charts.py" beforeDir="false" afterPath="$PROJECT_DIR$/tools/report/charts.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -96,7 +98,7 @@
       <recent name="" />
     </key>
   </component>
-  <component name="RunManager" selected="Maven.Run Client (JavaFX)">
+  <component name="RunManager" selected="Application.ServerApplication">
     <configuration name="ServerApplication" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="com.example.social.server.ServerApplication" />
       <module name="server" />
@@ -254,7 +256,6 @@
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="update 2.7" />
     <MESSAGE value="update 2.8" />
     <MESSAGE value="update 2.8.1" />
     <MESSAGE value="update 2.8.2" />
@@ -279,7 +280,8 @@
     <MESSAGE value="update 4.2" />
     <MESSAGE value="update 4.3" />
     <MESSAGE value="update 4.4" />
-    <option name="LAST_COMMIT_MESSAGE" value="update 4.4" />
+    <MESSAGE value="update 4.4 FIX" />
+    <option name="LAST_COMMIT_MESSAGE" value="update 4.4 FIX" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
