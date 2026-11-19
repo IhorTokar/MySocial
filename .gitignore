@@ -6,3 +6,6 @@
 # Секрети: справжні значення лише локально, у git — тільки шаблон .env.example
 .env
 uploads/
+# IDE і Python
+.idea/workspace.xml
+__pycache__/
