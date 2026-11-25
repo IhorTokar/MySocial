@@ -198,6 +198,7 @@ public class SeedEvolutionService {
         State st = tx.execute(status -> {
             State s = new State(p, generator.buildNetwork(p.network(), baseEnd));
             assignRoles(s);
+            saveRoles(s);
             // для порівнянності з тижнями — лише останній тиждень базової мережі
             recordPersonal(s, personalTopicsOfBase(s, baseEnd.minusDays(p.epochDays())));
             return s;
@@ -324,6 +325,15 @@ public class SeedEvolutionService {
         return role;
     }
 
+    /** Ролі — у seed_ground_truth: під час оцінки виявлення спільнот ті, хто переходить, не враховуються. */
+    private void saveRoles(State st) {
+        for (Role role : st.roles) {
+            if (role.user != null) {
+                generator.saveRole(role.user.id, role.persona.key(), role.to);
+            }
+        }
+    }
+
     /** Чотири різні теми, крім головної теми своєї спільноти, — порівну. */
     private Map<Integer, Double> spreadInterests(State st, int community) {
         Integer main = st.net.communities.get(community).interests().keySet().iterator().next();
@@ -359,6 +369,7 @@ public class SeedEvolutionService {
                 st.byId.put(u.id, u);
                 role.user = u;
                 st.roleByUser.put(u.id, role);
+                generator.saveRole(u.id, role.persona.key(), null);
                 c.newUsers++;
                 int first = Math.max(2, (int) Math.round(np.avgFollows() * 0.6));
                 c.follows += followSome(st, u, st.members(role.from), first, false, u.createdAt, to);

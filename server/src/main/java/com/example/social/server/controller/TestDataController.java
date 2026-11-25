@@ -2,13 +2,16 @@ package com.example.social.server.controller;
 
 import com.example.social.server.exception.BadRequestException;
 import com.example.social.server.repository.PostEmbeddingRepository;
+import com.example.social.server.security.AuthenticatedUser;
 import com.example.social.server.service.EmbeddingApiService;
 import com.example.social.server.service.GraphSyncService;
 import com.example.social.server.service.PostSentimentService;
 import com.example.social.server.service.RecommendationService;
+import com.example.social.server.service.SeedEvolutionService;
 import com.example.social.server.service.SeedGeneratorService;
 import com.example.social.server.service.TestDataService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;
@@ -26,13 +29,15 @@ public class TestDataController {
     private final RecommendationService recommendationService;
     private final SeedGeneratorService seedGeneratorService;
     private final GraphSyncService graphSyncService;
+    private final SeedEvolutionService seedEvolutionService;
 
     public TestDataController(TestDataService testDataService, EmbeddingApiService embeddingApiService,
                               PostEmbeddingRepository postEmbeddingRepository,
                               PostSentimentService postSentimentService,
                               RecommendationService recommendationService,
                               SeedGeneratorService seedGeneratorService,
-                              GraphSyncService graphSyncService) {
+                              GraphSyncService graphSyncService,
+                              SeedEvolutionService seedEvolutionService) {
         this.testDataService = testDataService;
         this.embeddingApiService = embeddingApiService;
         this.postEmbeddingRepository = postEmbeddingRepository;
@@ -40,6 +45,7 @@ public class TestDataController {
         this.recommendationService = recommendationService;
         this.seedGeneratorService = seedGeneratorService;
         this.graphSyncService = graphSyncService;
+        this.seedEvolutionService = seedEvolutionService;
     }
 
     /**
@@ -69,7 +75,52 @@ public class TestDataController {
         return ResponseEntity.ok(result);
     }
 
-    /** Видалити всі акаунти, створені /seed-realistic (разом з усім їхнім вмістом). */
+    /**
+     * Мережа, що живе в часі: базова мережа (як /seed-realistic, але її «сьогодні» — epochs тижнів тому),
+     * далі epochs тижнів активності з ролями — затягування в ехо-камеру, вихід з неї, міграція між спільнотами,
+     * новачки й ті, хто йде. Після бази й кожного тижня — тональність, вектори й знімок ехо-камер.
+     * Триває кілька хвилин. Видаляється тим самим DELETE /seed-realistic.
+     * Приклад: POST /api/dev/seed-evolution?users=200&days=21&epochs=6
+     *
+     * @param snapshots false — лише дані, без NLP і знімків (коли Neo4j чи NLP-сервіс не запущено)
+     */
+    @PostMapping("/seed-evolution")
+    public ResponseEntity<?> seedEvolution(
+            @AuthenticationPrincipal AuthenticatedUser admin,
+            @RequestParam(name = "users", defaultValue = "200") int users,
+            @RequestParam(name = "communities", defaultValue = "8") int communities,
+            @RequestParam(name = "days", defaultValue = "21") int days,
+            @RequestParam(name = "avgPosts", defaultValue = "6") double avgPosts,
+            @RequestParam(name = "avgFollows", defaultValue = "12") double avgFollows,
+            @RequestParam(name = "avgLikes", defaultValue = "30") double avgLikes,
+            @RequestParam(name = "homophily", defaultValue = "0.8") double homophily,
+            @RequestParam(name = "narrowShare", defaultValue = "0.5") double narrowShare,
+            @RequestParam(name = "bridgeShare", defaultValue = "0.1") double bridgeShare,
+            @RequestParam(name = "commentRate", defaultValue = "0.15") double commentRate,
+            @RequestParam(name = "replyRate", defaultValue = "0.4") double replyRate,
+            @RequestParam(name = "saveRate", defaultValue = "0.05") double saveRate,
+            @RequestParam(name = "seed", defaultValue = "42") long seed,
+            @RequestParam(name = "epochs", defaultValue = "6") int epochs,
+            @RequestParam(name = "epochDays", defaultValue = "7") int epochDays,
+            @RequestParam(name = "drifterShare", defaultValue = "0.05") double drifterShare,
+            @RequestParam(name = "escaperShare", defaultValue = "0.05") double escaperShare,
+            @RequestParam(name = "migrantShare", defaultValue = "0.05") double migrantShare,
+            @RequestParam(name = "newcomerShare", defaultValue = "0.1") double newcomerShare,
+            @RequestParam(name = "leaverShare", defaultValue = "0.05") double leaverShare,
+            @RequestParam(name = "snapshots", defaultValue = "true") boolean snapshots) {
+        SeedGeneratorService.Params network = new SeedGeneratorService.Params(
+                users, communities, days, avgPosts, avgFollows, avgLikes, homophily, narrowShare, bridgeShare,
+                commentRate, replyRate, saveRate, seed);
+        Map<String, Object> result = new LinkedHashMap<>(seedEvolutionService.run(new SeedEvolutionService.Params(
+                        network, epochs, epochDays, drifterShare, escaperShare, migrantShare, newcomerShare, leaverShare),
+                admin.getUserId(), snapshots));
+        if (!snapshots) {
+            result.put("graphSync", syncGraph());   // зі знімками граф оновлює кожен знімок
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    /** Видалити всі акаунти, створені /seed-realistic і /seed-evolution (разом з усім їхнім вмістом). */
     @DeleteMapping("/seed-realistic")
     public ResponseEntity<?> cleanupRealistic() {
         Map<String, Object> result = new LinkedHashMap<>(seedGeneratorService.cleanup());

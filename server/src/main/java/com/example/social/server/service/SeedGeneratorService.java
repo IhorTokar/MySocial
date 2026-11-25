@@ -51,6 +51,8 @@ public class SeedGeneratorService {
 
     public static final String EMAIL_DOMAIN = "@seed.nexus.local";
     public static final String SEED_PASSWORD = "password123";
+    /** Тимчасові мережі експериментів (якість виявлення спільнот) — окремо від основної згенерованої мережі. */
+    public static final String EXPERIMENT_DOMAIN = "@experiment.nexus.local";
 
     /** Параметри генерації (значення за замовчуванням — у контролері). */
     public record Params(int users, int communities, int days, double avgPosts, double avgFollows,
@@ -106,6 +108,7 @@ public class SeedGeneratorService {
     static final class Network {
         final Params params;
         final Random rnd;
+        String emailDomain = EMAIL_DOMAIN;
         final long started = System.nanoTime();
         List<Community> communities;
         final List<SeedUser> users = new ArrayList<>();
@@ -166,8 +169,14 @@ public class SeedGeneratorService {
      * Без власної транзакції: викликається з {@link #generate} або з транзакції еволюції.
      */
     Network buildNetwork(Params p, LocalDateTime now) {
+        return buildNetwork(p, now, EMAIL_DOMAIN);
+    }
+
+    /** Те саме з іншим доменом пошти — для тимчасових мереж, які прибирає {@link #cleanup(String)}. */
+    Network buildNetwork(Params p, LocalDateTime now, String emailDomain) {
         p.validate();
         Network net = new Network(p, new Random(p.seed()));
+        net.emailDomain = emailDomain;
 
         net.communities = buildCommunities(p, net.rnd);
         createUsers(net, now);
@@ -226,9 +235,14 @@ public class SeedGeneratorService {
     /** Видалити всі згенеровані акаунти (каскадом — їхні пости, підписки, лайки, коментарі). */
     @Transactional
     public Map<String, Object> cleanup() {
+        return cleanup(EMAIL_DOMAIN);
+    }
+
+    /** Видалити акаунти з доменом пошти {@code emailDomain} (каскадом — усе їхнє). */
+    Map<String, Object> cleanup(String emailDomain) {
         int deleted = jdbc.update("DELETE FROM \"user\" WHERE user_id IN "
-                + "(SELECT user_id FROM user_private WHERE email LIKE ?)", "%" + EMAIL_DOMAIN);
-        log.info("Seed cleanup: {} users deleted", deleted);
+                + "(SELECT user_id FROM user_private WHERE email LIKE ?)", "%" + emailDomain);
+        log.info("Seed cleanup ({}): {} users deleted", emailDomain, deleted);
         return Map.of("usersDeleted", deleted);
     }
 
@@ -319,7 +333,10 @@ public class SeedGeneratorService {
                 Long.class, UUID.randomUUID().toString().replace("-", "").substring(0, 10),
                 username, first + " " + last, about, Timestamp.valueOf(u.createdAt));
         jdbc.update("INSERT INTO user_private(user_id, email, password_hash) VALUES (?, ?, ?)",
-                u.id, username + EMAIL_DOMAIN, net.passwordHash);
+                u.id, username + net.emailDomain, net.passwordHash);
+        // правильна відповідь для оцінки виявлення спільнот
+        jdbc.update("INSERT INTO seed_ground_truth(user_id, community, narrow) VALUES (?, ?, ?)",
+                u.id, c.index(), c.narrow());
         return u;
     }
 
@@ -391,6 +408,11 @@ public class SeedGeneratorService {
         SeedPost post = new SeedPost(postId, u.id, topicIndex, sentiment, when);
         net.posts.add(post);
         return post;
+    }
+
+    void saveRole(long userId, String role, Integer targetCommunity) {
+        jdbc.update("UPDATE seed_ground_truth SET role = ?, target_community = ? WHERE user_id = ?",
+                role, targetCommunity, userId);
     }
 
     void insertPostTags(List<Object[]> postTags) {
