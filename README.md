@@ -79,6 +79,7 @@ python seed.py --admin ваш_логін                  # ~200 користу�
 python demo.py --admin ваш_логін --experiments --scenario
 python charts.py                                  # графіки → report-charts/
 python seed.py --admin ваш_логін --only-cleanup   # прибрати згенероване
+python seed.py --admin ваш_логін --cleanup --epochs 6   # мережа, що живе 6 тижнів (ролі, траєкторії)
 ```
 
 Згенеровані акаунти мають адреси `@seed.nexus.local` і пароль `password123`.

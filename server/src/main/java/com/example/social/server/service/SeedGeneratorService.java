@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Function;
 
 /**
  * Генератор реалістичної мережі для демонстрації та звіту.
@@ -39,6 +40,9 @@ import java.util.UUID;
  * з перевагою популярних постів; коментарі погоджуються або сперечаються залежно від тону, автори відповідають.
  *
  * <p>Усі згенеровані акаунти мають email {@value #EMAIL_DOMAIN} — так їх можна видалити одним запитом.
+ *
+ * <p>Стан мережі ({@link Network}: користувачі з інтересами, тоном і активністю, пости, підписки)
+ * доступний у пакеті — його продовжує {@link SeedEvolutionService}, симулюючи наступні тижні.
  */
 @Service
 public class SeedGeneratorService {
@@ -80,10 +84,11 @@ public class SeedGeneratorService {
 
     // ===== Модель =====
 
-    private record Community(int index, Map<Integer, Double> interests, boolean narrow, double bias, double biasSpread) {}
+    record Community(int index, Map<Integer, Double> interests, boolean narrow, double bias, double biasSpread) {}
 
-    private static final class SeedUser {
+    static final class SeedUser {
         long id;
+        String username;
         int community;
         boolean bridge;
         Map<Integer, Double> interests;
@@ -91,9 +96,46 @@ public class SeedGeneratorService {
         double bias;
         LocalDateTime createdAt;
         final Set<Long> following = new LinkedHashSet<>();
+        /** Пости, які користувач уже вподобав, — щоб не вподобати двічі (і в наступних тижнях еволюції). */
+        final Set<Long> liked = new HashSet<>();
     }
 
-    private record SeedPost(long id, long authorId, int topic, int sentiment, LocalDateTime at) {}
+    record SeedPost(long id, long authorId, int topic, int sentiment, LocalDateTime at) {}
+
+    /** Стан згенерованої мережі в пам'яті — для продовження симуляції ({@link SeedEvolutionService}). */
+    static final class Network {
+        final Params params;
+        final Random rnd;
+        final long started = System.nanoTime();
+        List<Community> communities;
+        final List<SeedUser> users = new ArrayList<>();
+        final List<SeedPost> posts = new ArrayList<>();
+        Map<String, Long> tagIds;
+        /** Кількість читачів — для преференційного приєднання. */
+        final Map<Long, Integer> indegree = new HashMap<>();
+        final Map<Long, Integer> likesPerPost = new HashMap<>();
+        Set<String> usedNames;
+        String passwordHash;
+        int follows;
+        Map<String, Integer> interactions;
+
+        Network(Params params, Random rnd) {
+            this.params = params;
+            this.rnd = rnd;
+        }
+
+        SeedUser user(long id) {
+            return users.stream().filter(u -> u.id == id).findFirst().orElseThrow();
+        }
+    }
+
+    /** Накопичувач вподобань, збережень і коментарів — вставляються пакетом наприкінці. */
+    static final class InteractionBatch {
+        final List<Object[]> likes = new ArrayList<>();
+        final List<Object[]> saves = new ArrayList<>();
+        int comments;
+        int replies;
+    }
 
     private final JdbcTemplate jdbc;
     private final PasswordEncoder passwordEncoder;
@@ -116,23 +158,32 @@ public class SeedGeneratorService {
 
     @Transactional
     public Map<String, Object> generate(Params p) {
+        return summarize(buildNetwork(p, LocalDateTime.now()));
+    }
+
+    /**
+     * Згенерувати мережу, у якій «зараз» — момент {@code now} (дати постів — за {@code days} днів до нього).
+     * Без власної транзакції: викликається з {@link #generate} або з транзакції еволюції.
+     */
+    Network buildNetwork(Params p, LocalDateTime now) {
         p.validate();
-        long started = System.nanoTime();
-        Random rnd = new Random(p.seed());
-        LocalDateTime now = LocalDateTime.now();
+        Network net = new Network(p, new Random(p.seed()));
 
-        List<Community> communities = buildCommunities(p, rnd);
-        List<SeedUser> users = createUsers(p, communities, rnd, now);
-        Map<String, Long> tagIds = ensureTags();
-        List<SeedPost> posts = createPosts(p, users, tagIds, rnd, now);
-        int follows = createFollows(p, users, rnd, now);
-        Map<String, Integer> interactions = createInteractions(p, users, posts, rnd, now);
+        net.communities = buildCommunities(p, net.rnd);
+        createUsers(net, now);
+        net.tagIds = ensureTags();
+        createPosts(net, now);
+        net.follows = createFollows(net, now);
+        net.interactions = createInteractions(net, now);
+        return net;
+    }
 
+    Map<String, Object> summarize(Network net) {
         long sameCommunity = 0;
         long totalFollows = 0;
         Map<Long, SeedUser> byId = new HashMap<>();
-        users.forEach(u -> byId.put(u.id, u));
-        for (SeedUser u : users) {
+        net.users.forEach(u -> byId.put(u.id, u));
+        for (SeedUser u : net.users) {
             for (long target : u.following) {
                 totalFollows++;
                 if (byId.get(target).community == u.community) {
@@ -142,23 +193,23 @@ public class SeedGeneratorService {
         }
 
         Map<String, Object> result = new LinkedHashMap<>();
-        result.put("usersCreated", users.size());
-        result.put("postsCreated", posts.size());
-        result.put("followsCreated", follows);
-        result.putAll(interactions);
+        result.put("usersCreated", net.users.size());
+        result.put("postsCreated", net.posts.size());
+        result.put("followsCreated", net.follows);
+        result.putAll(net.interactions);
         result.put("followsWithinCommunityShare", totalFollows == 0 ? 0 : round(sameCommunity / (double) totalFollows));
-        result.put("communities", communities.stream().map(c -> {
+        result.put("communities", net.communities.stream().map(c -> {
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("index", c.index());
             row.put("type", c.narrow() ? "narrow" : "diverse");
             row.put("topics", c.interests().keySet().stream().map(t -> content.topics().get(t).key()).toList());
             row.put("tone", round(c.bias()));
-            row.put("members", users.stream().filter(u -> u.community == c.index()).count());
+            row.put("members", net.users.stream().filter(u -> u.community == c.index()).count());
             return row;
         }).toList());
         result.put("password", SEED_PASSWORD);
         result.put("emailDomain", EMAIL_DOMAIN);
-        result.put("durationSeconds", round((System.nanoTime() - started) / 1e9));
+        result.put("durationSeconds", round((System.nanoTime() - net.started) / 1e9));
         result.put("next", List.of(
                 "POST /api/dev/backfill-embeddings — векторні представлення постів (семантика)",
                 "POST /api/dev/backfill-sentiment — тональність постів",
@@ -166,6 +217,10 @@ public class SeedGeneratorService {
                 "POST /api/admin/echo-history — знімок ехо-камер"));
         log.info("Seed generated: {}", result);
         return result;
+    }
+
+    Content content() {
+        return content;
     }
 
     /** Видалити всі згенеровані акаунти (каскадом — їхні пости, підписки, лайки, коментарі). */
@@ -208,52 +263,64 @@ public class SeedGeneratorService {
         return result;
     }
 
-    private List<SeedUser> createUsers(Params p, List<Community> communities, Random rnd, LocalDateTime now) {
-        String hash = passwordEncoder.encode(SEED_PASSWORD);   // один хеш на всіх — bcrypt повільний
-        Set<String> usedNames = new HashSet<>(jdbc.queryForList("SELECT username FROM \"user\"", String.class));
+    private void createUsers(Network net, LocalDateTime now) {
+        Params p = net.params;
+        Random rnd = net.rnd;
+        net.passwordHash = passwordEncoder.encode(SEED_PASSWORD);   // один хеш на всіх — bcrypt повільний
+        net.usedNames = new HashSet<>(jdbc.queryForList("SELECT username FROM \"user\"", String.class));
 
         List<Integer> assignment = new ArrayList<>();
         for (int i = 0; i < p.users(); i++) {
-            assignment.add(i % communities.size());
+            assignment.add(i % net.communities.size());
         }
         Collections.shuffle(assignment, rnd);
 
-        List<SeedUser> users = new ArrayList<>();
         for (int i = 0; i < p.users(); i++) {
-            Community c = communities.get(assignment.get(i));
-            SeedUser u = new SeedUser();
-            u.community = c.index();
-            u.interests = new HashMap<>(c.interests());
-            if (rnd.nextDouble() < p.bridgeShare()) {
-                // «міст»: інтереси ще однієї спільноти
-                Community other = communities.get((c.index() + 1 + rnd.nextInt(communities.size() - 1)) % communities.size());
-                other.interests().forEach((t, w) -> u.interests.merge(t, w * 0.8, Double::sum));
-                u.bridge = true;
-            }
-            if (rnd.nextDouble() < 0.3) {
-                u.interests.merge(rnd.nextInt(content.topics().size()), 0.15, Double::sum);
-            }
-            normalize(u.interests);
-            u.activity = Math.exp(rnd.nextGaussian() * 0.7) / 1.28;   // log-normal із середнім ≈ 1
-            u.bias = clamp(c.bias() + rnd.nextGaussian() * c.biasSpread(), -1, 1);
-            u.createdAt = now.minusDays(p.days()).minusHours(rnd.nextInt(24 * 60));
-
-            boolean female = rnd.nextBoolean();
-            String first = pick(female ? content.firstNamesFemale() : content.firstNamesMale(), rnd);
-            String last = pick(content.lastNames(), rnd);
-            String username = uniqueUsername(first, last, usedNames, rnd);
-            String about = pick(content.about(), rnd).replace("{topics}", topicList(u.interests));
-
-            u.id = jdbc.queryForObject(
-                    "INSERT INTO \"user\"(uid, username, display_name, about_me, created_at) "
-                            + "VALUES (?, ?, ?, ?, ?) RETURNING user_id",
-                    Long.class, UUID.randomUUID().toString().replace("-", "").substring(0, 10),
-                    username, first + " " + last, about, Timestamp.valueOf(u.createdAt));
-            jdbc.update("INSERT INTO user_private(user_id, email, password_hash) VALUES (?, ?, ?)",
-                    u.id, username + EMAIL_DOMAIN, hash);
-            users.add(u);
+            Community c = net.communities.get(assignment.get(i));
+            net.users.add(insertUser(net, c, r -> now.minusDays(p.days()).minusHours(r.nextInt(24 * 60))));
         }
-        return users;
+    }
+
+    /**
+     * Новий користувач спільноти {@code c}: інтереси спільноти (у «мостів» — ще й сусідньої), тон, активність,
+     * ім'я з банку. {@code createdAt} отримує той самий генератор випадковостей у потрібний момент послідовності.
+     */
+    SeedUser insertUser(Network net, Community c, Function<Random, LocalDateTime> createdAt) {
+        Params p = net.params;
+        Random rnd = net.rnd;
+        List<Community> communities = net.communities;
+        SeedUser u = new SeedUser();
+        u.community = c.index();
+        u.interests = new HashMap<>(c.interests());
+        if (rnd.nextDouble() < p.bridgeShare()) {
+            // «міст»: інтереси ще однієї спільноти
+            Community other = communities.get((c.index() + 1 + rnd.nextInt(communities.size() - 1)) % communities.size());
+            other.interests().forEach((t, w) -> u.interests.merge(t, w * 0.8, Double::sum));
+            u.bridge = true;
+        }
+        if (rnd.nextDouble() < 0.3) {
+            u.interests.merge(rnd.nextInt(content.topics().size()), 0.15, Double::sum);
+        }
+        normalize(u.interests);
+        u.activity = Math.exp(rnd.nextGaussian() * 0.7) / 1.28;   // log-normal із середнім ≈ 1
+        u.bias = clamp(c.bias() + rnd.nextGaussian() * c.biasSpread(), -1, 1);
+        u.createdAt = createdAt.apply(rnd);
+
+        boolean female = rnd.nextBoolean();
+        String first = pick(female ? content.firstNamesFemale() : content.firstNamesMale(), rnd);
+        String last = pick(content.lastNames(), rnd);
+        String username = uniqueUsername(first, last, net.usedNames, rnd);
+        String about = pick(content.about(), rnd).replace("{topics}", topicList(u.interests));
+
+        u.username = username;
+        u.id = jdbc.queryForObject(
+                "INSERT INTO \"user\"(uid, username, display_name, about_me, created_at) "
+                        + "VALUES (?, ?, ?, ?, ?) RETURNING user_id",
+                Long.class, UUID.randomUUID().toString().replace("-", "").substring(0, 10),
+                username, first + " " + last, about, Timestamp.valueOf(u.createdAt));
+        jdbc.update("INSERT INTO user_private(user_id, email, password_hash) VALUES (?, ?, ?)",
+                u.id, username + EMAIL_DOMAIN, net.passwordHash);
+        return u;
     }
 
     // ===== Пости =====
@@ -269,66 +336,82 @@ public class SeedGeneratorService {
         return ids;
     }
 
-    private List<SeedPost> createPosts(Params p, List<SeedUser> users, Map<String, Long> tagIds,
-                                       Random rnd, LocalDateTime now) {
-        List<SeedPost> posts = new ArrayList<>();
+    private void createPosts(Network net, LocalDateTime now) {
+        Params p = net.params;
         List<Object[]> postTags = new ArrayList<>();
-        for (SeedUser u : users) {
-            int count = Math.min(40, poisson(p.avgPosts() * u.activity, rnd));
+        for (SeedUser u : net.users) {
+            int count = Math.min(40, poisson(p.avgPosts() * u.activity, net.rnd));
             for (int i = 0; i < count; i++) {
-                int topicIndex = sampleWeighted(u.interests, rnd);
-                Topic topic = content.topics().get(topicIndex);
-                double tone = u.bias + rnd.nextGaussian() * 0.35;
-                String wanted = tone > 0.25 ? "positive" : tone < -0.25 ? "negative" : "neutral";
-                Item item = pickItem(topic, wanted, rnd);
-                String mood = item.mood();
-                int sentiment = "positive".equals(mood) ? 1 : "negative".equals(mood) ? -1 : 0;
-
-                StringBuilder text = new StringBuilder();
-                text.append(pick(content.openers().get(mood), rnd)).append(' ').append(item.text());
-                if (rnd.nextDouble() < 0.35) {
-                    text.append(' ').append(pick(content.addons(), rnd));
-                }
-                text.append(' ').append(pick(content.closers().get(mood), rnd));
-
                 // свіжіші пости трапляються частіше (степінь > 1 зсуває до «сьогодні»)
-                long minutesAgo = (long) (Math.pow(rnd.nextDouble(), 1.6) * p.days() * 24 * 60);
-                LocalDateTime at = now.minusMinutes(minutesAgo);
-
-                long postId = jdbc.queryForObject(
-                        "INSERT INTO posts(user_id, label, text, created_date) VALUES (?, ?, ?, ?) RETURNING post_id",
-                        Long.class, u.id, item.title(), text.toString(), Timestamp.valueOf(at));
-
-                Set<String> tags = new LinkedHashSet<>();
-                tags.add(topic.key());
-                for (String tag : topic.tags()) {
-                    if (!tag.equals(topic.key()) && rnd.nextDouble() < 0.45) {
-                        tags.add(tag);
-                    }
-                }
-                if (rnd.nextDouble() < 0.05) {   // зрідка — тег «не в тему»
-                    tags.add(pick(content.topics().get(rnd.nextInt(content.topics().size())).tags(), rnd));
-                }
-                tags.forEach(tag -> postTags.add(new Object[]{postId, tagIds.get(tag)}));
-                posts.add(new SeedPost(postId, u.id, topicIndex, sentiment, at));
+                insertPost(net, u, r -> now.minusMinutes((long) (Math.pow(r.nextDouble(), 1.6) * p.days() * 24 * 60)),
+                        postTags);
             }
         }
+        insertPostTags(postTags);
+    }
+
+    /**
+     * Пост користувача на тему з його поточних інтересів, з настроєм за його тоном.
+     * Теги додаються до {@code postTags} — їх вставляє {@link #insertPostTags} пакетом.
+     */
+    SeedPost insertPost(Network net, SeedUser u, Function<Random, LocalDateTime> at, List<Object[]> postTags) {
+        Random rnd = net.rnd;
+        int topicIndex = sampleWeighted(u.interests, rnd);
+        Topic topic = content.topics().get(topicIndex);
+        double tone = u.bias + rnd.nextGaussian() * 0.35;
+        String wanted = tone > 0.25 ? "positive" : tone < -0.25 ? "negative" : "neutral";
+        Item item = pickItem(topic, wanted, rnd);
+        String mood = item.mood();
+        int sentiment = "positive".equals(mood) ? 1 : "negative".equals(mood) ? -1 : 0;
+
+        StringBuilder text = new StringBuilder();
+        text.append(pick(content.openers().get(mood), rnd)).append(' ').append(item.text());
+        if (rnd.nextDouble() < 0.35) {
+            text.append(' ').append(pick(content.addons(), rnd));
+        }
+        text.append(' ').append(pick(content.closers().get(mood), rnd));
+
+        LocalDateTime when = at.apply(rnd);
+
+        long postId = jdbc.queryForObject(
+                "INSERT INTO posts(user_id, label, text, created_date) VALUES (?, ?, ?, ?) RETURNING post_id",
+                Long.class, u.id, item.title(), text.toString(), Timestamp.valueOf(when));
+
+        Set<String> tags = new LinkedHashSet<>();
+        tags.add(topic.key());
+        for (String tag : topic.tags()) {
+            if (!tag.equals(topic.key()) && rnd.nextDouble() < 0.45) {
+                tags.add(tag);
+            }
+        }
+        if (rnd.nextDouble() < 0.05) {   // зрідка — тег «не в тему»
+            tags.add(pick(content.topics().get(rnd.nextInt(content.topics().size())).tags(), rnd));
+        }
+        tags.forEach(tag -> postTags.add(new Object[]{postId, net.tagIds.get(tag)}));
+        SeedPost post = new SeedPost(postId, u.id, topicIndex, sentiment, when);
+        net.posts.add(post);
+        return post;
+    }
+
+    void insertPostTags(List<Object[]> postTags) {
         jdbc.batchUpdate("INSERT INTO post_tags(post_id, tag_id) VALUES (?, ?) ON CONFLICT DO NOTHING", postTags);
-        return posts;
     }
 
     /** Сюжет потрібного настрою; якщо такого в темі немає — будь-який. */
-    private static Item pickItem(Topic topic, String mood, Random rnd) {
+    static Item pickItem(Topic topic, String mood, Random rnd) {
         List<Item> matching = topic.items().stream().filter(i -> mood.equals(i.mood())).toList();
         return pick(matching.isEmpty() ? topic.items() : matching, rnd);
     }
 
     // ===== Підписки =====
 
-    private int createFollows(Params p, List<SeedUser> users, Random rnd, LocalDateTime now) {
+    private int createFollows(Network net, LocalDateTime now) {
+        Params p = net.params;
+        Random rnd = net.rnd;
+        List<SeedUser> users = net.users;
         Map<Integer, List<SeedUser>> byCommunity = new HashMap<>();
         users.forEach(u -> byCommunity.computeIfAbsent(u.community, k -> new ArrayList<>()).add(u));
-        Map<Long, Integer> indegree = new HashMap<>();
+        Map<Long, Integer> indegree = net.indegree;
         List<Object[]> rows = new ArrayList<>();
 
         List<SeedUser> order = new ArrayList<>(users);
@@ -354,8 +437,29 @@ public class SeedGeneratorService {
         return rows.size();
     }
 
+    /** Підписка u → to з датою at; false — вже підписаний або це він сам. */
+    boolean follow(Network net, SeedUser u, SeedUser to, LocalDateTime at) {
+        if (to.id == u.id || !u.following.add(to.id)) {
+            return false;
+        }
+        net.indegree.merge(to.id, 1, Integer::sum);
+        jdbc.update("INSERT INTO followers(follower_id, following_id, created_at) VALUES (?, ?, ?)",
+                u.id, to.id, Timestamp.valueOf(at));
+        return true;
+    }
+
+    /** Відписка u → to; false — не був підписаний. */
+    boolean unfollow(Network net, SeedUser u, SeedUser to) {
+        if (!u.following.remove(to.id)) {
+            return false;
+        }
+        net.indegree.merge(to.id, -1, Integer::sum);
+        jdbc.update("DELETE FROM followers WHERE follower_id = ? AND following_id = ?", u.id, to.id);
+        return true;
+    }
+
     /** Популярніших обирають частіше: вага = кількість читачів + 1. */
-    private static SeedUser preferential(List<SeedUser> pool, Map<Long, Integer> indegree, Random rnd) {
+    static SeedUser preferential(List<SeedUser> pool, Map<Long, Integer> indegree, Random rnd) {
         double total = 0;
         for (SeedUser u : pool) {
             total += indegree.getOrDefault(u.id, 0) + 1;
@@ -372,87 +476,101 @@ public class SeedGeneratorService {
 
     // ===== Вподобання, коментарі, збереження =====
 
-    private Map<String, Integer> createInteractions(Params p, List<SeedUser> users, List<SeedPost> posts,
-                                                    Random rnd, LocalDateTime now) {
+    private Map<String, Integer> createInteractions(Network net, LocalDateTime now) {
+        Params p = net.params;
         Map<Integer, List<SeedPost>> byTopic = new HashMap<>();
         Map<Long, List<SeedPost>> byAuthor = new HashMap<>();
+        groupPosts(net.posts, byTopic, byAuthor);
+
+        InteractionBatch batch = new InteractionBatch();
+        for (SeedUser u : net.users) {
+            int target = Math.min(200, poisson(p.avgLikes() * u.activity, net.rnd));
+            interact(net, u, target, byTopic, byAuthor, now, batch);
+        }
+        return flushInteractions(batch);
+    }
+
+    static void groupPosts(List<SeedPost> posts, Map<Integer, List<SeedPost>> byTopic, Map<Long, List<SeedPost>> byAuthor) {
         for (SeedPost post : posts) {
             byTopic.computeIfAbsent(post.topic(), k -> new ArrayList<>()).add(post);
             byAuthor.computeIfAbsent(post.authorId(), k -> new ArrayList<>()).add(post);
         }
-        Map<Long, SeedUser> byId = new HashMap<>();
-        users.forEach(u -> byId.put(u.id, u));
-        Map<Long, Integer> likesPerPost = new HashMap<>();
+    }
 
-        List<Object[]> likes = new ArrayList<>();
-        List<Object[]> saves = new ArrayList<>();
-        int comments = 0;
-        int replies = 0;
+    /**
+     * До {@code target} вподобань користувача серед постів {@code byTopic}/{@code byAuthor}: за інтересами
+     * і від підписок, з перевагою популярних; частина — із збереженням, коментарем і відповіддю автора.
+     */
+    void interact(Network net, SeedUser u, int target, Map<Integer, List<SeedPost>> byTopic,
+                  Map<Long, List<SeedPost>> byAuthor, LocalDateTime now, InteractionBatch batch) {
+        Params p = net.params;
+        Random rnd = net.rnd;
+        Map<Long, Integer> likesPerPost = net.likesPerPost;
+        List<Long> followed = new ArrayList<>(u.following);
+        double maxInterest = Collections.max(u.interests.values());
+        int likedNow = 0;
 
-        for (SeedUser u : users) {
-            int target = Math.min(200, poisson(p.avgLikes() * u.activity, rnd));
-            List<Long> followed = new ArrayList<>(u.following);
-            double maxInterest = Collections.max(u.interests.values());
-            Set<Long> liked = new HashSet<>();
+        for (int attempt = 0; attempt < target * 6 && likedNow < target; attempt++) {
+            List<SeedPost> source;
+            boolean viaFollow = !followed.isEmpty() && rnd.nextDouble() < 0.45;
+            if (viaFollow) {
+                source = byAuthor.get(followed.get(rnd.nextInt(followed.size())));
+            } else {
+                int topic = rnd.nextDouble() < 0.85 ? sampleWeighted(u.interests, rnd)
+                        : rnd.nextInt(content.topics().size());
+                source = byTopic.get(topic);
+            }
+            if (source == null || source.isEmpty()) {
+                continue;
+            }
+            // «турнір» із двох: популярніший пост має більше шансів зібрати ще вподобання
+            SeedPost a = source.get(rnd.nextInt(source.size()));
+            SeedPost b = source.get(rnd.nextInt(source.size()));
+            SeedPost post = likesPerPost.getOrDefault(b.id(), 0) > likesPerPost.getOrDefault(a.id(), 0) ? b : a;
+            if (post.authorId() == u.id || u.liked.contains(post.id())) {
+                continue;
+            }
+            // пост підписки не в тему подобається рідше
+            double interest = u.interests.getOrDefault(post.topic(), 0.0) / maxInterest;
+            if (viaFollow && rnd.nextDouble() > 0.35 + 0.65 * interest) {
+                continue;
+            }
 
-            for (int attempt = 0; attempt < target * 6 && liked.size() < target; attempt++) {
-                List<SeedPost> source;
-                boolean viaFollow = !followed.isEmpty() && rnd.nextDouble() < 0.45;
-                if (viaFollow) {
-                    source = byAuthor.get(followed.get(rnd.nextInt(followed.size())));
-                } else {
-                    int topic = rnd.nextDouble() < 0.85 ? sampleWeighted(u.interests, rnd)
-                            : rnd.nextInt(content.topics().size());
-                    source = byTopic.get(topic);
-                }
-                if (source == null || source.isEmpty()) {
-                    continue;
-                }
-                // «турнір» із двох: популярніший пост має більше шансів зібрати ще вподобання
-                SeedPost a = source.get(rnd.nextInt(source.size()));
-                SeedPost b = source.get(rnd.nextInt(source.size()));
-                SeedPost post = likesPerPost.getOrDefault(b.id(), 0) > likesPerPost.getOrDefault(a.id(), 0) ? b : a;
-                if (post.authorId() == u.id || liked.contains(post.id())) {
-                    continue;
-                }
-                // пост підписки не в тему подобається рідше
-                double interest = u.interests.getOrDefault(post.topic(), 0.0) / maxInterest;
-                if (viaFollow && rnd.nextDouble() > 0.35 + 0.65 * interest) {
-                    continue;
-                }
+            u.liked.add(post.id());
+            likedNow++;
+            likesPerPost.merge(post.id(), 1, Integer::sum);
+            LocalDateTime likedAt = within(post.at(), Duration.ofDays(4), now, rnd);
+            batch.likes.add(new Object[]{u.id, post.id(), Timestamp.valueOf(likedAt)});
 
-                liked.add(post.id());
-                likesPerPost.merge(post.id(), 1, Integer::sum);
-                LocalDateTime likedAt = within(post.at(), Duration.ofDays(4), now, rnd);
-                likes.add(new Object[]{u.id, post.id(), Timestamp.valueOf(likedAt)});
-
-                if (rnd.nextDouble() < p.saveRate()) {
-                    saves.add(new Object[]{u.id, post.id(), Timestamp.valueOf(likedAt)});
-                }
-                if (rnd.nextDouble() < p.commentRate()) {
-                    LocalDateTime commentedAt = within(likedAt, Duration.ofHours(6), now, rnd);
-                    long commentId = jdbc.queryForObject(
-                            "INSERT INTO comments(post_id, user_id, text, created_at) VALUES (?, ?, ?, ?) RETURNING comment_id",
-                            Long.class, post.id(), u.id, commentText(u, post, rnd), Timestamp.valueOf(commentedAt));
-                    comments++;
-                    if (rnd.nextDouble() < p.replyRate()) {
-                        jdbc.update("INSERT INTO comments(post_id, user_id, text, parent_comment_id, created_at) "
-                                        + "VALUES (?, ?, ?, ?, ?)",
-                                post.id(), post.authorId(), pick(content.replies(), rnd), commentId,
-                                Timestamp.valueOf(within(commentedAt, Duration.ofHours(12), now, rnd)));
-                        replies++;
-                    }
+            if (rnd.nextDouble() < p.saveRate()) {
+                batch.saves.add(new Object[]{u.id, post.id(), Timestamp.valueOf(likedAt)});
+            }
+            if (rnd.nextDouble() < p.commentRate()) {
+                LocalDateTime commentedAt = within(likedAt, Duration.ofHours(6), now, rnd);
+                long commentId = jdbc.queryForObject(
+                        "INSERT INTO comments(post_id, user_id, text, created_at) VALUES (?, ?, ?, ?) RETURNING comment_id",
+                        Long.class, post.id(), u.id, commentText(u, post, rnd), Timestamp.valueOf(commentedAt));
+                batch.comments++;
+                if (rnd.nextDouble() < p.replyRate()) {
+                    jdbc.update("INSERT INTO comments(post_id, user_id, text, parent_comment_id, created_at) "
+                                    + "VALUES (?, ?, ?, ?, ?)",
+                            post.id(), post.authorId(), pick(content.replies(), rnd), commentId,
+                            Timestamp.valueOf(within(commentedAt, Duration.ofHours(12), now, rnd)));
+                    batch.replies++;
                 }
             }
         }
-        jdbc.batchUpdate("INSERT INTO post_likes(user_id, post_id, liked_at) VALUES (?, ?, ?)", likes);
-        jdbc.batchUpdate("INSERT INTO saved_posts(user_id, post_id, saved_at) VALUES (?, ?, ?)", saves);
+    }
+
+    Map<String, Integer> flushInteractions(InteractionBatch batch) {
+        jdbc.batchUpdate("INSERT INTO post_likes(user_id, post_id, liked_at) VALUES (?, ?, ?)", batch.likes);
+        jdbc.batchUpdate("INSERT INTO saved_posts(user_id, post_id, saved_at) VALUES (?, ?, ?)", batch.saves);
 
         Map<String, Integer> result = new LinkedHashMap<>();
-        result.put("likesCreated", likes.size());
-        result.put("commentsCreated", comments);
-        result.put("repliesCreated", replies);
-        result.put("savesCreated", saves.size());
+        result.put("likesCreated", batch.likes.size());
+        result.put("commentsCreated", batch.comments);
+        result.put("repliesCreated", batch.replies);
+        result.put("savesCreated", batch.saves.size());
         return result;
     }
 
@@ -514,11 +632,11 @@ public class SeedGeneratorService {
         return sb.toString();
     }
 
-    private static <T> T pick(List<T> list, Random rnd) {
+    static <T> T pick(List<T> list, Random rnd) {
         return list.get(rnd.nextInt(list.size()));
     }
 
-    private static int sampleWeighted(Map<Integer, Double> weights, Random rnd) {
+    static int sampleWeighted(Map<Integer, Double> weights, Random rnd) {
         double r = rnd.nextDouble() * weights.values().stream().mapToDouble(Double::doubleValue).sum();
         int last = -1;
         for (Map.Entry<Integer, Double> e : weights.entrySet()) {
@@ -531,7 +649,7 @@ public class SeedGeneratorService {
         return last;
     }
 
-    private static void normalize(Map<Integer, Double> weights) {
+    static void normalize(Map<Integer, Double> weights) {
         double sum = weights.values().stream().mapToDouble(Double::doubleValue).sum();
         weights.replaceAll((k, v) -> v / sum);
     }
@@ -554,22 +672,22 @@ public class SeedGeneratorService {
         return k;
     }
 
-    private static LocalDateTime between(LocalDateTime from, LocalDateTime to, Random rnd) {
+    static LocalDateTime between(LocalDateTime from, LocalDateTime to, Random rnd) {
         long minutes = Math.max(1, Duration.between(from, to).toMinutes());
         return from.plusMinutes((long) (rnd.nextDouble() * minutes));
     }
 
     /** Момент після start, але не пізніше ніж через max і не в майбутньому. */
-    private static LocalDateTime within(LocalDateTime start, Duration max, LocalDateTime now, Random rnd) {
+    static LocalDateTime within(LocalDateTime start, Duration max, LocalDateTime now, Random rnd) {
         LocalDateTime end = start.plus(max).isBefore(now) ? start.plus(max) : now;
         return end.isAfter(start) ? between(start, end, rnd) : start;
     }
 
-    private static double clamp(double v, double min, double max) {
+    static double clamp(double v, double min, double max) {
         return Math.max(min, Math.min(max, v));
     }
 
-    private static double round(double v) {
+    static double round(double v) {
         return Math.round(v * 1000) / 1000.0;
     }
 }
