@@ -39,6 +39,13 @@ jwt:
   secret: ${JWT_SECRET}          # щонайменше 32 символи
   expiration-ms: 86400000
 
+# Захист від підбору пароля: після стількох невдалих спроб вхід блокується до кінця вікна
+security:
+  login:
+    max-failures-per-user: 5     # для одного логіна
+    max-failures-per-ip: 30      # з однієї IP-адреси (на будь-які логіни)
+    lockout-minutes: 15
+
 neo4j:
   uri: ${NEO4J_URI:bolt://localhost:7687}
   username: ${NEO4J_USERNAME:neo4j}

@@ -169,6 +169,36 @@ class SecurityIntegrationTest extends IntegrationTestBase {
 
         mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
                         .content(loginJson(user.username(), "wrong-password")))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Неправильний логін або пароль"));
+    }
+
+    @Test
+    void unknownUsernameGivesSameAnswerAsWrongPassword() throws Exception {
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson("nobody_" + System.nanoTime(), "whatever-password")))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.error").value("Неправильний логін або пароль"));
+    }
+
+    @Test
+    void repeatedWrongPasswordsLockLoginTemporarily() throws Exception {
+        TestUser victim = createUser(UserRole.user);
+        TestUser other = createUser(UserRole.user);
+
+        for (int i = 0; i < 5; i++) {
+            mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                            .content(loginJson(victim.username(), "guess-" + i)))
+                    .andExpect(status().isUnauthorized());
+        }
+        // навіть правильний пароль не допомагає до кінця вікна — інакше перебір просто тривав би далі
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson(victim.username(), PASSWORD)))
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.error").value(containsString("Спробуйте через 15 хв")));
+        // інші акаунти це не зачіпає
+        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content(loginJson(other.username(), PASSWORD)))
+                .andExpect(status().isOk());
     }
 }
