@@ -16,11 +16,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: validate     # схему створює ТІЛЬКИ Flyway, Hibernate лише перевіряє
-    show-sql: true
+    # SQL-запити в консоль: SHOW_SQL=true у .env — лише для налагодження
+    show-sql: ${SHOW_SQL:false}
     properties:
       hibernate:
-        format_sql: true
-        dialect: org.hibernate.dialect.PostgreSQLDialect
         default_batch_fetch_size: 50
 
   flyway:
@@ -48,10 +47,9 @@ neo4j:
 nlp-service:
   base-url: http://localhost:8001
 
-logging:
-  level:
-    com.example.social.server.service.RecommendationService: DEBUG
-    com.example.social.server.service.EmbeddingApiService: DEBUG
+# Детальні журнали для налагодження вмикаються без зміни коду — змінною оточення під час запуску:
+#   LOGGING_LEVEL_COM_EXAMPLE_SOCIAL_SERVER_SERVICE=DEBUG mvn -pl server spring-boot:run
+# За замовчуванням DEBUG вимкнено: EmbeddingApiService на цьому рівні пише в журнал тексти постів.
 app:
   upload:
     dir: uploads
@@ -66,7 +64,7 @@ recommendation:
     followed-bonus: 0.3
   # MMR-різноманітність стрічки: 1.0 — вимкнено (чисте ранжування за формулою 3.1),
   # 0.7–0.8 — помітно різноманітніша стрічка без великої втрати релевантності.
-    # Як і weights, діє лише поки в БД немає жодної версії ваг; далі λ змінюється в адмін-панелі.
+  # Як і weights, діє лише поки в БД немає жодної версії ваг; далі λ змінюється в адмін-панелі.
   mmr:
     lambda: 0.7
 

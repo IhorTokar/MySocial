@@ -1,11 +1,23 @@
-# Project exclude paths
+# Збірка Maven
 /server/target/
 /shared/target/
 /client/target/
 
 # Секрети: справжні значення лише локально, у git — тільки шаблон .env.example
 .env
+
+# Файли, які завантажують користувачі (аватари, фото в постах і повідомленнях)
 uploads/
-# IDE і Python
+
+# Особисті налаштування IntelliJ (змінюються з кожним кліком у середовищі)
 .idea/workspace.xml
+.idea/shelf/
+*.iml
+
+# Python
 __pycache__/
+*.pyc
+
+# Результати demo.py / seed.py і графіки — генеруються заново командою, у git не потрібні
+tools/report/report-data/
+tools/report/report-charts/
