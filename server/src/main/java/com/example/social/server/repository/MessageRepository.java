@@ -15,15 +15,16 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     @Query("SELECT m FROM Message m WHERE m.sender = :user OR m.receiver = :user")
     List<Message> findAllByUser(@Param("user") User user);
 
-    // діалог в обидва боки; JOIN FETCH, щоб не було N+1 на sender/receiver
+    // діалог в обидва боки; JOIN FETCH, щоб не було N+1 на sender/receiver.
+    // messageId — другий ключ сортування: два повідомлення з однаковим часом не міняються місцями
     @Query("SELECT m FROM Message m JOIN FETCH m.sender JOIN FETCH m.receiver " +
             "WHERE (m.sender = :a AND m.receiver = :b) OR (m.sender = :b AND m.receiver = :a) " +
-            "ORDER BY m.createdAt ASC")
+            "ORDER BY m.createdAt ASC, m.messageId ASC")
     List<Message> findConversation(@Param("a") User a, @Param("b") User b);
 
     // усі повідомлення користувача (для списку діалогів), найновіші першими
     @Query("SELECT m FROM Message m JOIN FETCH m.sender JOIN FETCH m.receiver " +
-            "WHERE m.sender = :user OR m.receiver = :user ORDER BY m.createdAt DESC")
+            "WHERE m.sender = :user OR m.receiver = :user ORDER BY m.createdAt DESC, m.messageId DESC")
     List<Message> findAllInvolving(@Param("user") User user);
 
     @Modifying(clearAutomatically = true)

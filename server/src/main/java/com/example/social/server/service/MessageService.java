@@ -37,17 +37,17 @@ public class MessageService {
         boolean hasPhoto = localPhoto != null;
 
         if (!hasText && !hasPhoto) {
-            throw new IllegalArgumentException("Message must contain text or a photo");
+            throw new IllegalArgumentException("Повідомлення має містити текст або фото");
         }
         if (senderId.equals(receiverId)) {
-            throw new IllegalArgumentException("You cannot message yourself");
+            throw new IllegalArgumentException("Не можна надіслати повідомлення самому собі");
         }
 
         String trimmed = null;
         if (hasText) {
             trimmed = text.trim();
             if (trimmed.length() > MAX_LENGTH) {
-                throw new IllegalArgumentException("Message is too long (max " + MAX_LENGTH + ")");
+                throw new IllegalArgumentException("Повідомлення задовге (щонайбільше " + MAX_LENGTH + " символів)");
             }
         }
 
@@ -62,13 +62,13 @@ public class MessageService {
 
         if (parentMessageId != null) {
             Message parent = messageRepository.findById(parentMessageId)
-                    .orElseThrow(() -> new NotFoundException("Parent message not found: " + parentMessageId));
+                    .orElseThrow(() -> new NotFoundException("Повідомлення, на яке ви відповідаєте, не знайдено"));
 
             boolean sameConversation =
                     (parent.getSender().getUserId().equals(senderId) && parent.getReceiver().getUserId().equals(receiverId))
                             || (parent.getSender().getUserId().equals(receiverId) && parent.getReceiver().getUserId().equals(senderId));
             if (!sameConversation) {
-                throw new IllegalArgumentException("Parent message is not part of this conversation");
+                throw new IllegalArgumentException("Відповідати можна лише на повідомлення з цього діалогу");
             }
             message.setParentMessage(parent);
         }
@@ -79,21 +79,21 @@ public class MessageService {
     @Transactional
     public MessageDto editMessage(Long messageId, Long currentUserId, String newText) {
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new NotFoundException("Message not found: " + messageId));
+                .orElseThrow(() -> new NotFoundException("Повідомлення не знайдено"));
 
         if (!message.getSender().getUserId().equals(currentUserId)) {
-            throw new ForbiddenException("You can only edit your own messages");
+            throw new ForbiddenException("Редагувати можна лише власні повідомлення");
         }
         if (Boolean.TRUE.equals(message.getDeleted())) {
-            throw new IllegalArgumentException("Cannot edit a deleted message");
+            throw new IllegalArgumentException("Видалене повідомлення не можна редагувати");
         }
         if (newText == null || newText.isBlank()) {
-            throw new IllegalArgumentException("Message text cannot be empty");
+            throw new IllegalArgumentException("Текст повідомлення не може бути порожнім");
         }
 
         String trimmed = newText.trim();
         if (trimmed.length() > MAX_LENGTH) {
-            throw new IllegalArgumentException("Message is too long (max " + MAX_LENGTH + ")");
+            throw new IllegalArgumentException("Повідомлення задовге (щонайбільше " + MAX_LENGTH + " символів)");
         }
 
         message.setMessage(trimmed);
@@ -104,10 +104,10 @@ public class MessageService {
     @Transactional
     public MessageDto deleteMessage(Long messageId, Long currentUserId) {
         Message message = messageRepository.findById(messageId)
-                .orElseThrow(() -> new NotFoundException("Message not found: " + messageId));
+                .orElseThrow(() -> new NotFoundException("Повідомлення не знайдено"));
 
         if (!message.getSender().getUserId().equals(currentUserId)) {
-            throw new ForbiddenException("You can only delete your own messages");
+            throw new ForbiddenException("Видаляти можна лише власні повідомлення");
         }
 
         message.setDeleted(true);
@@ -184,7 +184,7 @@ public class MessageService {
 
     private User findUser(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new NotFoundException("User not found: " + userId));
+                .orElseThrow(() -> new NotFoundException("Користувача не знайдено"));
     }
 
     /**
