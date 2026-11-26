@@ -11,7 +11,7 @@
 Запуск (сервер має працювати):
     python3 demo.py --admin admin                 # пароль буде запитано
     python3 demo.py --admin admin --pause         # пауза після кожного кроку (для живого показу)
-    python3 demo.py --admin admin --experiments   # + NDCG і валідація ехо-камер (кілька хвилин)
+    python3 demo.py --admin admin --experiments   # + NDCG, валідація ехо-камер, Louvain проти Leiden (кілька хвилин)
     python3 demo.py --admin admin --scenario      # + покроковий сценарій ехо-камери
     python3 demo.py --admin admin --keep          # не видаляти демо-користувачів наприкінці
 
@@ -228,6 +228,34 @@ class Demo:
         self.save("trajectory.json", {"userId": user_id, "points": trajectory})
         self.ok(f"знімків в історії: {len(history)}, точок траєкторії користувача {user_id}: {len(trajectory)}")
 
+    def communities(self):
+        self.step("Аналіз спільнот: якість виявлення і структура",
+                  "Louvain і Leiden проти спільнот, які заклав генератор (NMI, ARI, чистота); "
+                  "щільність, провідність, лідери, «мости» й зв'язки між спільнотами.")
+        quality = self.admin.get("/api/graph/communities/quality", refresh="true")
+        self.save("community-quality.json", quality)
+        self.info(f"· справжніх спільнот {quality['trueCommunities']}, користувачів {quality['users']}, "
+                  f"модульність справжнього розбиття {quality['trueModularity']:.3f}")
+        for a in quality["algorithms"]:
+            if "error" in a:
+                self.info(f"· {a['algorithm']}: {a['error']}")
+                continue
+            self.info(f"· {a['algorithm']:8} NMI {a['nmi']:.3f}  ARI {a['ari']:.3f}  чистота {a['purity']:.3f}  "
+                      f"знайдено {a['foundCommunities']}  модульність {a['modularity']:.3f}  "
+                      f"незв'язних {a['disconnectedCommunities']}")
+
+        structure = self.admin.get("/api/graph/communities/structure", algorithm="louvain", top=8)
+        self.save("community-structure.json", structure)
+        self.info(f"· Louvain: спільнот {structure['communities']}, модульність {structure['modularity']:.3f}, "
+                  f"середня провідність {structure['weightedConductance']:.3f}")
+        for c in structure["details"][:5]:
+            leader = c["leaders"][0]["username"] if c["leaders"] else "—"
+            bridge = c["bridges"][0]["username"] if c["bridges"] else "—"
+            self.info(f"  сп. {c['community']:<6} {c['size']:3} ос.  щільність {c['density']:.3f}  "
+                      f"провідність {c['conductance']:.3f}  #{' #'.join(c['topTags'][:2])}  "
+                      f"лідер @{leader}  міст @{bridge}")
+        self.ok("структура збережена")
+
     def experiments(self):
         self.step("Експеримент NDCG@10 (ваги рекомендацій)",
                   "Синтетичні користувачі з прихованими вподобаннями; порівняння методів ранжування. "
@@ -250,6 +278,19 @@ class Demo:
             self.info(f"· рівень {row['level']:.1f}: echo-score {row['scoreMean']:.3f} ± {row['scoreSd']:.3f}")
         self.ok(f"Spearman (рівень ↔ echo-score) = {report['spearmanVsLevel']['composite']}; "
                 f"готово за {time.time() - started:.0f} с")
+        self.pause()
+
+        self.step("Якість виявлення спільнот: Louvain проти Leiden",
+                  "Тимчасові мережі з гомофілією 0.5–0.9 (по 3 повтори); основна мережа не змінюється. "
+                  "Триває кілька хвилин.")
+        started = time.time()
+        report = self.admin.post("/api/dev/community-quality-experiment", timeout=LONG)
+        self.save("community-experiment.json", report)
+        for row in report["summary"]:
+            self.info(f"· гомофілія {row['homophily']:.1f} {row['algorithm']:8} NMI {row['nmiMean']:.3f} ± "
+                      f"{row['nmiSd']:.3f}  ARI {row['ariMean']:.3f}  знайдено {row['foundCommunitiesMean']:.1f}  "
+                      f"незв'язних {row['disconnectedCommunitiesMean']:.1f}")
+        self.ok(f"готово за {time.time() - started:.0f} с")
 
     def scenario(self):
         self.step("Сценарій ехо-камери: 4 кроки",
@@ -302,7 +343,8 @@ class Demo:
         if len(self.users) < 3:
             return 1
         for func in (self.create_posts, self.social_activity, self.notifications, self.feeds,
-                     self.discovery, self.search, self.forgot_password, self.mmr, self.echo):
+                     self.discovery, self.search, self.forgot_password, self.mmr, self.echo,
+                     self.communities):
             self.run_step(func)
         if self.args.experiments:
             self.run_step(self.experiments)
@@ -326,7 +368,8 @@ def main():
     parser.add_argument("--admin", required=True, help="логін адміністратора")
     parser.add_argument("--out", default="report-data", help="куди зберігати JSON для графіків")
     parser.add_argument("--pause", action="store_true", help="пауза після кожного кроку")
-    parser.add_argument("--experiments", action="store_true", help="NDCG і валідація ехо-камер (довго)")
+    parser.add_argument("--experiments", action="store_true",
+                        help="NDCG, валідація ехо-камер, якість виявлення спільнот (довго)")
     parser.add_argument("--scenario", action="store_true", help="покроковий сценарій ехо-камери")
     parser.add_argument("--keep", action="store_true", help="не видаляти демо-користувачів")
     parser.add_argument("--mmr-user", type=int, help="id користувача для MMR (за замовчуванням — адміністратор)")
