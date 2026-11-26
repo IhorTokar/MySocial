@@ -16,6 +16,8 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyCollection;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 /**
@@ -52,6 +54,12 @@ class CommunityInsightIntegrationTest extends IntegrationTestBase {
     /** «Louvain» знаходить точно справжні спільноти, «Leiden» — зливає всіх в одну. */
     private void stubPerfectAndMerged() {
         when(graph.labels(false)).thenAnswer(inv -> groundTruthLabels());
+        when(graph.detectWithin(eq(false), anyCollection())).thenAnswer(inv -> groundTruthLabels());
+        when(graph.detectWithin(eq(true), anyCollection())).thenAnswer(inv -> {
+            Map<Long, Long> one = new HashMap<>();
+            groundTruthLabels().keySet().forEach(u -> one.put(u, 1L));
+            return one;
+        });
         when(graph.labels(true)).thenAnswer(inv -> {
             Map<Long, Long> one = new HashMap<>();
             groundTruthLabels().keySet().forEach(u -> one.put(u, 1L));

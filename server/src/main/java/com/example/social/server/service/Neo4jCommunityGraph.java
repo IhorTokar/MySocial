@@ -3,6 +3,7 @@ package com.example.social.server.service;
 import com.example.social.shared.dto.CommunityMemberDto;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,11 @@ public class Neo4jCommunityGraph implements CommunityGraph {
         } else {
             communityDetectionService.detectCommunities();
         }
+    }
+
+    @Override
+    public Map<Long, Long> detectWithin(boolean leiden, Collection<Long> userIds) {
+        return communityDetectionService.streamCommunitiesWithin(leiden, userIds);
     }
 
     @Override

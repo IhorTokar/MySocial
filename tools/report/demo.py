@@ -281,7 +281,7 @@ class Demo:
         self.pause()
 
         self.step("Якість виявлення спільнот: Louvain проти Leiden",
-                  "Тимчасові мережі з гомофілією 0.5–0.9 (по 3 повтори); основна мережа не змінюється. "
+                  "Тимчасові мережі з гомофілією 0.15–0.9 (по 3 повтори); основна мережа не змінюється. "
                   "Триває кілька хвилин.")
         started = time.time()
         report = self.admin.post("/api/dev/community-quality-experiment", timeout=LONG)

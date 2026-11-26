@@ -54,13 +54,15 @@ public class CommunityInsightController {
     /**
      * Louvain проти Leiden на тимчасових мережах з різною гомофілією. Основна мережа не змінюється,
      * але її спільноти наприкінці визначаються заново. Триває кілька хвилин.
-     * Приклад: POST /api/dev/community-quality-experiment?homophilies=0.5,0.6,0.7,0.8,0.9&repeats=3
+     * За замовчуванням гомофілія від 0.15 (майже випадкові підписки: з 8 спільнот «своя» — 1/8) до 0.9,
+     * щоб було видно поріг, нижче якого спільноти вже неможливо відновити.
+     * Приклад: POST /api/dev/community-quality-experiment?homophilies=0.2,0.3,0.5&repeats=3
      */
     @PostMapping("/api/dev/community-quality-experiment")
     public ResponseEntity<Map<String, Object>> experiment(
             @RequestParam(name = "users", defaultValue = "200") int users,
             @RequestParam(name = "communities", defaultValue = "8") int communities,
-            @RequestParam(name = "homophilies", defaultValue = "0.5,0.6,0.7,0.8,0.9") List<Double> homophilies,
+            @RequestParam(name = "homophilies", defaultValue = "0.15,0.2,0.25,0.3,0.35,0.4,0.5,0.7,0.9") List<Double> homophilies,
             @RequestParam(name = "repeats", defaultValue = "3") int repeats,
             @RequestParam(name = "seed", defaultValue = "100") long seed) {
         return ResponseEntity.ok(qualityService.experiment(users, communities, homophilies, repeats, seed));

@@ -26,9 +26,10 @@ import java.util.Map;
  * <ul>
  *   <li>{@link #current} — на основній згенерованій мережі (seed.py), за поточними спільнотами;</li>
  *   <li>{@link #experiment} — серія тимчасових мереж з різною гомофілією (часткою підписок усередині
- *       спільноти) і кількома повторами. Тимчасові користувачі мають окремий домен пошти й не пов'язані
- *       з рештою мережі, тож основні дані не змінюються; наприкінці їх видалено, а спільноти основної
- *       мережі визначено заново.</li>
+ *       спільноти) і кількома повторами. Тимчасові користувачі мають окремий домен пошти; спільноти
+ *       шукаються лише на їхньому підграфі ({@link CommunityGraph#detectWithin}) — інакше основна мережа
+ *       в тому самому графі змінювала б результат через межу роздільності модульності. Основні дані й
+ *       спільноти не змінюються; наприкінці тимчасових користувачів видалено.</li>
  * </ul>
  */
 @Service
@@ -105,11 +106,11 @@ public class CommunityQualityService {
 
                     graph.sync();
                     for (boolean leiden : new boolean[]{false, true}) {
-                        graph.detect(leiden);
+                        Map<Long, Long> found = graph.detectWithin(leiden, truth.keySet());
                         Map<String, Object> row = new LinkedHashMap<>();
                         row.put("homophily", homophily);
                         row.put("repeat", r);
-                        row.putAll(evaluate(leiden ? "leiden" : "louvain", truth, graph.labels(leiden), edges));
+                        row.putAll(evaluate(leiden ? "leiden" : "louvain", truth, found, edges));
                         row.put("trueModularity", trueModularity);
                         rows.add(row);
                     }
@@ -120,9 +121,7 @@ public class CommunityQualityService {
             }
         } finally {
             tx.execute(status -> generator.cleanup(SeedGeneratorService.EXPERIMENT_DOMAIN));
-            graph.sync();
-            graph.detect(false);
-            graph.detect(true);
+            graph.sync();   // прибрати тимчасових користувачів і з Neo4j
         }
 
         Map<String, Object> config = new LinkedHashMap<>();

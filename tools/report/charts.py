@@ -450,7 +450,8 @@ def evolution_lines(data, out, key, title, ylabel, name, note=None, roles=EVOLUT
                 label=f"{label} ({personas[role]['count']})")
         last = max((j for j, v in enumerate(values) if v is not None), default=None)
         if last is not None:
-            ends.append([xs[last], values[last], f"{values[last]:.2f}"])
+            # підпис з назвою ролі: після рознесення підписи можуть відійти від своїх ліній
+            ends.append([xs[last], values[last], f"{label} {values[last]:.2f}"])
         drawn += 1
     if ends:
         lo, hi = ylim if ylim else (0, max(e[1] for e in ends) * 1.1 or 1)
@@ -465,7 +466,7 @@ def evolution_lines(data, out, key, title, ylabel, name, note=None, roles=EVOLUT
         print(f"  – {name}: немає даних (знімки не робились?)")
         return
     ax.set_xticks(xs, labels)
-    ax.set_xlim(-0.3, len(xs) - 0.4)
+    ax.set_xlim(-0.3, len(xs) + 0.6)   # праворуч — місце під підписи з назвами ролей
     if ylim:
         ax.set_ylim(*ylim)
     ax.set_xlabel("тиждень симуляції")
@@ -534,13 +535,19 @@ def community_experiment_chart(report, out):
         if not group:
             continue
         xs = [r["homophily"] for r in group]
+        # Louvain — товстіша лінія знизу, Leiden — тонша з порожніми маркерами зверху:
+        # коли результати збігаються, видно обидва
+        width = 3.4 if key == "louvain" else 1.5
+        face = color if key == "louvain" else "white"
         for metric, style, marker in (("nmi", "-", "o"), ("ari", "--", "s")):
             top.errorbar(xs, [r[f"{metric}Mean"] for r in group], yerr=[r[f"{metric}Sd"] for r in group],
-                         color=color, linestyle=style, marker=marker, capsize=3, elinewidth=1,
-                         label=f"{name}: {metric.upper()}")
+                         color=color, linestyle=style, marker=marker, markerfacecolor=face, linewidth=width,
+                         markersize=8 if key == "louvain" else 6, capsize=3, elinewidth=1,
+                         label=f"{name}: {metric.upper()}", zorder=2 if key == "louvain" else 3)
         bottom.errorbar(xs, [r["foundCommunitiesMean"] for r in group],
                         yerr=[r["foundCommunitiesSd"] for r in group], color=color, marker=MARKERS[i],
-                        linestyle=LINESTYLES[i], capsize=3, elinewidth=1, label=name)
+                        markerfacecolor=face, linewidth=width, linestyle=LINESTYLES[i], capsize=3, elinewidth=1,
+                        label=name, zorder=2 if key == "louvain" else 3)
     cfg = report.get("config", {})
     if cfg.get("communities"):
         bottom.axhline(cfg["communities"], color=INK_2, linestyle=":", linewidth=1.2)
@@ -551,7 +558,9 @@ def community_experiment_chart(report, out):
     top.set_title("Якість виявлення спільнот: Louvain проти Leiden")
     top.legend(loc="lower right", fontsize=8, ncols=2)
     bottom.set_ylabel("знайдено")
-    bottom.yaxis.set_major_locator(MaxNLocator(integer=True))
+    found_max = max([r["foundCommunitiesMean"] + r["foundCommunitiesSd"] for r in rows] + [cfg.get("communities") or 1])
+    bottom.set_ylim(0, found_max * 1.25)
+    bottom.yaxis.set_major_locator(MaxNLocator(nbins=4, integer=True))
     bottom.set_xlabel("гомофілія (частка підписок усередині своєї спільноти)")
     bottom.set_xticks(cfg.get("homophilies") or sorted({r["homophily"] for r in rows}))
     disconnected = sum(r.get("disconnectedCommunitiesMean", 0) for r in rows if r["algorithm"] == "louvain")

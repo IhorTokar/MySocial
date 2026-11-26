@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -97,6 +98,52 @@ public class CommunityDetectionService {
             log.info("{} community detection completed: {}", propertyName, result);
             return result;
         }
+    }
+
+    /**
+     * Louvain або Leiden лише на підграфі заданих користувачів (підписки між ними), без запису у вузли.
+     *
+     * <p>Для експериментів з тимчасовими мережами: модульність залежить від загальної кількості зв'язків
+     * графа, тож поруч з основною мережею слабко виражені спільноти тимчасової мережі алгоритм міг би
+     * злити в одну (межа роздільності модульності). На окремому підграфі результат залежить лише від
+     * самої мережі, а спільноти основної мережі (властивості community / communityLeiden) не змінюються.
+     *
+     * @return userId → номер спільноти; користувачі без жодної підписки в межах набору — окремими спільнотами
+     */
+    public Map<Long, Long> streamCommunitiesWithin(boolean leiden, Collection<Long> userIds) {
+        String name = GRAPH_NAME + "Subset";
+        List<Long> ids = new ArrayList<>(userIds);
+        try (Session session = neo4jDriver.session()) {
+            dropIfExists(session, name);
+            try {
+                session.executeWrite(tx -> tx.run(
+                        "MATCH (a:User) WHERE a.userId IN $ids " +
+                                "OPTIONAL MATCH (a)-[:FOLLOWS]->(b:User) WHERE b.userId IN $ids " +
+                                "WITH gds.graph.project($name, a, b, {}, {undirectedRelationshipTypes: ['*']}) AS g " +
+                                "RETURN g.nodeCount AS nodes",
+                        Map.of("name", name, "ids", ids)).consume());
+
+                String procedure = leiden ? "gds.leiden.stream" : "gds.louvain.stream";
+                return session.executeWrite(tx -> {
+                    Map<Long, Long> result = new HashMap<>();
+                    tx.run("CALL " + procedure + "($name) YIELD nodeId, communityId " +
+                                            "RETURN gds.util.asNode(nodeId).userId AS userId, communityId",
+                                    Map.of("name", name))
+                            .list()
+                            .forEach(r -> result.put(r.get("userId").asLong(), r.get("communityId").asLong()));
+                    return result;
+                });
+            } finally {
+                dropIfExists(session, name);
+            }
+        }
+    }
+
+    private static void dropIfExists(Session session, String name) {
+        session.executeWrite(tx -> tx.run("CALL gds.graph.exists($name) YIELD exists " +
+                        "WITH exists WHERE exists = true " +
+                        "CALL gds.graph.drop($name) YIELD graphName RETURN graphName",
+                Map.of("name", name)).consume());
     }
 
     public List<CommunityMemberDto> getCommunities() {
