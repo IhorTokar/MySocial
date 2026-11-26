@@ -551,8 +551,9 @@ def community_experiment_chart(report, out):
     cfg = report.get("config", {})
     if cfg.get("communities"):
         bottom.axhline(cfg["communities"], color=INK_2, linestyle=":", linewidth=1.2)
-        bottom.annotate(f"закладено {cfg['communities']}", xy=(min(cfg.get("homophilies", [0])), cfg["communities"]),
-                        xytext=(0, 4), textcoords="offset points", fontsize=7, color=INK_2)
+        # підпис — праворуч над лінією, де розкид найменший і він не лягає на смуги похибок
+        bottom.annotate(f"закладено {cfg['communities']}", xy=(max(cfg.get("homophilies", [1])), cfg["communities"]),
+                        xytext=(0, 9), textcoords="offset points", ha="right", fontsize=7, color=INK_2)
     top.set_ylim(0, 1.05)
     top.set_ylabel("збіг зі справжніми")
     top.set_title("Якість виявлення спільнот: Louvain проти Leiden")
