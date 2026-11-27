@@ -16,6 +16,8 @@
   python seed.py --admin medoko --cleanup --users 300   # перегенерувати з нуля
   python seed.py --admin medoko --only-nlp              # лише кроки 2–5 для наявних постів
                                                         # (напр. після зміни моделі тональності)
+  python seed.py --admin medoko --reembed               # перерахувати вектори ВСІХ постів
+                                                        # (вектор — із заголовка й тексту разом)
   python seed.py --admin medoko --cleanup --epochs 6    # мережа, що живе 6 тижнів (див. нижче)
 
 Еволюція (--epochs N): базова мережа за --days днів (за замовчуванням 21), далі N тижнів активності.
@@ -64,6 +66,8 @@ def main():
     parser.add_argument("--skip-nlp", action="store_true", help="не рахувати вектори й тональність")
     parser.add_argument("--only-nlp", action="store_true",
                         help="не генерувати дані — лише вектори, тональність, node2vec і знімок")
+    parser.add_argument("--reembed", action="store_true",
+                        help="лише перерахувати вектори всіх постів (заголовок + текст) і вийти")
     parser.add_argument("--out", default="report-data", help="куди зберегти підсумок генерації")
 
     model = parser.add_argument_group("параметри мережі")
@@ -105,6 +109,13 @@ def main():
         sys.exit(f"{args.admin} не адміністратор (роль {admin.role})")
 
     try:
+        if args.reembed:
+            step("Перерахунок векторів усіх постів (заголовок + текст)")
+            r, sec = timed(lambda: admin.post("/api/dev/backfill-embeddings", timeout=LONG, all="true"))
+            print(f"  {short(r, ['processed', 'failed', 'total'])} ({sec:.1f} с)")
+            if r.get("failed"):
+                print("  ! частина постів без нових векторів — чи запущено NLP-сервіс (FastAPI)?")
+            return
         if args.cleanup or args.only_cleanup:
             step("Видалення згенерованих даних")
             r, sec = timed(lambda: admin.request("DELETE", "/api/dev/seed-realistic", timeout=LONG))

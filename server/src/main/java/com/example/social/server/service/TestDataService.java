@@ -219,13 +219,24 @@ public class TestDataService {
 
     @Transactional
     public Map<String, Object> backfillEmbeddings() {
-        List<Post> postsWithoutEmbedding = postRepository.findByEmbeddingIsNull();
+        return backfillEmbeddings(false);
+    }
+
+    /**
+     * Вектори постів (заголовок + текст, див. {@link EmbeddingText}).
+     *
+     * @param all перерахувати для всіх постів, а не лише для тих, що ще без вектора
+     *            (напр., після зміни того, з чого рахується вектор)
+     */
+    @Transactional
+    public Map<String, Object> backfillEmbeddings(boolean all) {
+        List<Post> postsWithoutEmbedding = all ? postRepository.findAll() : postRepository.findByEmbeddingIsNull();
 
         int processed = 0;
         int failed = 0;
 
         for (Post post : postsWithoutEmbedding) {
-            List<Double> vector = embeddingApiService.embed(post.getText());
+            List<Double> vector = embeddingApiService.embed(EmbeddingText.of(post.getLabel(), post.getText()));
             if (vector != null) {
                 postEmbeddingRepository.saveEmbedding(post.getPostId(), vector);
                 processed++;

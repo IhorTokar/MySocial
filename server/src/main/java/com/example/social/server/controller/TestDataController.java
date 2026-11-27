@@ -153,9 +153,10 @@ public class TestDataController {
         return ResponseEntity.ok(testDataService.generateRandomLikes(count));
     }
 
+    /** Вектори постів без них; all=true — перерахувати для всіх (напр., після зміни тексту для вектора). */
     @PostMapping("/backfill-embeddings")
-    public ResponseEntity<?> backfillEmbeddings() {
-        return ResponseEntity.ok(testDataService.backfillEmbeddings());
+    public ResponseEntity<?> backfillEmbeddings(@RequestParam(name = "all", defaultValue = "false") boolean all) {
+        return ResponseEntity.ok(testDataService.backfillEmbeddings(all));
     }
 
     /** Тональність для постів без неї; retryLexicon=true — також перерахувати оцінені словником. */

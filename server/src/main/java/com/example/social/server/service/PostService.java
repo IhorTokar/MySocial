@@ -82,7 +82,8 @@ public class PostService {
 
         Post saved = postRepository.save(post);
 
-        List<Double> vector = embeddingApiService.embed(dto.getText());
+        // вектор — із заголовка й тексту разом (EmbeddingText)
+        List<Double> vector = embeddingApiService.embed(EmbeddingText.of(saved.getLabel(), saved.getText()));
         if (vector != null) {
             postEmbeddingRepository.saveEmbedding(saved.getPostId(), vector);
         }
@@ -278,8 +279,8 @@ public class PostService {
 
         Post saved = postRepository.save(post);
 
-        // текст міг змінитись — переоцінюємо семантичний вектор для рекомендацій
-        List<Double> vector = embeddingApiService.embed(saved.getText());
+        // заголовок чи текст могли змінитись — переоцінюємо вектор для рекомендацій і пошуку за змістом
+        List<Double> vector = embeddingApiService.embed(EmbeddingText.of(saved.getLabel(), saved.getText()));
         if (vector != null) {
             postEmbeddingRepository.saveEmbedding(saved.getPostId(), vector);
         }
