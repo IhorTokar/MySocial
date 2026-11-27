@@ -70,6 +70,15 @@ public class CommunityData {
         return result;
     }
 
+    /** userId → тексти його постів — для ключових слів спільнот (заголовки службових постів не враховуються). */
+    public Map<Long, List<String>> textsByUser() {
+        Map<Long, List<String>> result = new HashMap<>();
+        jdbc.query("SELECT user_id, COALESCE(text, '') AS body FROM posts",
+                (org.springframework.jdbc.core.RowCallbackHandler) rs -> result
+                        .computeIfAbsent(rs.getLong("user_id"), k -> new ArrayList<>()).add(rs.getString("body")));
+        return result;
+    }
+
     /** userId → кількість його постів. */
     public Map<Long, Integer> postsByAuthor() {
         Map<Long, Integer> result = new HashMap<>();

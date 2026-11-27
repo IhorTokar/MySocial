@@ -17,8 +17,14 @@ public class SearchApiService {
     }
 
     public SearchResult search(String query) throws IOException, InterruptedException {
+        return search(query, false);
+    }
+
+    /** @param semantic пости шукати за змістом (вектори тексту), а не за збігом слів */
+    public SearchResult search(String query, boolean semantic) throws IOException, InterruptedException {
         String encoded = URLEncoder.encode(query, StandardCharsets.UTF_8);
-        ApiClient.ApiResponse response = apiClient.get("/api/search?q=" + encoded);
+        ApiClient.ApiResponse response = apiClient.get("/api/search?q=" + encoded
+                + (semantic ? "&mode=semantic" : ""));
 
         if (!response.isSuccess()) {
             return SearchResult.fail("Не вдалося виконати пошук (код " + response.statusCode() + ")");
@@ -42,7 +48,7 @@ public class SearchApiService {
             posts.add(PostApiService.parsePost(node));
         }
 
-        return SearchResult.ok(users, posts);
+        return SearchResult.ok(users, posts, root.path("mode").asText("text"));
     }
 
     public record UserSummary(Long userId, String username, String displayName,
@@ -52,13 +58,17 @@ public class SearchApiService {
         }
     }
 
+    /**
+     * @param mode "text", "semantic" або "semantic-unavailable" (просили за змістом, але NLP-сервіс
+     *             недоступний — сервер показав звичайний пошук)
+     */
     public record SearchResult(boolean success, List<UserSummary> users,
-                               List<PostApiService.PostItem> posts, String errorMessage) {
-        public static SearchResult ok(List<UserSummary> users, List<PostApiService.PostItem> posts) {
-            return new SearchResult(true, users, posts, null);
+                               List<PostApiService.PostItem> posts, String errorMessage, String mode) {
+        public static SearchResult ok(List<UserSummary> users, List<PostApiService.PostItem> posts, String mode) {
+            return new SearchResult(true, users, posts, null, mode);
         }
         public static SearchResult fail(String errorMessage) {
-            return new SearchResult(false, List.of(), List.of(), errorMessage);
+            return new SearchResult(false, List.of(), List.of(), errorMessage, "text");
         }
     }
 }

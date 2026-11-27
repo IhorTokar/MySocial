@@ -21,6 +21,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Tooltip;
+import javafx.util.Duration;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
@@ -70,6 +72,10 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
     private final ContextMenu moreMenu = new ContextMenu();
     private final MenuItem editItem = new MenuItem("Редагувати");
     private final MenuItem deleteItem = new MenuItem("Видалити");
+    /** «Чому мені це показано» (стрічка «Для вас») або схожість за змістом (пошук, схожі пости). */
+    private final Label reasonLabel = new Label();
+    private final FontIcon reasonIcon = new FontIcon("fas-lightbulb");
+    private final Tooltip reasonTooltip = new Tooltip();
     private final Label titleLabel = new Label();
     private final Label textLabel = new Label();
     private final ImageView imageView = new ImageView();
@@ -151,6 +157,13 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
         HBox header = new HBox(12, avatarHolder, nameRow, headerSpacer, moreButton);
         header.setAlignment(Pos.CENTER_LEFT);
 
+        reasonLabel.setGraphic(reasonIcon);
+        reasonLabel.getStyleClass().add("post-reason");
+        reasonLabel.setWrapText(true);
+        reasonTooltip.setWrapText(true);
+        reasonTooltip.setMaxWidth(420);
+        reasonTooltip.setShowDelay(Duration.millis(250));
+
         titleLabel.getStyleClass().add("post-title");
         titleLabel.setWrapText(true);
         textLabel.getStyleClass().add("post-text");
@@ -200,7 +213,7 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
         errorLabel.visibleProperty().bind(errorLabel.textProperty().isNotEmpty());
         errorLabel.managedProperty().bind(errorLabel.visibleProperty());
 
-        card.getChildren().addAll(header, titleLabel, textLabel, imageView, tagsPane, actions, errorLabel);
+        card.getChildren().addAll(header, reasonLabel, titleLabel, textLabel, imageView, tagsPane, actions, errorLabel);
 
         // клік по «порожньому» місцю картки — пост в окремому вікні з коментарями (як у вебверсії)
         card.setCursor(Cursor.HAND);
@@ -255,7 +268,7 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
         }
 
         int key = Objects.hash(post.postId(), post.label(), post.text(), post.mediaUrl(),
-                post.authorAvatarUrl(), post.authorNameOrUsername(), post.tags());
+                post.authorAvatarUrl(), post.authorNameOrUsername(), post.tags(), post.reason(), post.matchScore());
         if (renderedKey == null || renderedKey != key) {
             renderContent(post);
             renderedKey = key;
@@ -282,6 +295,8 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
         boolean isOwner = post.authorId() != null
                 && post.authorId().equals(SessionManager.getInstance().getUserId());
         show(moreButton, isOwner);
+
+        renderReason(post);
 
         boolean hasTitle = post.label() != null && !post.label().isBlank();
         titleLabel.setText(hasTitle ? post.label() : "");
@@ -323,6 +338,32 @@ public class PostListCell extends ListCell<PostApiService.PostItem> {
         }
         commentsExpanded = false;
         errorLabel.setText("");
+    }
+
+    /** Причина рекомендації з підказкою «внесок ознак», або схожість за змістом; інакше рядок прихований. */
+    private void renderReason(PostApiService.PostItem post) {
+        reasonLabel.getStyleClass().remove("post-reason-other");
+        if (post.reason() != null && !post.reason().isBlank()) {
+            boolean otherCommunity = post.reason().startsWith("З іншої спільноти");
+            reasonIcon.setIconLiteral(otherCommunity ? "fas-random" : "fas-lightbulb");
+            if (otherCommunity) {
+                reasonLabel.getStyleClass().add("post-reason-other");
+            }
+            reasonLabel.setText(post.reason());
+            reasonTooltip.setText("Чому мені це показано\n" + (post.reasonDetails() == null ? "" : post.reasonDetails()));
+            reasonLabel.setTooltip(reasonTooltip);
+            show(reasonLabel, true);
+        } else if (post.matchScore() != null) {
+            reasonIcon.setIconLiteral("fas-search");
+            reasonLabel.setText(String.format(Locale.ROOT, "Схожість за змістом: %.0f%%", post.matchScore() * 100));
+            reasonTooltip.setText("Косинусна схожість векторів текстів (модель обробки природної мови): "
+                    + "100% — той самий зміст, близько 0% — тексти не пов'язані.");
+            reasonLabel.setTooltip(reasonTooltip);
+            show(reasonLabel, true);
+        } else {
+            reasonLabel.setTooltip(null);
+            show(reasonLabel, false);
+        }
     }
 
     private void renderActions(PostApiService.PostItem post) {

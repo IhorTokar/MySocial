@@ -3,8 +3,10 @@ package com.example.social.server.service;
 import com.example.social.server.entity.Post;
 import com.example.social.server.entity.User;
 import com.example.social.server.repository.FollowersRepository;
+import com.example.social.server.repository.PostEmbeddingRepository;
 import com.example.social.server.repository.PostRepository;
 import com.example.social.server.repository.UserRepository;
+import com.example.social.shared.dto.PostResponseDto;
 import com.example.social.shared.dto.SearchResultDto;
 import com.example.social.shared.dto.UserSummaryDto;
 import org.springframework.data.domain.PageRequest;
@@ -20,24 +22,45 @@ public class SearchService {
     private static final int MIN_QUERY_LENGTH = 2;
     private static final int USER_LIMIT = 20;
     private static final int POST_LIMIT = 30;
+    /**
+     * Пошук за змістом показує лише пости з косинусною схожістю не нижче цього порогу:
+     * інакше на будь-який запит знаходилися б 30 «найменш далеких», навіть зовсім не пов'язаних постів.
+     */
+    static final double MIN_SEMANTIC_SIMILARITY = 0.35;
 
     private final UserRepository userRepository;
     private final PostRepository postRepository;
     private final FollowersRepository followersRepository;
     private final PostService postService;
+    private final EmbeddingApiService embeddingApiService;
+    private final PostEmbeddingRepository postEmbeddingRepository;
 
     public SearchService(UserRepository userRepository,
                          PostRepository postRepository,
                          FollowersRepository followersRepository,
-                         PostService postService) {
+                         PostService postService,
+                         EmbeddingApiService embeddingApiService,
+                         PostEmbeddingRepository postEmbeddingRepository) {
         this.userRepository = userRepository;
         this.postRepository = postRepository;
         this.followersRepository = followersRepository;
         this.postService = postService;
+        this.embeddingApiService = embeddingApiService;
+        this.postEmbeddingRepository = postEmbeddingRepository;
     }
 
     @Transactional(readOnly = true)
     public SearchResultDto search(String rawQuery, Long currentUserId) {
+        return search(rawQuery, currentUserId, false);
+    }
+
+    /**
+     * @param semantic пости шукати за змістом: запит перетворюється на вектор тим самим NLP-сервісом,
+     *                 що й тексти постів, і знаходяться найближчі за косинусною схожістю (pgvector).
+     *                 Людей і #теги завжди шукаємо за словами.
+     */
+    @Transactional(readOnly = true)
+    public SearchResultDto search(String rawQuery, Long currentUserId, boolean semantic) {
         String query = rawQuery == null ? "" : rawQuery.trim();
         if (query.length() < MIN_QUERY_LENGTH) {
             return new SearchResultDto(List.of(), List.of());
@@ -69,12 +92,29 @@ public class SearchService {
                 ))
                 .collect(Collectors.toList());
 
+        if (semantic && !isTagSearch) {
+            List<Double> vector = embeddingApiService.embed(normalizedQuery);
+            if (vector != null) {
+                return new SearchResultDto(userDtos, semanticPosts(vector, currentUserId),
+                        SearchResultDto.MODE_SEMANTIC);
+            }
+        }
+
         List<Post> foundPosts = isTagSearch
                 ? postRepository.searchPostsByTag(normalizedQuery, PageRequest.of(0, POST_LIMIT))
                 : postRepository.searchPostsByText(normalizedQuery, PageRequest.of(0, POST_LIMIT));
 
-        List<com.example.social.shared.dto.PostResponseDto> postDtos = postService.toDtos(foundPosts, currentUserId);
+        List<PostResponseDto> postDtos = postService.toDtos(foundPosts, currentUserId);
 
-        return new SearchResultDto(userDtos, postDtos);
+        // просили за змістом, але NLP-сервіс не відповів — показуємо звичайний пошук і кажемо про це
+        String mode = semantic && !isTagSearch ? SearchResultDto.MODE_SEMANTIC_UNAVAILABLE : SearchResultDto.MODE_TEXT;
+        return new SearchResultDto(userDtos, postDtos, mode);
+    }
+
+    /** Пости за спаданням схожості з запитом; у кожного — matchScore (косинусна схожість). */
+    private List<PostResponseDto> semanticPosts(List<Double> vector, Long currentUserId) {
+        List<PostEmbeddingRepository.Neighbour> nearest =
+                postEmbeddingRepository.findNearest(vector, POST_LIMIT, MIN_SEMANTIC_SIMILARITY);
+        return postService.toDtosWithScores(nearest, currentUserId);
     }
 }

@@ -8,7 +8,7 @@ import org.springframework.boot.autoconfigure.security.servlet.UserDetailsServic
 import java.util.TimeZone;
 
 @SpringBootApplication(exclude = UserDetailsServiceAutoConfiguration.class)
-@EnableScheduling   // планові знімки історії ехо-камер (EchoHistoryScheduler)
+@EnableScheduling   // планові знімки ехо-камер (EchoHistoryScheduler) і перерахунок node2vec (GraphEmbeddingScheduler)
 public class ServerApplication {
 
     public static void main(String[] args) {

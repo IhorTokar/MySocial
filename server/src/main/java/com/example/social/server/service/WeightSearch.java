@@ -90,6 +90,66 @@ public final class WeightSearch {
         return RankingMetrics.fromRanks(ranks, uc.totalRelevant(), k);
     }
 
+    /** Номери кандидатів за спаданням гібридної оцінки (той самий порядок, що й в evaluate). */
+    public static List<Integer> order(UserCase uc, double[] w, double followedBonus) {
+        double[] total = totals(uc, w, followedBonus);
+        List<Integer> idx = new ArrayList<>();
+        for (int i = 0; i < uc.size(); i++) {
+            idx.add(i);
+        }
+        idx.sort((a, b) -> ahead(total, uc.tieBreak(), a, b) ? -1 : ahead(total, uc.tieBreak(), b, a) ? 1 : 0);
+        return idx;
+    }
+
+    /**
+     * Якість стрічки після розбавлення постами інших спільнот ({@link CommunityDiversifier}):
+     * ті самі метрики на прихованих вподобаннях і частка своєї спільноти серед перших k.
+     */
+    public record Diluted(RankingMetrics.Metrics metrics, double ownShareAtK) {
+    }
+
+    /**
+     * @param outside кандидат від автора з іншої спільноти
+     * @param share   гарантована частка постів інших спільнот (0 — без розбавлення)
+     */
+    public static Diluted evaluateDiluted(UserCase uc, double[] w, double followedBonus, int k,
+                                          boolean[] outside, double share) {
+        List<Integer> main = order(uc, w, followedBonus);
+        List<Integer> others = main.stream().filter(i -> outside[i]).toList();
+        List<Integer> feed = CommunityDiversifier.interleave(main, others, i -> outside[i], i -> i, main.size(), share);
+        List<Integer> ranks = new ArrayList<>();
+        int own = 0;
+        for (int pos = 0; pos < feed.size(); pos++) {
+            int i = feed.get(pos);
+            if (uc.relevant()[i]) {
+                ranks.add(pos + 1);
+            }
+            if (pos < k && !outside[i]) {
+                own++;
+            }
+        }
+        int[] r = ranks.stream().mapToInt(Integer::intValue).toArray();
+        int shown = Math.min(k, feed.size());
+        return new Diluted(RankingMetrics.fromRanks(r, uc.totalRelevant(), k), shown == 0 ? 0 : own / (double) shown);
+    }
+
+    private static double[] totals(UserCase uc, double[] w, double followedBonus) {
+        int n = uc.size();
+        double[] total = new double[n];
+        for (int i = 0; i < n; i++) {
+            double[] s = uc.scores()[i];
+            double t = 0.0;
+            for (int j = 0; j < COMPONENTS; j++) {
+                t += w[j] * s[j];
+            }
+            if (uc.followed()[i]) {
+                t += followedBonus;
+            }
+            total[i] = t;
+        }
+        return total;
+    }
+
     public static RankingMetrics.Metrics evaluateMean(List<UserCase> cases, double[] w, double followedBonus, int k) {
         List<RankingMetrics.Metrics> list = new ArrayList<>(cases.size());
         for (UserCase uc : cases) {

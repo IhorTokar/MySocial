@@ -11,11 +11,16 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.Node;
 import javafx.scene.control.ListView;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 
 public class SearchController {
 
     @FXML private Label queryLabel;
     @FXML private Label statusLabel;
+    @FXML private ToggleButton textModeButton;
+    @FXML private ToggleButton semanticModeButton;
+    @FXML private Label modeHintLabel;
     @FXML private Label usersHeaderLabel;
     @FXML private ListView<SearchApiService.UserSummary> usersListView;
     @FXML private Label postsHeaderLabel;
@@ -28,6 +33,9 @@ public class SearchController {
 
     private final SearchApiService searchApiService = new SearchApiService(new ApiClient());
     private MainShellController shell;
+    /** Останній обраний спосіб пошуку постів — зберігається між пошуками в межах сеансу. */
+    private static boolean semanticMode;
+    private String currentQuery;
 
     public void setShell(MainShellController shell) {
         this.shell = shell;
@@ -42,9 +50,38 @@ public class SearchController {
             cell.setOnEditRequested(this::openEditForm);
             return cell;
         });
+
+        ToggleGroup mode = new ToggleGroup();
+        textModeButton.setToggleGroup(mode);
+        semanticModeButton.setToggleGroup(mode);
+        (semanticMode ? semanticModeButton : textModeButton).setSelected(true);
+        updateModeHint();
+        mode.selectedToggleProperty().addListener((obs, old, selected) -> {
+            if (selected == null) {
+                old.setSelected(true);   // один зі способів обрано завжди
+                return;
+            }
+            boolean semantic = selected == semanticModeButton;
+            if (semantic == semanticMode) {
+                return;   // повторне обрання того самого способу (після скасованого «зняття»)
+            }
+            semanticMode = semantic;
+            updateModeHint();
+            if (currentQuery != null) {
+                runSearch(currentQuery);
+            }
+        });
+    }
+
+    private void updateModeHint() {
+        modeHintLabel.setText(semanticMode
+                ? "пости, близькі за змістом, навіть без спільних слів (напр. «де смачно поїсти» знайде пост про ресторан)"
+                : "пости, де є ці слова, або #тег");
     }
 
     public void runSearch(String query) {
+        currentQuery = query;
+        boolean semantic = semanticMode;
         queryLabel.setText("Результати пошуку: \"" + query + "\"");
         statusLabel.setText("Пошук...");
         usersListView.getItems().clear();
@@ -55,7 +92,7 @@ public class SearchController {
 
         Thread.ofVirtual().start(() -> {
             try {
-                SearchApiService.SearchResult result = searchApiService.search(query);
+                SearchApiService.SearchResult result = searchApiService.search(query, semantic);
 
                 Platform.runLater(() -> {
                     if (result.success()) {
@@ -70,8 +107,17 @@ public class SearchController {
                         usersListView.setPrefHeight(Math.min(users, MAX_VISIBLE_USERS) * USER_ROW_HEIGHT + 2);
                         showSection(users > 0, usersHeaderLabel, usersListView);
                         showSection(!result.posts().isEmpty(), postsHeaderLabel, postsListView);
-                        statusLabel.setText(result.users().isEmpty() && result.posts().isEmpty()
-                                ? "Нічого не знайдено" : "");
+                        statusLabel.getStyleClass().setAll("secondary-label");
+                        if ("semantic-unavailable".equals(result.mode())) {
+                            statusLabel.setText("Пошук за змістом зараз недоступний (сервіс обробки тексту не відповідає) — "
+                                    + "показано пошук за словами.");
+                        } else if (result.users().isEmpty() && result.posts().isEmpty()) {
+                            statusLabel.setText(semantic && !query.startsWith("#")
+                                    ? "Нічого близького за змістом не знайдено" : "Нічого не знайдено");
+                        } else {
+                            statusLabel.setText("semantic".equals(result.mode())
+                                    ? "Пости впорядковано від найближчого за змістом" : "");
+                        }
                     } else {
                         statusLabel.getStyleClass().setAll("error-label");
                         statusLabel.setText(result.errorMessage());

@@ -12,6 +12,7 @@ import com.example.social.server.repository.FollowersRepository;
 import com.example.social.server.repository.PostEmbeddingRepository;
 import com.example.social.server.repository.PostLikeRepository;
 import com.example.social.server.repository.PostRepository;
+import com.example.social.server.repository.UserInterestRepository;
 import com.example.social.server.repository.UserRepository;
 import com.example.social.shared.dto.PostResponseDto;
 import com.example.social.shared.dto.RecommendationDto;
@@ -48,6 +49,10 @@ public class RecommendationService {
     private static final int SIMILAR_USERS_TOP_N = 10;
     /** MMR обирає зі стількох найрелевантніших кандидатів: limit × 3. */
     private static final int MMR_POOL_FACTOR = 3;
+    /** Холодний старт: скільки найновіших постів обраних тем додати до кандидатів. */
+    private static final int INTEREST_CANDIDATES = 60;
+    /** Холодний старт: зі скількома найвподобанішими постами обраних тем порівнюється текст кандидата. */
+    private static final int INTEREST_SEEDS = 20;
 
     /**
      * Вагові коефіцієнти гібридної оцінки (3.1), λ для MMR-перестановки і частка постів інших спільнот.
@@ -90,6 +95,7 @@ public class RecommendationService {
 
     private final RecommendationWeightsService weightsService;
     private final CommunityGraph communityGraph;
+    private final UserInterestRepository interestRepository;
     /** λ для MMR: 1 — без перестановки (чиста релевантність), менше — різноманітніша стрічка. */
     /** Ваги, з якими зараз працює стрічка (з БД, а якщо там порожньо — з application.yml). */
     public Weights currentWeights() {
@@ -105,7 +111,8 @@ public class RecommendationService {
                                  PostEmbeddingRepository postEmbeddingRepository,
                                  PostService postService,
                                  RecommendationWeightsService weightsService,
-                                 CommunityGraph communityGraph) {
+                                 CommunityGraph communityGraph,
+                                 UserInterestRepository interestRepository) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
         this.commentRepository = commentRepository;
@@ -116,6 +123,7 @@ public class RecommendationService {
         this.postService = postService;
         this.weightsService = weightsService;
         this.communityGraph = communityGraph;
+        this.interestRepository = interestRepository;
     }
 
 
@@ -133,7 +141,8 @@ public class RecommendationService {
     @Transactional(readOnly = true)
     public List<PostResponseDto> getHybridFeed(Long currentUserId, int limit, int offset) {
         List<ScoredPost> ranked = computeScoredFeed(currentUserId, offset + limit);
-        List<Post> page = ranked.subList(Math.min(offset, ranked.size()), ranked.size()).stream()
+        List<ScoredPost> recommended = ranked.subList(Math.min(offset, ranked.size()), ranked.size());
+        List<Post> page = recommended.stream()
                 .map(ScoredPost::post)
                 .collect(Collectors.toCollection(ArrayList::new));
 
@@ -147,7 +156,26 @@ public class RecommendationService {
             page.addAll(postRepository.findChronologicalExcluding(
                     currentUserId, recommendedIds, slice.take(), slice.skip()));
         }
-        return postService.toDtos(page, currentUserId);
+        List<PostResponseDto> dtos = postService.toDtos(page, currentUserId);
+        // «Чому мені це показано» — лише для рекомендованих; хронологічне продовження без причини
+        for (int i = 0; i < recommended.size() && i < dtos.size(); i++) {
+            FeedReasons.Explanation e = recommended.get(i).explanation();
+            dtos.get(i).setRecommendation(e.reason(), e.details());
+        }
+        return dtos;
+    }
+
+    /** Пост стрічки «Для вас» для аналітики «Моя стрічка»: чи від підписки і чи доданий з іншої спільноти. */
+    public record FeedItem(Post post, boolean followed, boolean otherCommunity, String reason) {
+    }
+
+    /** Перші limit постів стрічки «Для вас» так, як їх зараз побачить користувач (з MMR і розбавленням). */
+    @Transactional(readOnly = true)
+    public List<FeedItem> feedItems(Long currentUserId, int limit) {
+        return computeScoredFeed(currentUserId, limit).stream()
+                .map(sp -> new FeedItem(sp.post(), sp.breakdown().followed(), sp.otherCommunity(),
+                        sp.explanation().reason()))
+                .collect(Collectors.toList());
     }
 
     /** Яку частину хронологічного «продовження» взяти: skip — пропустити, take — взяти. */
@@ -231,7 +259,10 @@ public class RecommendationService {
         }
         Predicate<ScoredPost> outside = p -> !own.equals(labels.get(p.post().getUser().getUserId()));
         List<ScoredPost> others = ranked.stream().filter(outside).collect(Collectors.toList());
-        return CommunityDiversifier.interleave(feed, others, outside, p -> p.post().getPostId(), limit, share);
+        return CommunityDiversifier.interleave(feed, others, outside, p -> p.post().getPostId(), limit, share)
+                .stream()
+                .map(p -> outside.test(p) ? p.fromOtherCommunity() : p)
+                .collect(Collectors.toList());
     }
 
     /** Усі кандидати, відсортовані за гібридною оцінкою (3.1) — від найрелевантнішого. */
@@ -239,9 +270,14 @@ public class RecommendationService {
         Weights weights = weightsService.current();    // один знімок ваг на весь запит
         List<ScoredPost> scored = new ArrayList<>();
 
-        for (CandidateScores c : computeCandidateScores(currentUserId, null)) {
+        Candidates candidates = candidates(currentUserId, null, true);
+        for (CandidateScores c : candidates.scores()) {
             double totalScore = c.total(weights);
             double followedBonus = c.followed() ? weights.followedBonus() : 0.0;
+            double[] contributions = {
+                    weights.popularity() * c.popularity(), weights.itemCf() * c.itemCf(),
+                    weights.graphSim() * c.graphSim(), weights.semantic() * c.semantic(),
+                    weights.recency() * c.recency()};
 
             ScoreBreakdown breakdown = new ScoreBreakdown(
                     c.likesInWindow(), c.popularity(), c.itemCf(), c.graphSim(), c.semantic(),
@@ -255,7 +291,9 @@ public class RecommendationService {
                         c.recency(), c.postAgeHours(), c.followed(), totalScore));
             }
 
-            scored.add(new ScoredPost(c.post(), totalScore, breakdown));
+            FeedReasons.Explanation explanation = FeedReasons.explain(contributions, followedBonus, false,
+                    candidates.semanticFromInterests());
+            scored.add(new ScoredPost(c.post(), totalScore, breakdown, false, explanation));
         }
 
         return scored.stream()
@@ -332,6 +370,18 @@ public class RecommendationService {
      */
     @Transactional(readOnly = true)
     public List<CandidateScores> computeCandidateScores(Long currentUserId, Set<Long> allowedPostIds) {
+        // обрані теми (холодний старт) — лише для справжньої стрічки, не для експериментів з allowedPostIds
+        return candidates(currentUserId, allowedPostIds, allowedPostIds == null).scores();
+    }
+
+    /**
+     * @param semanticFromInterests у людини ще немає власних реакцій, тож «схожість тексту» рахувалась
+     *                              відносно постів обраних нею тем
+     */
+    private record Candidates(List<CandidateScores> scores, boolean semanticFromInterests) {
+    }
+
+    private Candidates candidates(Long currentUserId, Set<Long> allowedPostIds, boolean useInterests) {
         User currentUser = userRepository.findById(currentUserId)
                 .orElseThrow(() -> new NotFoundException("User not found: " + currentUserId));
 
@@ -380,13 +430,28 @@ public class RecommendationService {
                     .forEach(p -> candidatePostIds.add(p.getPostId()));
         }
 
+        // Обрані при першому вході теми: їхні найновіші пости завжди серед кандидатів
+        List<String> interests = useInterests ? interestRepository.findTagNames(currentUserId) : List.of();
+        if (!interests.isEmpty()) {
+            candidatePostIds.addAll(
+                    interestRepository.recentPostIdsWithTags(currentUserId, interests, INTEREST_CANDIDATES));
+        }
+
         if (allowedPostIds != null) {
             candidatePostIds.retainAll(allowedPostIds);
         }
 
         List<Post> candidates = postRepository.findAllById(candidatePostIds);
 
-        Map<Long, Double> semanticScoreByPostId = computeSemanticScores(currentUser, candidates);
+        // «Схожість тексту» — відносно постів, на які людина реагувала; якщо таких ще немає,
+        // а теми обрано — відносно найвподобаніших постів цих тем
+        List<Long> seedPostIds = reactedPostIds(currentUser);
+        boolean semanticFromInterests = false;
+        if (seedPostIds.isEmpty() && !interests.isEmpty()) {
+            seedPostIds = interestRepository.topLikedPostIdsWithTags(currentUserId, interests, INTEREST_SEEDS);
+            semanticFromInterests = !seedPostIds.isEmpty();
+        }
+        Map<Long, Double> semanticScoreByPostId = computeSemanticScores(seedPostIds, candidates);
 
         double maxPopularity = popularityByPostId.values().stream().mapToLong(Long::longValue).max().orElse(1L);
         double maxItemCf = itemCfScoreByPostId.values().stream().mapToDouble(Double::doubleValue).max().orElse(1.0);
@@ -420,7 +485,7 @@ public class RecommendationService {
                     recencyScore, hoursOld, isFollowed));
         }
 
-        return result;
+        return new Candidates(result, semanticFromInterests);
     }
 
     /**
@@ -431,11 +496,15 @@ public class RecommendationService {
         return 1.0 / (1.0 + hoursOld / 24.0);
     }
 
-    private Map<Long, Double> computeSemanticScores(User currentUser, List<Post> candidates) {
+    /** Пости, які людина вподобала або коментувала. */
+    private List<Long> reactedPostIds(User currentUser) {
         List<Long> seedPostIds = new ArrayList<>();
         postLikeRepository.findByUser(currentUser).forEach(l -> seedPostIds.add(l.getPost().getPostId()));
         commentRepository.findByUser(currentUser).forEach(c -> seedPostIds.add(c.getPost().getPostId()));
+        return seedPostIds;
+    }
 
+    private Map<Long, Double> computeSemanticScores(List<Long> seedPostIds, List<Post> candidates) {
         if (seedPostIds.isEmpty() || candidates.isEmpty()) {
             return Map.of();
         }
@@ -559,7 +628,17 @@ public class RecommendationService {
         return post.getTags().stream().map(Tag::getName).collect(Collectors.toList());
     }
 
-    private record ScoredPost(Post post, double score, ScoreBreakdown breakdown) {}
+    /**
+     * @param otherCommunity пост автора з іншої спільноти, а стрічка розбавляється такими постами
+     * @param explanation    «чому мені це показано»
+     */
+    private record ScoredPost(Post post, double score, ScoreBreakdown breakdown,
+                              boolean otherCommunity, FeedReasons.Explanation explanation) {
+        ScoredPost fromOtherCommunity() {
+            return new ScoredPost(post, score, breakdown, true,
+                    new FeedReasons.Explanation(FeedReasons.OTHER_COMMUNITY, explanation.details()));
+        }
+    }
 
     private record ScoreBreakdown(long likesInWindow, double popularityScore, double itemCfScore,
                                   double graphSimScore, double semanticScore, double recencyScore,

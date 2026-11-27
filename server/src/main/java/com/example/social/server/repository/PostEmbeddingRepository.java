@@ -4,6 +4,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.jdbc.core.RowCallbackHandler;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,102 @@ public class PostEmbeddingRepository {
                 Long.class,
                 excludePostId, vectorLiteral, topN
         );
+    }
+
+    /** Пост і його косинусна схожість із запитом: 1 — той самий зміст, 0 — не пов'язані. */
+    public record Neighbour(long postId, double similarity) {
+    }
+
+    /**
+     * Найближчі за змістом пости до вектора запиту (пошук за змістом, підказки тегів).
+     * Повертає не більше limit постів, схожість яких щонайменше minSimilarity.
+     */
+    public List<Neighbour> findNearest(List<Double> vector, int limit, double minSimilarity) {
+        String vectorLiteral = toVectorLiteral(vector);
+        // відстань <=> рахується один раз у підзапиті; ORDER BY по ній використовує індекс HNSW (V16)
+        return jdbcTemplate.query(
+                "SELECT post_id, 1 - distance AS similarity FROM (" +
+                        "  SELECT post_id, embedding <=> ?::vector AS distance FROM posts " +
+                        "  WHERE embedding IS NOT NULL ORDER BY embedding <=> ?::vector LIMIT ?" +
+                        ") nearest WHERE 1 - distance >= ? ORDER BY distance",
+                (rs, i) -> new Neighbour(rs.getLong("post_id"), rs.getDouble("similarity")),
+                vectorLiteral, vectorLiteral, limit, minSimilarity);
+    }
+
+    /** Найближчі за змістом пости до вже збереженого поста (без нього самого). */
+    public List<Neighbour> findNearestToPost(long postId, int limit) {
+        return jdbcTemplate.query(
+                "SELECT p.post_id, 1 - (p.embedding <=> s.embedding) AS similarity " +
+                        "FROM posts s JOIN posts p ON p.post_id <> s.post_id " +
+                        "WHERE s.post_id = ? AND s.embedding IS NOT NULL AND p.embedding IS NOT NULL " +
+                        "ORDER BY p.embedding <=> s.embedding LIMIT ?",
+                (rs, i) -> new Neighbour(rs.getLong("post_id"), rs.getDouble("similarity")),
+                postId, limit);
+    }
+
+    /** postId → назви його тегів (для постів зі списку; пости без тегів не потрапляють у результат). */
+    public Map<Long, List<String>> findTagsOf(List<Long> postIds) {
+        Map<Long, List<String>> result = new HashMap<>();
+        if (postIds.isEmpty()) {
+            return result;
+        }
+        Long[] idArray = postIds.toArray(new Long[0]);
+        jdbcTemplate.query(
+                "SELECT pt.post_id, t.name FROM post_tags pt JOIN tags t ON t.tag_id = pt.tag_id " +
+                        "WHERE pt.post_id = ANY(?) ORDER BY pt.post_id, t.name",
+                ps -> ps.setArray(1, ps.getConnection().createArrayOf("bigint", idArray)),
+                (RowCallbackHandler) rs -> result.computeIfAbsent(rs.getLong("post_id"), x -> new ArrayList<>())
+                        .add(rs.getString("name")));
+        return result;
+    }
+
+    /** postId → id автора. */
+    public Map<Long, Long> findAuthorsOf(List<Long> postIds) {
+        Map<Long, Long> result = new HashMap<>();
+        if (postIds.isEmpty()) {
+            return result;
+        }
+        Long[] idArray = postIds.toArray(new Long[0]);
+        jdbcTemplate.query(
+                "SELECT post_id, user_id FROM posts WHERE post_id = ANY(?)",
+                ps -> ps.setArray(1, ps.getConnection().createArrayOf("bigint", idArray)),
+                (RowCallbackHandler) rs -> result.put(rs.getLong("post_id"), rs.getLong("user_id")));
+        return result;
+    }
+
+    /** Id усіх постів, що мають вектор і хоча б один тег (для перевірки якості векторів). */
+    public List<Long> findTaggedPostIdsWithEmbedding() {
+        return jdbcTemplate.queryForList(
+                "SELECT p.post_id FROM posts p WHERE p.embedding IS NOT NULL " +
+                        "AND EXISTS (SELECT 1 FROM post_tags pt WHERE pt.post_id = p.post_id) ORDER BY p.post_id",
+                Long.class);
+    }
+
+    /**
+     * Для кожного поста з postIds — k найближчих за вектором постів серед тих, що мають тег
+     * (один запит із LATERAL-підзапитом замість окремого запиту на кожен пост).
+     */
+    public Map<Long, List<Long>> findNearestForEach(List<Long> postIds, int k) {
+        Map<Long, List<Long>> result = new HashMap<>();
+        if (postIds.isEmpty()) {
+            return result;
+        }
+        Long[] idArray = postIds.toArray(new Long[0]);
+        String sql = "SELECT s.post_id AS source_id, n.post_id AS neighbour_id FROM posts s " +
+                "CROSS JOIN LATERAL (" +
+                "  SELECT p.post_id FROM posts p WHERE p.post_id <> s.post_id AND p.embedding IS NOT NULL " +
+                "  AND EXISTS (SELECT 1 FROM post_tags pt WHERE pt.post_id = p.post_id) " +
+                "  ORDER BY p.embedding <=> s.embedding LIMIT ?" +
+                ") n WHERE s.post_id = ANY(?) AND s.embedding IS NOT NULL";
+        jdbcTemplate.query(
+                sql,
+                ps -> {
+                    ps.setInt(1, k);
+                    ps.setArray(2, ps.getConnection().createArrayOf("bigint", idArray));
+                },
+                (RowCallbackHandler) rs -> result.computeIfAbsent(rs.getLong("source_id"), x -> new ArrayList<>())
+                        .add(rs.getLong("neighbour_id")));
+        return result;
     }
 
     /**

@@ -51,6 +51,9 @@ class Api:
     def post(self, path, body=None, timeout=None, **params):
         return self.request("POST", path, body=body, params=params or None, timeout=timeout)
 
+    def put(self, path, body=None, timeout=None, **params):
+        return self.request("PUT", path, body=body, params=params or None, timeout=timeout)
+
     def delete(self, path, body=None, **params):
         return self.request("DELETE", path, body=body, params=params or None)
 

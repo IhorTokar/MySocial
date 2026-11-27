@@ -250,7 +250,7 @@ public class CommunityExposureService {
         for (double lambda : lambdas) {
             list.add(lambda >= 1.0
                     ? new Ranking("current", "Поточні ваги", c -> c.total(current), null)
-                    : new Ranking("current_mmr_" + lambda, "Поточні ваги + MMR λ=" + lambda, c -> c.total(current), lambda));
+                    : new Ranking("current_mmr_" + lambda, "Поточні ваги + розведення схожих λ=" + lambda, c -> c.total(current), lambda));
         }
         if (lambdas.stream().noneMatch(l -> l >= 1.0)) {
             list.add(0, new Ranking("current", "Поточні ваги", c -> c.total(current), null));
@@ -259,11 +259,11 @@ public class CommunityExposureService {
             list.add(new Ranking("current_outside_" + share, "Поточні ваги + інші спільноти " + share,
                     c -> c.total(current), null, share));
         }
-        list.add(new Ranking("default", "Стандартні ваги", c -> c.total(Weights.DEFAULT), null));
+        list.add(new Ranking("default", "Експертні ваги", c -> c.total(Weights.DEFAULT), null));
         list.add(single("popularity", "Лише популярність", CandidateScores::popularity));
-        list.add(single("itemCf", "Лише item-CF", CandidateScores::itemCf));
-        list.add(single("graphSim", "Лише граф (node2vec)", CandidateScores::graphSim));
-        list.add(single("semantic", "Лише семантика", CandidateScores::semantic));
+        list.add(single("itemCf", "Лише схожі вподобання", CandidateScores::itemCf));
+        list.add(single("graphSim", "Лише близькість у графі", CandidateScores::graphSim));
+        list.add(single("semantic", "Лише схожість тексту", CandidateScores::semantic));
         list.add(new Ranking("recency", "Лише свіжість", CandidateScores::recency, null));
         list.add(single("followed", "Лише підписки", c -> c.followed() ? 1.0 : 0.0));
         return list;

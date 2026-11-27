@@ -5,6 +5,7 @@ import com.example.social.server.security.AuthenticatedUser;
 import com.example.social.server.service.FileStorageService;
 import com.example.social.server.service.PostService;
 import com.example.social.server.service.RecommendationService;
+import com.example.social.server.service.TagSuggestionService;
 import com.example.social.shared.dto.PostCreateDto;
 import com.example.social.server.exception.BadRequestException;
 import jakarta.validation.Valid;
@@ -14,6 +15,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/posts")
 public class PostController {
@@ -21,13 +24,20 @@ public class PostController {
     private final PostService postService;
     private final RecommendationService recommendationService;
     private final FileStorageService fileStorageService;
+    private final TagSuggestionService tagSuggestionService;
 
     public PostController(PostService postService,
                           RecommendationService recommendationService,
-                          FileStorageService fileStorageService) {
+                          FileStorageService fileStorageService,
+                          TagSuggestionService tagSuggestionService) {
         this.postService = postService;
         this.recommendationService = recommendationService;
         this.fileStorageService = fileStorageService;
+        this.tagSuggestionService = tagSuggestionService;
+    }
+
+    /** Текст чернетки поста і теги, які автор уже вказав (для підказок тегів). */
+    public record TagSuggestionRequest(String text, List<String> tags) {
     }
 
     @PostMapping
@@ -96,6 +106,24 @@ public class PostController {
     public ResponseEntity<?> getPost(@AuthenticationPrincipal AuthenticatedUser currentUser,
                                      @PathVariable("postId") Long postId) {
         return ResponseEntity.ok(postService.getPost(postId, currentUser.getUserId()));
+    }
+
+    /** «Схожі пости»: найближчі за змістом до цього поста (вектори тексту, pgvector). */
+    @GetMapping("/{postId}/similar")
+    public ResponseEntity<?> getSimilarPosts(@AuthenticationPrincipal AuthenticatedUser currentUser,
+                                             @PathVariable("postId") Long postId,
+                                             @RequestParam(name = "limit", defaultValue = "5") int limit) {
+        if (limit < 1 || limit > 20) {
+            throw new BadRequestException("limit має бути від 1 до 20");
+        }
+        return ResponseEntity.ok(postService.getSimilarPosts(postId, currentUser.getUserId(), limit));
+    }
+
+    /** Підказки тегів для чернетки поста за її текстом. */
+    @PostMapping("/tag-suggestions")
+    public ResponseEntity<?> suggestTags(@RequestBody TagSuggestionRequest request) {
+        return ResponseEntity.ok(tagSuggestionService.suggest(request.text(),
+                request.tags() == null ? List.of() : request.tags()));
     }
 
     @GetMapping("/user/{userId}")

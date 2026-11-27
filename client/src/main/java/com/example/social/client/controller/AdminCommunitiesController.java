@@ -33,7 +33,7 @@ import java.util.function.LongConsumer;
 
 /**
  * Вкладка «Спільноти»: якість виявлення порівняно зі спільнотами генератора (NMI, ARI),
- * структура знайдених спільнот (щільність, провідність, теми), лідери за PageRank,
+ * структура знайдених спільнот (щільність, відкритість, теми, ключові слова), лідери за PageRank,
  * «мости» за коефіцієнтом участі та матриця підписок між спільнотами.
  */
 public class AdminCommunitiesController {
@@ -79,9 +79,10 @@ public class AdminCommunitiesController {
         communityTable.getColumns().setAll(List.of(
                 TableColumns.<CommunityDetail>text("Спільнота", 85, c -> "#" + c.community()),
                 TableColumns.<CommunityDetail>text("Учасн.", 60, c -> String.valueOf(c.size())),
-                TableColumns.<CommunityDetail>text("Теми", 190, c -> String.join(", ", c.topTags())),
+                TableColumns.<CommunityDetail>text("Теми", 150, c -> String.join(", ", c.topTags())),
+                TableColumns.<CommunityDetail>text("Ключові слова", 200, c -> String.join(", ", c.keywordsOrEmpty())),
                 TableColumns.<CommunityDetail>text("Щільність", 75, c -> AdminFormat.score(c.density())),
-                TableColumns.<CommunityDetail>text("Провідність", 85, c -> AdminFormat.score(c.conductance())),
+                TableColumns.<CommunityDetail>text("Відкритість", 85, c -> AdminFormat.score(c.conductance())),
                 TableColumns.<CommunityDetail>text("Підписок всер./назовні", 140,
                         c -> c.internalFollows() + " / " + c.externalFollows()),
                 TableColumns.<CommunityDetail>text("Спільнота генератора", 140, c -> c.seedCommunity() == null
@@ -193,7 +194,7 @@ public class AdminCommunitiesController {
             return;
         }
         summaryLabel.setText(String.format(Locale.ROOT,
-                "Спільнот: %d%s · користувачів %d · модульність %.3f · провідність %.3f · незв'язних %d",
+                "Спільнот: %d%s · користувачів %d · якість поділу (модульність) %.3f · відкритість %.3f · розірваних %d",
                 s.communities(), s.singletons() > 0 ? " (+" + s.singletons() + " поодиноких)" : "",
                 s.users(), s.modularity(), s.weightedConductance(), s.disconnectedCommunities()));
         communityTable.getItems().setAll(s.details());
@@ -215,9 +216,11 @@ public class AdminCommunitiesController {
         } else {
             detailTitle.setText("Спільнота #" + c.community() + " · " + c.size() + " учасн.");
             detailInfo.setText(String.format(Locale.ROOT,
-                    "Щільність %.3f — є %s можливих підписок усередині; провідність %.3f — %s зв'язків веде назовні.%s",
+                    "Щільність %.3f — є %s можливих підписок усередині; відкритість %.3f — %s зв'язків веде назовні.%s%s",
                     c.density(), AdminFormat.percent(c.density()), c.conductance(), AdminFormat.percent(c.conductance()),
-                    c.topTags().isEmpty() ? "" : " Теми: " + String.join(", ", c.topTags()) + "."));
+                    c.topTags().isEmpty() ? "" : " Теми: " + String.join(", ", c.topTags()) + ".",
+                    c.keywordsOrEmpty().isEmpty() ? ""
+                            : " Ключові слова з текстів: " + String.join(", ", c.keywordsOrEmpty()) + "."));
             leaderTable.getItems().setAll(c.leaders());
             bridgeTable.getItems().setAll(c.bridges());
         }

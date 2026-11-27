@@ -164,9 +164,11 @@ class Demo:
         o = self.users["olena"]
         for_you = o.get("/api/posts/feed", limit=5)
         following = o.get("/api/posts/feed/following", limit=5)
-        self.ok("«Для вас» (перші 5):")
+        self.ok("«Для вас» (перші 5) і чому кожен пост показано:")
         for p in for_you:
             self.info(f"· @{p['authorUsername']}: {p.get('label') or p['text'][:50]}")
+            if p.get("recommendationReason"):
+                self.info(f"    → {p['recommendationReason']}  [{p.get('recommendationDetails', '')}]")
         self.ok("«Відстежувані» (перші 5):")
         for p in following:
             self.info(f"· @{p['authorUsername']}: {p.get('label') or p['text'][:50]}")
@@ -191,6 +193,29 @@ class Demo:
         for p in posts[:5]:
             self.info(f"· @{p['authorUsername']}: {p.get('label') or p['text'][:50]}")
 
+        self.step("Пошук за змістом, схожі пости, підказки тегів",
+                  "Запит перетворюється на вектор тим самим NLP-сервісом, що й пости; знаходяться найближчі "
+                  "за змістом — навіть без спільних слів.")
+        query = "де можна смачно поїсти"
+        result = self.users["iryna"].get("/api/search", q=query, mode="semantic")
+        posts = result.get("posts", [])
+        if result.get("mode") == "semantic-unavailable":
+            self.info("NLP-сервіс недоступний — сервер показав пошук за словами")
+        self.ok(f"«{query}»: знайдено за змістом {len(posts)}")
+        for p in posts[:5]:
+            self.info(f"· {p.get('matchScore', 0):.2f}  @{p['authorUsername']}: {p['text'][:60]}  #{' #'.join(p['tags'])}")
+        words = self.users["iryna"].get("/api/search", q=query)
+        self.info(f"для порівняння, за словами: {len(words.get('posts', []))} постів")
+        if posts:
+            similar = self.users["iryna"].get(f"/api/posts/{posts[0]['postId']}/similar", limit=3)
+            self.ok(f"схожі на пост #{posts[0]['postId']}:")
+            for p in similar:
+                self.info(f"· {p.get('matchScore', 0):.2f}  {p['text'][:60]}")
+        draft = "Вчора приготувала борщ за бабусиним рецептом, вийшло дуже смачно"
+        tags = self.users["iryna"].post("/api/posts/tag-suggestions", {"text": draft, "tags": []})
+        self.ok(f"підказки тегів для «{draft[:40]}…»: "
+                + (", ".join(f"#{t['tag']} ({t['share']:.0%})" for t in tags) or "немає"))
+
     def forgot_password(self):
         self.step("«Забули пароль?» → заявка адміністратору",
                   "Анонімна заявка; однакова відповідь для існуючого й вигаданого логіна.")
@@ -205,14 +230,14 @@ class Demo:
             self.admin.post(f"/api/admin/password-requests/{mine[0]['requestId']}/reject")
 
     def mmr(self):
-        self.step("MMR-експеримент (різноманітність стрічки)",
+        self.step("Розведення схожих постів (MMR) — різноманітність стрічки",
                   "Та сама стрічка при різних λ: 1 — лише релевантність, менше — більше різноманіття.")
         # у щойно створеної Олени лише кілька кандидатів — λ нічого не змінить; беремо акаунт з історією
         user_id = self.args.mmr_user or self.admin.user_id
         rows = self.admin.get("/api/dev/mmr-experiment", userId=user_id, limit=10,
                               lambdas="1,0.9,0.8,0.7,0.6,0.5,0.4,0.3")
         for r in rows:
-            self.info(f"λ={r['lambda']:.1f}: ILD={r['intraListDiversity']:.3f}, "
+            self.info(f"λ={r['lambda']:.1f}: різноманітність змісту={r['intraListDiversity']:.3f}, "
                       f"релевантність={r['relevanceRetained']:.3f}, тегів={r['distinctTags']}, авторів={r['distinctAuthors']}")
         self.save("mmr.json", {"userId": user_id, "rows": rows})
 
@@ -221,7 +246,7 @@ class Demo:
                   "Потрібні Neo4j + GDS; знімок перераховує спільноти й зберігає метрики.")
         snap = self.admin.post("/api/admin/echo-history", timeout=LONG, refresh="true")
         self.ok(f"знімок #{snap['snapshotId']}: спільнот {snap['communityCount']}, "
-                f"зважений echo-score {snap['weightedEchoScore']:.3f}")
+                f"показник ехо-камери мережі {snap['weightedEchoScore']:.3f}")
         history = self.admin.get("/api/admin/echo-history", limit=100)
         self.save("echo-history.json", history)
         user_id = self.args.trajectory_user or self.admin.user_id
@@ -232,30 +257,66 @@ class Demo:
     def communities(self):
         self.step("Аналіз спільнот: якість виявлення і структура",
                   "Louvain і Leiden проти спільнот, які заклав генератор (NMI, ARI, чистота); "
-                  "щільність, провідність, лідери, «мости» й зв'язки між спільнотами.")
+                  "щільність, відкритість, лідери, «мости» й зв'язки між спільнотами.")
         quality = self.admin.get("/api/graph/communities/quality", refresh="true")
         self.save("community-quality.json", quality)
         self.info(f"· справжніх спільнот {quality['trueCommunities']}, користувачів {quality['users']}, "
-                  f"модульність справжнього розбиття {quality['trueModularity']:.3f}")
+                  f"якість поділу (модульність) справжнього розбиття {quality['trueModularity']:.3f}")
         for a in quality["algorithms"]:
             if "error" in a:
                 self.info(f"· {a['algorithm']}: {a['error']}")
                 continue
             self.info(f"· {a['algorithm']:8} NMI {a['nmi']:.3f}  ARI {a['ari']:.3f}  чистота {a['purity']:.3f}  "
-                      f"знайдено {a['foundCommunities']}  модульність {a['modularity']:.3f}  "
-                      f"незв'язних {a['disconnectedCommunities']}")
+                      f"знайдено {a['foundCommunities']}  якість поділу {a['modularity']:.3f}  "
+                      f"розірваних {a['disconnectedCommunities']}")
 
         structure = self.admin.get("/api/graph/communities/structure", algorithm="louvain", top=8)
         self.save("community-structure.json", structure)
-        self.info(f"· Louvain: спільнот {structure['communities']}, модульність {structure['modularity']:.3f}, "
-                  f"середня провідність {structure['weightedConductance']:.3f}")
+        self.info(f"· Louvain: спільнот {structure['communities']}, якість поділу {structure['modularity']:.3f}, "
+                  f"середня відкритість {structure['weightedConductance']:.3f}")
         for c in structure["details"][:5]:
             leader = c["leaders"][0]["username"] if c["leaders"] else "—"
             bridge = c["bridges"][0]["username"] if c["bridges"] else "—"
             self.info(f"  сп. {c['community']:<6} {c['size']:3} ос.  щільність {c['density']:.3f}  "
-                      f"провідність {c['conductance']:.3f}  #{' #'.join(c['topTags'][:2])}  "
+                      f"відкритість {c['conductance']:.3f}  #{' #'.join(c['topTags'][:2])}  "
                       f"лідер @{leader}  міст @{bridge}")
+            if c.get("keywords"):
+                self.info(f"           ключові слова: {', '.join(c['keywords'])}")
         self.ok("структура збережена")
+
+    def my_feed(self):
+        self.step("Холодний старт і сторінка «Моя стрічка»",
+                  "Людина обирає теми (людині без вподобань і підписок це пропонується при першому вході) — стрічка "
+                  "одразу підбирає пости про них; «Моя стрічка» показує її спільноту, склад стрічки "
+                  "й що вона вподобує порівняно з мережею.")
+        newbie = self.users["olena"]
+        interests = newbie.get("/api/users/me/interests")
+        options = [o["tag"] for o in interests.get("options", [])][:10]
+        self.info(f"теми на вибір: {', '.join('#' + t for t in options)}")
+        chosen = [t for t in ("подорожі", "їжа") if t in options] or options[:2]
+        newbie.put("/api/users/me/interests", {"tags": chosen})
+        self.ok(f"Олена обрала: {', '.join('#' + t for t in chosen)}")
+        insights = newbie.get("/api/users/me/insights", timeout=LONG)
+        self.save("my-feed.json", insights)
+        feed = insights.get("feed", {})
+        if "ownCommunityShare" in feed:
+            self.info(f"· своя спільнота у стрічці {feed['ownCommunityShare']:.0%} "
+                      f"(навмання {feed['randomOwnCommunityShare']:.1%})")
+        for r in feed.get("reasons", []):
+            self.info(f"· {r['reason']}: {r['posts']}")
+        for h in insights.get("hints", []):
+            self.info(f"→ {h}")
+
+    def text_vectors(self):
+        self.step("Перевірка векторів текстів",
+                  "Для 300 випадкових постів — 10 найближчих за вектором; яка частка з них на ту саму тему "
+                  "(спільний тег) порівняно з випадковими постами.")
+        report = self.admin.get("/api/graph/nlp/text-vectors", timeout=LONG, sample=300, k=10)
+        self.save("text-vectors.json", report)
+        self.ok(f"точність@{report['k']}: {report['precisionAtK']:.3f}, навмання {report['randomBaseline']:.3f} "
+                f"(у {report['lift']:.1f} раза краще); той самий автор серед сусідів {report['sameAuthorShare']:.0%}")
+        for t in report["byTag"][:8]:
+            self.info(f"· #{t['tag']:<12} {t['posts']:3} постів  точність {t['precision']:.2f}  навмання {t['baseline']:.2f}")
 
     def exposure(self):
         self.step("Рекомендації × спільноти",
@@ -269,8 +330,8 @@ class Demo:
                   f"спільноти навмання {report['randomOwnShare']:.2f}, серед кандидатів {report['candidateOwnShare']:.2f}")
         for r in report["rankings"]:
             lift = f"×{r['lift']:.1f}" if r.get("lift") else "—"
-            self.info(f"  {r['label']:<34} своя {r['ownShare']:.2f} ({lift})  ентропія {r['entropy']:.2f}  "
-                      f"ILD {r['diversity']:.2f}  тем {r['distinctTags']:.1f}  від підписок {r['followedShare']:.2f}  "
+            self.info(f"  {r['label']:<44} своя {r['ownShare']:.2f} ({lift})  різноманітність спільнот {r['entropy']:.2f}  "
+                      f"змісту {r['diversity']:.2f}  тем {r['distinctTags']:.1f}  від підписок {r['followedShare']:.2f}  "
                       f"релевантність {r['relevanceRetained']:.2f}  інтереси {r['interestMatch']:.2f}")
         self.ok(f"готово за {time.time() - started:.0f} с")
 
@@ -284,30 +345,34 @@ class Demo:
         for m in report["methods"]:
             if not m["name"].startswith("default_without_"):
                 self.info(f"· {m['name']:<15} NDCG валідація = {m['validation']['ndcg']:.3f}")
+        for d in report.get("dilution", []):
+            self.info(f"· розбавлення {d['outsideShare']:.1f}: NDCG валідація {d['validation']['ndcg']:.3f}, "
+                      f"своя спільнота серед перших {report['config']['k']} {d['ownCommunityShareAtK']:.0%}")
         self.ok(f"готово за {time.time() - started:.0f} с")
         self.pause()
 
         self.step("Валідація метрики ехо-камер",
-                  "Штучні спільноти із заданим рівнем однорідності; чи росте echo-score разом із ним.")
+                  "Штучні спільноти із заданим рівнем однорідності; чи росте показник ехо-камери разом із ним.")
         started = time.time()
         report = self.admin.post("/api/dev/validation/echo-chamber", timeout=LONG)
         self.save("echo-validation.json", report)
         for row in report["byLevel"]:
-            self.info(f"· рівень {row['level']:.1f}: echo-score {row['scoreMean']:.3f} ± {row['scoreSd']:.3f}")
-        self.ok(f"Spearman (рівень ↔ echo-score) = {report['spearmanVsLevel']['composite']}; "
+            self.info(f"· рівень {row['level']:.1f}: показник ехо-камери {row['scoreMean']:.3f} ± {row['scoreSd']:.3f}")
+        self.ok(f"коефіцієнт Спірмена (рівень ↔ показник) = {report['spearmanVsLevel']['composite']}; "
                 f"готово за {time.time() - started:.0f} с")
         self.pause()
 
         self.step("Якість виявлення спільнот: Louvain проти Leiden",
-                  "Тимчасові мережі з гомофілією 0.15–0.9 (по 3 повтори); основна мережа не змінюється. "
+                  "Тимчасові мережі, де частка підписок усередині своєї групи 0.15–0.9 (по 3 повтори); "
+                  "основна мережа не змінюється. "
                   "Триває кілька хвилин.")
         started = time.time()
         report = self.admin.post("/api/dev/community-quality-experiment", timeout=LONG)
         self.save("community-experiment.json", report)
         for row in report["summary"]:
-            self.info(f"· гомофілія {row['homophily']:.1f} {row['algorithm']:8} NMI {row['nmiMean']:.3f} ± "
+            self.info(f"· підписок усередині {row['homophily']:.2f} {row['algorithm']:8} NMI {row['nmiMean']:.3f} ± "
                       f"{row['nmiSd']:.3f}  ARI {row['ariMean']:.3f}  знайдено {row['foundCommunitiesMean']:.1f}  "
-                      f"незв'язних {row['disconnectedCommunitiesMean']:.1f}")
+                      f"розірваних {row['disconnectedCommunitiesMean']:.1f}")
         self.ok(f"готово за {time.time() - started:.0f} с")
 
     def scenario(self):
@@ -341,7 +406,7 @@ class Demo:
         })
         for p in sorted(points, key=lambda p: p["createdAt"]):
             self.info(f"· знімок #{p['snapshotId']}: спільнота {p['memberCount']} осіб, "
-                      f"echo-score {p['echoChamberScore']:.3f} (мережа {p['networkEchoScore']:.3f})")
+                      f"показник ехо-камери {p['echoChamberScore']:.3f} (мережа {p['networkEchoScore']:.3f})")
 
     def cleanup(self):
         self.step("Прибирання: видалення демо-користувачів")
@@ -362,7 +427,7 @@ class Demo:
             return 1
         for func in (self.create_posts, self.social_activity, self.notifications, self.feeds,
                      self.discovery, self.search, self.forgot_password, self.mmr, self.echo,
-                     self.communities, self.exposure):
+                     self.communities, self.text_vectors, self.my_feed, self.exposure):
             self.run_step(func)
         if self.args.experiments:
             self.run_step(self.experiments)

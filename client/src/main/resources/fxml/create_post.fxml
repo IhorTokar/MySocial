@@ -6,6 +6,7 @@
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.image.ImageView?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
@@ -22,6 +23,8 @@
     <TextField fx:id="labelField" promptText="Заголовок (необов'язково)" styleClass="text-field" />
     <TextArea fx:id="textArea" prefRowCount="4" promptText="Про що ваш пост?" wrapText="true" styleClass="text-area" />
     <TextField fx:id="tagsField" promptText="#тег1 #тег2 #тег3" styleClass="text-field" />
+    <!-- підказки тегів за текстом поста (теги найближчих за змістом постів); клік додає тег -->
+    <FlowPane fx:id="tagSuggestionsPane" hgap="6.0" vgap="4.0" visible="false" managed="false" />
 
     <ImageView fx:id="imagePreview" fitWidth="360.0" preserveRatio="true" visible="false" managed="false" />
 

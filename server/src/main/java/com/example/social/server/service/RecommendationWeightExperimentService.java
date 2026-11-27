@@ -35,6 +35,8 @@ public class RecommendationWeightExperimentService {
     private static final String PREFIX = "rec_";
     private static final int EMBEDDING_DIM = 16;
     private static final int RANDOM_DRAWS = 100;
+    /** Частки постів інших спільнот, для яких міряється ціна розбавлення стрічки. */
+    private static final double[] OUTSIDE_SHARES = {0.1, 0.2, 0.3};
 
     // припущення генератора даних (описуються у звіті)
     private static final double OWN_TOPIC_POST_PROB = 0.85;   // частка дописів користувача на його тему
@@ -227,6 +229,10 @@ public class RecommendationWeightExperimentService {
             Set<Long> allowed = posts.stream().map(SimPost::id).collect(Collectors.toSet());
             Random tieRandom = new Random(p.seed() + 1);
             List<WeightSearch.UserCase> cases = new ArrayList<>();
+            // спільнота автора = його закладена тема (Louvain знаходить такі спільноти майже без помилок);
+            // outside[i] — кандидат від автора іншої спільноти, для оцінки розбавлення стрічки
+            Map<Long, Integer> topicOf = users.stream().collect(Collectors.toMap(SimUser::id, SimUser::topic));
+            List<boolean[]> outsides = new ArrayList<>();
             double coverageSum = 0;
             double poolSum = 0;
             for (SimUser u : users) {
@@ -242,6 +248,7 @@ public class RecommendationWeightExperimentService {
                 double[][] scores = new double[n][WeightSearch.COMPONENTS];
                 boolean[] followed = new boolean[n];
                 boolean[] relevant = new boolean[n];
+                boolean[] outside = new boolean[n];
                 double[] tie = new double[n];
                 int reachable = 0;
                 for (int i = 0; i < n; i++) {
@@ -249,12 +256,14 @@ public class RecommendationWeightExperimentService {
                     scores[i] = new double[]{c.popularity(), c.itemCf(), c.graphSim(), c.semantic(), c.recency()};
                     followed[i] = c.followed();
                     relevant[i] = hid.contains(c.postId());
+                    outside[i] = topicOf.getOrDefault(c.authorId(), -1) != u.topic();
                     if (relevant[i]) {
                         reachable++;
                     }
                     tie[i] = tieRandom.nextDouble();
                 }
                 cases.add(new WeightSearch.UserCase(u.id(), scores, followed, relevant, hid.size(), tie));
+                outsides.add(outside);
                 coverageSum += (double) reachable / hid.size();
                 poolSum += n;
             }
@@ -345,6 +354,28 @@ public class RecommendationWeightExperimentService {
                 perUserNdcg.put(m.name(), ndcgs);
             }
 
+            // 9a. ціна розбавлення постами інших спільнот: поточні ваги, частка 0 (без розбавлення) і OUTSIDE_SHARES
+            List<Map<String, Object>> dilution = new ArrayList<>();
+            List<Double> shares = new ArrayList<>(List.of(0.0));
+            Arrays.stream(OUTSIDE_SHARES).forEach(shares::add);
+            for (double share : shares) {
+                List<RankingMetrics.Metrics> tuneList = new ArrayList<>();
+                List<RankingMetrics.Metrics> valList = new ArrayList<>();
+                double ownSum = 0;
+                for (int i = 0; i < cases.size(); i++) {
+                    WeightSearch.Diluted d = WeightSearch.evaluateDiluted(cases.get(i), defaultWeights, bonus, p.k(),
+                            outsides.get(i), share);
+                    (isTuning[i] ? tuneList : valList).add(d.metrics());
+                    ownSum += d.ownShareAtK();
+                }
+                Map<String, Object> row = new LinkedHashMap<>();
+                row.put("outsideShare", share);
+                row.put("ownCommunityShareAtK", r4(ownSum / cases.size()));
+                row.put("tuning", metricsMap(RankingMetrics.mean(tuneList)));
+                row.put("validation", metricsMap(RankingMetrics.mean(valList)));
+                dilution.add(row);
+            }
+
             // 10. звіт
             report = new LinkedHashMap<>();
             Map<String, Object> config = new LinkedHashMap<>();
@@ -384,6 +415,7 @@ public class RecommendationWeightExperimentService {
             bestReport.put("validationNdcg", r4(valNdcg[bestIdx]));
             report.put("bestOnTuning", bestReport);
             report.put("methods", methodReports);
+            report.put("dilution", dilution);
             report.put("userGroups", Arrays.stream(boxed(isTuning)).map(t -> t ? "tuning" : "validation").toList());
             report.put("perUserNdcg", perUserNdcg);
 

@@ -43,6 +43,33 @@ public class PostApiService {
         return fetchList("/api/posts/user/" + userId);
     }
 
+    /** «Схожі пости»: найближчі за змістом до цього поста (у кожного — matchScore). */
+    public FeedResult getSimilarPosts(Long postId, int limit) throws IOException, InterruptedException {
+        return fetchList("/api/posts/" + postId + "/similar?limit=" + limit);
+    }
+
+    /** Підказаний тег і частка «голосів» схожих постів за нього (0..1). */
+    public record TagSuggestion(String tag, double share) {
+    }
+
+    /**
+     * Підказки тегів за текстом чернетки; порожній список — текст короткий, схожих постів немає
+     * або NLP-сервіс недоступний.
+     */
+    public List<TagSuggestion> suggestTags(String text, List<String> currentTags)
+            throws IOException, InterruptedException {
+        ApiClient.ApiResponse response = apiClient.post("/api/posts/tag-suggestions",
+                Map.of("text", text, "tags", currentTags));
+        List<TagSuggestion> result = new ArrayList<>();
+        if (!response.isSuccess()) {
+            return result;
+        }
+        for (JsonNode node : apiClient.getObjectMapper().readTree(response.body())) {
+            result.add(new TagSuggestion(node.get("tag").asText(), node.path("share").asDouble()));
+        }
+        return result;
+    }
+
     public CreatePostResult createPost(String label, String text, List<String> tags)
             throws IOException, InterruptedException {
 
@@ -140,7 +167,10 @@ public class PostApiService {
                 node.path("likesCount").asLong(),
                 node.path("commentsCount").asLong(),
                 node.path("likedByCurrentUser").asBoolean(),
-                node.path("savedByCurrentUser").asBoolean()
+                node.path("savedByCurrentUser").asBoolean(),
+                nullableText(node, "recommendationReason"),
+                nullableText(node, "recommendationDetails"),
+                node.hasNonNull("matchScore") ? node.get("matchScore").asDouble() : null
         );
     }
 
@@ -148,10 +178,16 @@ public class PostApiService {
         return node.hasNonNull(field) ? node.get(field).asText() : null;
     }
 
+    /**
+     * @param reason        стрічка «Для вас»: чому пост показано (null поза рекомендаціями)
+     * @param reasonDetails внесок кожної ознаки в оцінку — для підказки при наведенні
+     * @param matchScore    пошук за змістом і «схожі пости»: схожість 0..1 (null — не застосовно)
+     */
     public record PostItem(Long postId, Long authorId, String authorUsername, String authorDisplayName,
                            String authorAvatarUrl, String label, String text, String mediaUrl,
                            String createdDate, List<String> tags, long likesCount, long commentsCount,
-                           boolean likedByCurrentUser, boolean savedByCurrentUser) {
+                           boolean likedByCurrentUser, boolean savedByCurrentUser,
+                           String reason, String reasonDetails, Double matchScore) {
 
         public String authorNameOrUsername() {
             return authorDisplayName != null && !authorDisplayName.isBlank() ? authorDisplayName : authorUsername;
@@ -159,19 +195,20 @@ public class PostApiService {
 
         public PostItem withLike(boolean liked, long count) {
             return new PostItem(postId, authorId, authorUsername, authorDisplayName, authorAvatarUrl,
-                    label, text, mediaUrl, createdDate, tags, count, commentsCount, liked, savedByCurrentUser);
+                    label, text, mediaUrl, createdDate, tags, count, commentsCount, liked, savedByCurrentUser,
+                    reason, reasonDetails, matchScore);
         }
 
         public PostItem withSaved(boolean saved) {
             return new PostItem(postId, authorId, authorUsername, authorDisplayName, authorAvatarUrl,
                     label, text, mediaUrl, createdDate, tags, likesCount, commentsCount,
-                    likedByCurrentUser, saved);
+                    likedByCurrentUser, saved, reason, reasonDetails, matchScore);
         }
 
         public PostItem withCommentsCount(long count) {
             return new PostItem(postId, authorId, authorUsername, authorDisplayName, authorAvatarUrl,
                     label, text, mediaUrl, createdDate, tags, likesCount, count,
-                    likedByCurrentUser, savedByCurrentUser);
+                    likedByCurrentUser, savedByCurrentUser, reason, reasonDetails, matchScore);
         }
     }
 

@@ -2,7 +2,9 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
 <VBox spacing="6.0" xmlns="http://javafx.com/javafx"
@@ -13,6 +15,12 @@
     </padding>
 
     <Label fx:id="queryLabel" styleClass="title-label" />
+    <!-- як шукати пости: збіг слів чи близькість за змістом (вектори тексту) -->
+    <HBox spacing="6.0" alignment="CENTER_LEFT">
+        <ToggleButton fx:id="textModeButton" text="За словами" styleClass="interest-chip" />
+        <ToggleButton fx:id="semanticModeButton" text="За змістом" styleClass="interest-chip" />
+        <Label fx:id="modeHintLabel" styleClass="secondary-label" wrapText="true" />
+    </HBox>
     <Label fx:id="statusLabel" styleClass="secondary-label" />
 
     <Label fx:id="usersHeaderLabel" text="Користувачі" styleClass="post-title" />

@@ -19,8 +19,10 @@ public class SearchController {
 
     @GetMapping("/api/search")
     public ResponseEntity<?> search(@AuthenticationPrincipal AuthenticatedUser currentUser,
-                                    @RequestParam("q") String query) {
+                                    @RequestParam("q") String query,
+                                    @RequestParam(name = "mode", defaultValue = "text") String mode) {
         Long currentUserId = currentUser != null ? currentUser.getUserId() : null;
-        return ResponseEntity.ok(searchService.search(query, currentUserId));
+        // mode=semantic — пости за змістом (вектори тексту); будь-яке інше значення — звичайний пошук
+        return ResponseEntity.ok(searchService.search(query, currentUserId, "semantic".equals(mode)));
     }
 }

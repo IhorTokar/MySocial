@@ -763,3 +763,90 @@
     -fx-font-size: 30px;
     -fx-cursor: default;
 }
+/* ===== Рекомендації: «чому мені це показано», схожість за змістом ===== */
+.post-reason {
+    -fx-text-fill: -fx-secondary-text;
+    -fx-font-size: 12px;
+    -fx-background-color: -fx-primary-bg;
+    -fx-background-radius: 10px;
+    -fx-padding: 2px 8px;
+}
+
+.post-reason .ikonli-font-icon {
+    -fx-icon-size: 11px;
+    -fx-icon-color: -fx-accent;
+}
+
+.post-reason-other {
+    -fx-background-color: derive(-fx-share-color, 85%);
+}
+
+.post-reason-other .ikonli-font-icon {
+    -fx-icon-color: -fx-share-color;
+}
+
+/* «Схожі за змістом» під постом у вікні */
+.similar-row {
+    -fx-padding: 8px 10px;
+    -fx-background-color: -fx-secondary-bg;
+    -fx-background-radius: 8px;
+    -fx-border-color: -fx-card-border;
+    -fx-border-radius: 8px;
+    -fx-cursor: hand;
+}
+
+.similar-row:hover {
+    -fx-border-color: -fx-accent;
+}
+
+/* ===== Підказки тегів і вибір тем ===== */
+.tag-suggestion, .interest-chip {
+    -fx-background-color: -fx-primary-bg;
+    -fx-text-fill: -fx-accent;
+    -fx-background-radius: 14px;
+    -fx-border-color: -fx-card-border;
+    -fx-border-radius: 14px;
+    -fx-padding: 3px 10px;
+    -fx-cursor: hand;
+}
+
+.tag-suggestion:hover, .interest-chip:hover {
+    -fx-border-color: -fx-accent;
+}
+
+.interest-chip:selected {
+    -fx-background-color: -fx-accent;
+    -fx-text-fill: white;
+    -fx-border-color: -fx-accent;
+}
+
+/* ===== Сторінка «Моя стрічка» ===== */
+.insight-number {
+    -fx-font-size: 26px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-primary-text;
+}
+
+.insight-hint {
+    -fx-text-fill: -fx-primary-text;
+    -fx-font-size: 13px;
+    -fx-background-color: derive(-fx-accent, 88%);
+    -fx-background-radius: 8px;
+    -fx-padding: 8px 12px;
+}
+
+.share-bar-track {
+    -fx-background-color: -fx-primary-bg;
+    -fx-background-radius: 4px;
+}
+
+.share-bar-fill {
+    -fx-background-color: -fx-accent;
+    -fx-background-radius: 4px;
+}
+
+.share-bar-fill-network {
+    -fx-background-color: -fx-secondary-text;
+    -fx-opacity: 0.45;
+    -fx-background-radius: 4px;
+}

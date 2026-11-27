@@ -19,6 +19,12 @@ public class PostResponseDto {
     private long commentsCount;
     private boolean likedByCurrentUser;
     private boolean savedByCurrentUser;
+    /** Стрічка «Для вас»: чому пост показано (головна причина) — null поза рекомендаціями. */
+    private String recommendationReason;
+    /** Стрічка «Для вас»: внесок кожної ознаки в оцінку поста (для підказки при наведенні). */
+    private String recommendationDetails;
+    /** Пошук за змістом і «схожі пости»: косинусна схожість із запитом / постом (0..1), інакше null. */
+    private Double matchScore;
 
     public PostResponseDto(Long postId, Long authorId, String authorUsername, String authorDisplayName,
                            String authorAvatarUrl, String label, String text, String mediaUrl,
@@ -55,4 +61,16 @@ public class PostResponseDto {
     public long getCommentsCount() { return commentsCount; }
     public boolean isLikedByCurrentUser() { return likedByCurrentUser; }
     public boolean isSavedByCurrentUser() { return savedByCurrentUser; }
+    public String getRecommendationReason() { return recommendationReason; }
+    public String getRecommendationDetails() { return recommendationDetails; }
+    public Double getMatchScore() { return matchScore; }
+
+    public void setRecommendation(String reason, String details) {
+        this.recommendationReason = reason;
+        this.recommendationDetails = details;
+    }
+
+    public void setMatchScore(Double matchScore) {
+        this.matchScore = matchScore;
+    }
 }

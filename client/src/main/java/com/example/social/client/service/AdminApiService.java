@@ -221,7 +221,12 @@ public class AdminApiService {
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record CommunityDetail(long community, int size, int internalFollows, int externalFollows,
                                   double density, double conductance, List<String> topTags,
-                                  SeedCommunity seedCommunity, List<Person> leaders, List<Person> bridges) {
+                                  SeedCommunity seedCommunity, List<Person> leaders, List<Person> bridges,
+                                  List<String> keywords) {
+        /** Ключові слова з текстів постів (TF-IDF); старий сервер їх не надсилає — тоді порожньо. */
+        public List<String> keywordsOrEmpty() {
+            return keywords == null ? List.of() : keywords;
+        }
     }
 
     /** Спільнота генератора, з якої походить більшість учасників (для згенерованих даних). */

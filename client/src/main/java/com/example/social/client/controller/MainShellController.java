@@ -6,7 +6,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.layout.StackPane;
-import javafx.stage.Modality;
 import com.example.social.client.service.ApiClient;
 import com.example.social.client.service.UserApiService;
 import com.example.social.client.util.AvatarUtil;
@@ -30,6 +29,8 @@ import javafx.scene.control.Label;
 import com.example.social.client.component.NotificationBell;
 import com.example.social.client.component.PostViewDialog;
 import com.example.social.client.service.PostApiService;
+import com.example.social.client.service.InsightsApiService;
+import com.example.social.client.component.InterestsDialog;
 
 
 import java.io.IOException;
@@ -114,6 +115,40 @@ public class MainShellController {
             }
         });
         showFeed();
+        offerInterestsIfNew();
+    }
+
+    /**
+     * Холодний старт: людині без вподобань і підписок, якої ще не питали, пропонуємо обрати теми —
+     * тоді стрічка «Для вас» одразу підбирає пости про них.
+     */
+    private void offerInterestsIfNew() {
+        Thread.ofVirtual().start(() -> {
+            try {
+                InsightsApiService.Interests interests = new InsightsApiService(new ApiClient()).getInterests();
+                if (interests.needsOnboarding() && !interests.options().isEmpty()) {
+                    Platform.runLater(() -> {
+                        if (contentArea.getScene() != null) {
+                            InterestsDialog.show(contentArea.getScene().getWindow(), interests, this::showFeed);
+                        }
+                    });
+                }
+            } catch (Exception ignored) {
+                // старий сервер без цього запиту або немає з'єднання — просто без пропозиції
+            }
+        });
+    }
+
+    public void showAnalytics() {
+        AnalyticsController controller = loadIntoContent("/fxml/analytics.fxml");
+        if (controller != null) {
+            controller.setShell(this);
+        }
+    }
+
+    @FXML
+    private void handleShowAnalytics() {
+        showAnalytics();
     }
 
     public FeedController showFeed() {

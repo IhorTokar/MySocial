@@ -55,6 +55,13 @@
                 </graphic>
             </Button>
 
+            <Button fx:id="navAnalyticsButton" onAction="#handleShowAnalytics" styleClass="nav-link"
+                    contentDisplay="LEFT" graphicTextGap="10.0" text="Моя стрічка">
+                <graphic>
+                    <FontIcon iconLiteral="fas-chart-pie" />
+                </graphic>
+            </Button>
+
             <Button fx:id="navMessagesButton" onAction="#handleShowDialogs" styleClass="nav-link"
                     text="Повідомлення" contentDisplay="LEFT" graphicTextGap="10.0">
                 <graphic>
