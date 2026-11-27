@@ -18,6 +18,9 @@
   community-experiment.json → community_experiment.png (Louvain проти Leiden за гомофілією)
   community-quality.json    → community_quality.png (NMI, ARI, чистота на основній мережі)
   community-structure.json  → community_structure.png, community_matrix.png
+  community-exposure.json   → community_exposure.png, community_exposure_mmr.png,
+                              community_diversification.png
+                              (чи тримає стрічка людей у своїх спільнотах і що дає розбавлення)
 
 Оформлення під друк на A4: білий фон, сіра рамка (щоб графік не зливався з папером),
 ширина 16 см, 200 dpi; крім кольору, серії розрізняються маркерами й типом лінії —
@@ -95,6 +98,16 @@ def load(data_dir, name):
         print(f"  – {name}: немає даних, пропускаю")
         return None
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def spread(values, gap):
+    """Позиції підписів для значень: ті самі, але розсунуті щонайменше на gap (щоб не накладались)."""
+    order = sorted(range(len(values)), key=lambda i: values[i])
+    placed = list(values)
+    for a, b in zip(order, order[1:]):
+        if placed[b] - placed[a] < gap:
+            placed[b] = placed[a] + gap
+    return placed
 
 
 def label_end(ax, x, y, text, color, dy=0.0):
@@ -661,6 +674,95 @@ def community_matrix_chart(report, out):
     save(fig, out, "community_matrix.png", "Діагональ — підписки всередині своєї спільноти.")
 
 
+def community_exposure_charts(report, out):
+    rows = report["rankings"]
+    random_share, candidate_share = report["randomOwnShare"], report["candidateOwnShare"]
+    note = (f"{report['usersEvaluated']} користувачів, стрічка з {report['config']['k']} постів, "
+            f"спільноти {report['config']['algorithm'].capitalize()}; власні пости не враховано.")
+
+    # 1. Частка своєї спільноти за способами ранжування (без MMR-варіантів)
+    plain = sorted((r for r in rows if r["lambda"] >= 1.0 and not r.get("outsideShare")),
+                   key=lambda r: r["ownShare"])
+    fig, ax = new_figure(0.36 * len(plain) + 1.4)
+    ys = range(len(plain))
+    bars = ax.barh(list(ys), [r["ownShare"] for r in plain], 0.62, edgecolor="white", linewidth=0.8,
+                   color=[ORANGE if r["key"] == "current" else BLUE for r in plain],
+                   hatch=None)
+    for bar, r in zip(bars, plain):
+        lift = f"  ×{r['lift']:.1f}" if r.get("lift") else ""
+        ax.annotate(f"{r['ownShare'] * 100:.0f}%{lift}", (bar.get_width(), bar.get_y() + bar.get_height() / 2),
+                    xytext=(3, 0), textcoords="offset points", va="center", fontsize=7, color=INK,
+                    bbox=dict(facecolor="white", edgecolor="none", pad=0.6))   # читається поверх опорних ліній
+    # опорні лінії підписані в легенді: значення бувають близькі, і підписи біля ліній накладаються
+    ax.axvline(random_share, color=INK_2, linestyle="--", linewidth=1.2,
+               label=f"навмання з усієї мережі: {random_share * 100:.0f}%")
+    ax.axvline(candidate_share, color=INK_2, linestyle=":", linewidth=1.2,
+               label=f"серед кандидатів стрічки: {candidate_share * 100:.0f}%")
+    ax.legend(loc="lower right", fontsize=7, handlelength=2.5)
+    ax.set_yticks(list(ys), [r["label"] for r in plain], fontsize=8)
+    ax.set_xlim(0, 1.0)
+    ax.xaxis.set_major_formatter(lambda v, _: f"{v * 100:.0f}%")
+    ax.grid(axis="y", visible=False)
+    ax.set_xlabel("частка постів зі своєї спільноти (×N — порівняно з випадковою)")
+    ax.set_title("Чи замикає стрічка людей у своїх спільнотах")
+    save(fig, out, "community_exposure.png", note + " Помаранчевий — ваги стрічки.")
+
+    # 2. MMR: частка своєї спільноти, ентропія спільнот і ILD залежно від λ
+    mmr = sorted((r for r in rows if r["key"] == "current" or r["key"].startswith("current_mmr_")),
+                 key=lambda r: -r["lambda"])
+    if len(mmr) < 2:
+        return
+    lambdas = [r["lambda"] for r in mmr]
+    fig, ax = new_figure()
+    series = [("Частка своєї спільноти", "ownShare"), ("Ентропія спільнот", "entropy"),
+              ("Різноманітність змісту (ILD)", "diversity")]
+    for i, (title, key) in enumerate(series):
+        values = [r[key] for r in mmr]
+        ax.plot(lambdas, values, color=SERIES[i], marker=MARKERS[i], linestyle=LINESTYLES[i], label=title)
+        label_end(ax, lambdas[-1], values[-1], f"{values[-1]:.2f}", SERIES[i])
+    ax.axhline(random_share, color=INK_2, linestyle=":", linewidth=1.2)
+    ax.annotate(f"частка навмання {random_share:.2f}", (lambdas[0], random_share), xytext=(0, 4),
+                textcoords="offset points", fontsize=7, color=INK_2)
+    ax.invert_xaxis()
+    ax.set_xticks(lambdas)
+    ax.set_ylim(0, 1.05)
+    ax.set_xlabel("λ (1 — лише релевантність)")
+    ax.set_ylabel("значення")
+    ax.set_title("MMR і спільноти у стрічці")
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.17), ncols=3, fontsize=8)
+    save(fig, out, "community_exposure_mmr.png", note)
+
+    # 3. Розбавлення постами інших спільнот: що отримуємо і чим платимо
+    diluted = sorted((r for r in rows if r["key"] == "current" or r.get("outsideShare")),
+                     key=lambda r: r.get("outsideShare") or 0.0)
+    if len(diluted) < 2 or "relevanceRetained" not in diluted[0]:
+        return
+    shares = [r.get("outsideShare") or 0.0 for r in diluted]
+    fig, ax = new_figure(3.6)
+    tags = report["config"].get("interestTags", 3)
+    series = [("Частка своєї спільноти", "ownShare", "своя"), ("Ентропія спільнот", "entropy", "ентропія"),
+              ("Збережена релевантність", "relevanceRetained", "релевантність"),
+              (f"Збіг з інтересами ({tags} улюблені теги)", "interestMatch", "інтереси")]
+    ends = [diluted[-1][key] for _, key, _ in series]
+    for i, ((title, key, short), y) in enumerate(zip(series, spread(ends, 0.05))):
+        values = [r[key] for r in diluted]
+        ax.plot(shares, values, color=SERIES[i], marker=MARKERS[i], linestyle=LINESTYLES[i], label=title)
+        # підпис на розсунутій висоті, щоб близькі кінці ліній не зливались
+        ax.annotate(f"{values[-1]:.2f} {short}", (shares[-1], y), xytext=(8, 0), textcoords="offset points",
+                    va="center", fontsize=8, color=INK)
+    ax.axhline(random_share, color=INK_2, linestyle=":", linewidth=1.2)
+    ax.annotate(f"частка своєї навмання {random_share:.2f}", (shares[0], random_share), xytext=(0, 4),
+                textcoords="offset points", fontsize=7, color=INK_2)
+    ax.set_xticks(shares, [f"{s:g}" for s in shares])
+    ax.set_xlim(shares[0] - 0.02, shares[-1] + 0.13)   # місце під підписи кінців ліній
+    ax.set_ylim(0, 1.05)
+    ax.set_xlabel("частка постів інших спільнот, яку гарантує стрічка (0 — без розбавлення)")
+    ax.set_ylabel("значення")
+    ax.set_title("Розбавлення стрічки постами інших спільнот")
+    ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.17), ncols=2, fontsize=8)
+    save(fig, out, "community_diversification.png", note)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Графіки для звіту з даних demo.py")
     parser.add_argument("--data", default="report-data")
@@ -693,6 +795,8 @@ def main():
     if (d := load(data_dir, "community-structure.json")) is not None:
         community_structure_chart(d, out)
         community_matrix_chart(d, out)
+    if (d := load(data_dir, "community-exposure.json")) is not None:
+        community_exposure_charts(d, out)
 
 
 if __name__ == "__main__":

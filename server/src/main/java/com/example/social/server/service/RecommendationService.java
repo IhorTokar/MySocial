@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
@@ -49,15 +50,18 @@ public class RecommendationService {
     private static final int MMR_POOL_FACTOR = 3;
 
     /**
-     * Вагові коефіцієнти гібридної оцінки (3.1) і λ для MMR-перестановки.
-     * mmrLambda на оцінку окремого поста не впливає — лише на порядок постів у стрічці.
+     * Вагові коефіцієнти гібридної оцінки (3.1), λ для MMR-перестановки і частка постів інших спільнот.
+     * mmrLambda й outsideShare на оцінку окремого поста не впливають — лише на склад і порядок стрічки.
+     *
+     * @param outsideShare частка постів з інших спільнот Louvain у стрічці (0 — вимкнено, до 0.5),
+     *                     див. {@link CommunityDiversifier}
      */
     public record Weights(double popularity, double itemCf, double graphSim,
                           double semantic, double recency, double followedBonus,
-                          double mmrLambda) {
+                          double mmrLambda, double outsideShare) {
         public static final Weights DEFAULT = new Weights(
                 POPULARITY_WEIGHT, ITEM_CF_WEIGHT, GRAPH_SIM_WEIGHT,
-                SEMANTIC_WEIGHT, RECENCY_WEIGHT, FOLLOWED_BONUS, 1.0);
+                SEMANTIC_WEIGHT, RECENCY_WEIGHT, FOLLOWED_BONUS, 1.0, 0.0);
     }
 
     /** Нормалізовані оцінки компонентів для одного кандидата (до зважування). */
@@ -85,6 +89,7 @@ public class RecommendationService {
     private final PostService postService;
 
     private final RecommendationWeightsService weightsService;
+    private final CommunityGraph communityGraph;
     /** λ для MMR: 1 — без перестановки (чиста релевантність), менше — різноманітніша стрічка. */
     /** Ваги, з якими зараз працює стрічка (з БД, а якщо там порожньо — з application.yml). */
     public Weights currentWeights() {
@@ -99,7 +104,8 @@ public class RecommendationService {
                                  UserSimilarityService userSimilarityService,
                                  PostEmbeddingRepository postEmbeddingRepository,
                                  PostService postService,
-                                 RecommendationWeightsService weightsService) {
+                                 RecommendationWeightsService weightsService,
+                                 CommunityGraph communityGraph) {
         this.postRepository = postRepository;
         this.postLikeRepository = postLikeRepository;
         this.commentRepository = commentRepository;
@@ -109,6 +115,7 @@ public class RecommendationService {
         this.postEmbeddingRepository = postEmbeddingRepository;
         this.postService = postService;
         this.weightsService = weightsService;
+        this.communityGraph = communityGraph;
     }
 
 
@@ -187,15 +194,44 @@ public class RecommendationService {
         return computeScoredFeed(currentUserId, limit, weightsService.current().mmrLambda());
     }
 
-    /** Стрічка: ранжування за формулою (3.1), а при λ < 1 — ще й MMR-перестановка для різноманітності. */
+    /**
+     * Стрічка: ранжування за формулою (3.1), при λ < 1 — MMR-перестановка для різноманітності змісту,
+     * а при outsideShare > 0 — ще й розбавлення постами інших спільнот ({@link CommunityDiversifier}).
+     */
     private List<ScoredPost> computeScoredFeed(Long currentUserId, int limit, double lambda) {
         List<ScoredPost> ranked = rankByRelevance(currentUserId);
+        List<ScoredPost> feed;
         if (lambda >= 1.0 || ranked.size() <= 1) {
-            return new ArrayList<>(ranked.subList(0, Math.min(limit, ranked.size())));
+            feed = new ArrayList<>(ranked.subList(0, Math.min(limit, ranked.size())));
+        } else {
+            List<ScoredPost> pool = mmrPool(ranked, limit);
+            List<Integer> order = MmrReranker.rerank(normalizedRelevance(pool), similarityMatrix(pool), limit, lambda);
+            feed = order.stream().map(pool::get).collect(Collectors.toList());
         }
-        List<ScoredPost> pool = mmrPool(ranked, limit);
-        List<Integer> order = MmrReranker.rerank(normalizedRelevance(pool), similarityMatrix(pool), limit, lambda);
-        return order.stream().map(pool::get).collect(Collectors.toList());
+        double outsideShare = weightsService.current().outsideShare();
+        return outsideShare > 0 ? withOtherCommunities(currentUserId, ranked, feed, limit, outsideShare) : feed;
+    }
+
+    /**
+     * Частина позицій стрічки віддається найрелевантнішим постам з інших спільнот Louvain.
+     * Якщо спільноти ще не визначені, користувач не має спільноти або Neo4j недоступний — стрічка без змін.
+     */
+    private List<ScoredPost> withOtherCommunities(Long currentUserId, List<ScoredPost> ranked, List<ScoredPost> feed,
+                                                  int limit, double share) {
+        Map<Long, Long> labels;
+        try {
+            labels = communityGraph.labels(false);
+        } catch (RuntimeException e) {
+            log.warn("Спільноти недоступні, стрічка без розбавлення: {}", e.getMessage());
+            return feed;
+        }
+        Long own = labels.get(currentUserId);
+        if (own == null) {
+            return feed;
+        }
+        Predicate<ScoredPost> outside = p -> !own.equals(labels.get(p.post().getUser().getUserId()));
+        List<ScoredPost> others = ranked.stream().filter(outside).collect(Collectors.toList());
+        return CommunityDiversifier.interleave(feed, others, outside, p -> p.post().getPostId(), limit, share);
     }
 
     /** Усі кандидати, відсортовані за гібридною оцінкою (3.1) — від найрелевантнішого. */

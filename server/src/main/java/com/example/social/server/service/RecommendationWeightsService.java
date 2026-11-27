@@ -33,6 +33,8 @@ public class RecommendationWeightsService {
 
     private static final Logger log = LoggerFactory.getLogger(RecommendationWeightsService.class);
     private static final double SUM_TOLERANCE = 1e-3;
+    /** Більше половини стрічки з чужих спільнот — це вже не розбавлення, а заміна інтересів. */
+    static final double MAX_OUTSIDE_SHARE = 0.5;
 
     private final RecommendationWeightsRepository weightsRepository;
     private final UserRepository userRepository;
@@ -51,16 +53,21 @@ public class RecommendationWeightsService {
                                         @Value("${recommendation.weights.semantic:0.20}") double semantic,
                                         @Value("${recommendation.weights.recency:0.15}") double recency,
                                         @Value("${recommendation.weights.followed-bonus:0.3}") double followedBonus,
-                                        @Value("${recommendation.mmr.lambda:1.0}") double mmrLambda) {
+                                        @Value("${recommendation.mmr.lambda:1.0}") double mmrLambda,
+                                        @Value("${recommendation.community.outside-share:0.0}") double outsideShare) {
         this.weightsRepository = weightsRepository;
         this.userRepository = userRepository;
         this.auditService = auditService;
-        this.configDefaults = new Weights(popularity, itemCf, graphSim, semantic, recency, followedBonus, mmrLambda);
+        this.configDefaults = new Weights(popularity, itemCf, graphSim, semantic, recency, followedBonus,
+                mmrLambda, outsideShare);
         if (popularity < 0 || itemCf < 0 || graphSim < 0 || semantic < 0 || recency < 0 || followedBonus < 0) {
             throw new IllegalStateException("recommendation.weights.*: значення не можуть бути від'ємними");
         }
         if (mmrLambda < 0 || mmrLambda > 1) {
             throw new IllegalStateException("recommendation.mmr.lambda має бути в межах [0, 1]");
+        }
+        if (outsideShare < 0 || outsideShare > MAX_OUTSIDE_SHARE) {
+            throw new IllegalStateException("recommendation.community.outside-share має бути в межах [0, 0.5]");
         }
     }
 
@@ -84,7 +91,8 @@ public class RecommendationWeightsService {
                 .orElseGet(() -> new RecommendationWeightsDto(null,
                         configDefaults.popularity(), configDefaults.itemCf(), configDefaults.graphSim(),
                         configDefaults.semantic(), configDefaults.recency(), configDefaults.followedBonus(),
-                        configDefaults.mmrLambda(), "Значення з application.yml", null, null));
+                        configDefaults.mmrLambda(), configDefaults.outsideShare(),
+                        "Значення з application.yml", null, null));
     }
 
     @Transactional(readOnly = true)
@@ -96,10 +104,11 @@ public class RecommendationWeightsService {
 
     @Transactional
     public RecommendationWeightsDto update(WeightsUpdateRequestDto request, Long adminId) {
-        // λ не передали (старий клієнт, Postman) — лишається чинне значення
+        // λ чи частку інших спільнот не передали (старий клієнт, Postman) — лишається чинне значення
         double mmrLambda = request.mmrLambda() != null ? request.mmrLambda() : current.mmrLambda();
+        double outsideShare = request.outsideShare() != null ? request.outsideShare() : current.outsideShare();
         Weights next = new Weights(request.popularity(), request.itemCf(), request.graphSim(),
-                request.semantic(), request.recency(), request.followedBonus(), mmrLambda);
+                request.semantic(), request.recency(), request.followedBonus(), mmrLambda, outsideShare);
         validate(next);
         return saveVersion(next, request.comment(), adminId, AuditAction.WEIGHTS_UPDATE);
     }
@@ -118,7 +127,7 @@ public class RecommendationWeightsService {
 
         RecommendationWeightsVersion saved = weightsRepository.save(new RecommendationWeightsVersion(
                 next.popularity(), next.itemCf(), next.graphSim(), next.semantic(), next.recency(),
-                next.followedBonus(), next.mmrLambda(), comment, admin));
+                next.followedBonus(), next.mmrLambda(), next.outsideShare(), comment, admin));
 
         auditService.log(adminId, action, "WEIGHTS", saved.getWeightsId(), describeChange(before, next));
 
@@ -142,6 +151,9 @@ public class RecommendationWeightsService {
         if (w.mmrLambda() < 0 || w.mmrLambda() > 1) {
             throw new BadRequestException("mmrLambda має бути в межах [0, 1]");
         }
+        if (w.outsideShare() < 0 || w.outsideShare() > MAX_OUTSIDE_SHARE) {
+            throw new BadRequestException("outsideShare має бути в межах [0, 0.5]");
+        }
     }
 
     private static String describeChange(Weights a, Weights b) {
@@ -153,6 +165,7 @@ public class RecommendationWeightsService {
         diff(parts, "recency", a.recency(), b.recency());
         diff(parts, "followedBonus", a.followedBonus(), b.followedBonus());
         diff(parts, "mmrLambda", a.mmrLambda(), b.mmrLambda());
+        diff(parts, "outsideShare", a.outsideShare(), b.outsideShare());
         return parts.isEmpty() ? "без змін" : String.join("; ", parts);
     }
 
@@ -164,13 +177,13 @@ public class RecommendationWeightsService {
 
     private static Weights toWeights(RecommendationWeightsVersion v) {
         return new Weights(v.getPopularity(), v.getItemCf(), v.getGraphSim(),
-                v.getSemantic(), v.getRecency(), v.getFollowedBonus(), v.getMmrLambda());
+                v.getSemantic(), v.getRecency(), v.getFollowedBonus(), v.getMmrLambda(), v.getOutsideShare());
     }
 
     private static RecommendationWeightsDto toDto(RecommendationWeightsVersion v) {
         return new RecommendationWeightsDto(v.getWeightsId(),
                 v.getPopularity(), v.getItemCf(), v.getGraphSim(), v.getSemantic(), v.getRecency(),
-                v.getFollowedBonus(), v.getMmrLambda(), v.getComment(),
+                v.getFollowedBonus(), v.getMmrLambda(), v.getOutsideShare(), v.getComment(),
                 v.getCreatedBy() == null ? null : v.getCreatedBy().getUsername(),
                 v.getCreatedAt());
     }

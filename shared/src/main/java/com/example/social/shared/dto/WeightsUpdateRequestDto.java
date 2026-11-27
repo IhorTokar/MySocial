@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Size;
 
 /**
  * Нові ваги від адміністратора. Сума п'яти основних ваг має дорівнювати 1.
- * mmrLambda може бути відсутнім (null) — тоді лишається чинне значення.
+ * mmrLambda і outsideShare можуть бути відсутніми (null) — тоді лишаються чинні значення.
  */
 public record WeightsUpdateRequestDto(
         @DecimalMin("0.0") @DecimalMax("1.0") double popularity,
@@ -16,5 +16,6 @@ public record WeightsUpdateRequestDto(
         @DecimalMin("0.0") @DecimalMax("1.0") double recency,
         @DecimalMin("0.0") @DecimalMax("1.0") double followedBonus,
         @DecimalMin("0.0") @DecimalMax("1.0") Double mmrLambda,
+        @DecimalMin("0.0") @DecimalMax("0.5") Double outsideShare,
         @Size(max = 255) String comment) {
 }

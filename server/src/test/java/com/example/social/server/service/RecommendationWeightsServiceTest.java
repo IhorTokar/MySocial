@@ -33,7 +33,7 @@ import static org.mockito.Mockito.when;
 /** Ваги стрічки: значення за замовчуванням, перевірка суми, кеш після коміту, запис у журнал. */
 class RecommendationWeightsServiceTest {
 
-    private static final Weights YML = new Weights(0.10, 0.35, 0.35, 0.10, 0.10, 0.3, 0.7);
+    private static final Weights YML = new Weights(0.10, 0.35, 0.35, 0.10, 0.10, 0.3, 0.7, 0.0);
     private static final long ADMIN_ID = 83L;
 
     private final RecommendationWeightsRepository repository = mock(RecommendationWeightsRepository.class);
@@ -60,7 +60,7 @@ class RecommendationWeightsServiceTest {
     private RecommendationWeightsService newService() {
         RecommendationWeightsService s = new RecommendationWeightsService(repository, userRepository, auditService,
                 YML.popularity(), YML.itemCf(), YML.graphSim(), YML.semantic(), YML.recency(), YML.followedBonus(),
-                YML.mmrLambda());
+                YML.mmrLambda(), YML.outsideShare());
         s.loadFromDatabase();
         return s;
     }
@@ -71,11 +71,11 @@ class RecommendationWeightsServiceTest {
     }
 
     private static WeightsUpdateRequestDto request(double p, double i, double g, double s, double r) {
-        return new WeightsUpdateRequestDto(p, i, g, s, r, 0.3, 0.7, "тест");
+        return new WeightsUpdateRequestDto(p, i, g, s, r, 0.3, 0.7, null, "тест");
     }
 
     private static WeightsUpdateRequestDto requestWithLambda(Double lambda) {
-        return new WeightsUpdateRequestDto(0.10, 0.35, 0.35, 0.10, 0.10, 0.3, lambda, "тест");
+        return new WeightsUpdateRequestDto(0.10, 0.35, 0.35, 0.10, 0.10, 0.3, lambda, null, "тест");
     }
 
     @Test
@@ -90,9 +90,9 @@ class RecommendationWeightsServiceTest {
     @Test
     void latestVersionFromDatabaseWinsOverYml() {
         when(repository.findTopByOrderByWeightsIdDesc()).thenReturn(Optional.of(
-                new RecommendationWeightsVersion(0.10, 0.30, 0.35, 0.15, 0.10, 0.3, 0.5, null, null)));
+                new RecommendationWeightsVersion(0.10, 0.30, 0.35, 0.15, 0.10, 0.3, 0.5, 0.2, null, null)));
 
-        assertEquals(new Weights(0.10, 0.30, 0.35, 0.15, 0.10, 0.3, 0.5), newService().current());
+        assertEquals(new Weights(0.10, 0.30, 0.35, 0.15, 0.10, 0.3, 0.5, 0.2), newService().current());
     }
 
     @Test
@@ -113,7 +113,7 @@ class RecommendationWeightsServiceTest {
         assertEquals(YML, service.current(), "до коміту стрічка працює на старих вагах");
 
         commit();
-        assertEquals(new Weights(0.10, 0.30, 0.35, 0.15, 0.10, 0.3, 0.7), service.current());
+        assertEquals(new Weights(0.10, 0.30, 0.35, 0.15, 0.10, 0.3, 0.7, 0.0), service.current());
     }
 
     @Test
@@ -158,6 +158,41 @@ class RecommendationWeightsServiceTest {
     @Test
     void rejectsLambdaOutsideRange() {
         assertThrows(BadRequestException.class, () -> service.update(requestWithLambda(1.5), ADMIN_ID));
+        verify(repository, never()).save(any());
+    }
+
+    // ===== Частка постів інших спільнот =====
+
+    private static WeightsUpdateRequestDto requestWithOutsideShare(Double share) {
+        return new WeightsUpdateRequestDto(0.10, 0.35, 0.35, 0.10, 0.10, 0.3, 0.7, share, "тест");
+    }
+
+    @Test
+    void outsideShareChangeIsVersionedAndAudited() {
+        service.update(requestWithOutsideShare(0.2), ADMIN_ID);
+
+        ArgumentCaptor<String> details = ArgumentCaptor.forClass(String.class);
+        verify(auditService).log(eq(ADMIN_ID), eq(AuditAction.WEIGHTS_UPDATE), eq("WEIGHTS"), any(), details.capture());
+        assertEquals("outsideShare 0.000 → 0.200", details.getValue());
+
+        commit();
+        assertEquals(0.2, service.current().outsideShare(), 1e-12);
+    }
+
+    @Test
+    void missingOutsideShareKeepsCurrentValue() {
+        service.update(requestWithOutsideShare(0.3), ADMIN_ID);
+        commit();
+        service.update(requestWithOutsideShare(null), ADMIN_ID);
+
+        ArgumentCaptor<RecommendationWeightsVersion> saved = ArgumentCaptor.forClass(RecommendationWeightsVersion.class);
+        verify(repository, org.mockito.Mockito.times(2)).save(saved.capture());
+        assertEquals(0.3, saved.getAllValues().get(1).getOutsideShare(), 1e-12);
+    }
+
+    @Test
+    void rejectsOutsideShareAboveHalf() {
+        assertThrows(BadRequestException.class, () -> service.update(requestWithOutsideShare(0.6), ADMIN_ID));
         verify(repository, never()).save(any());
     }
 }

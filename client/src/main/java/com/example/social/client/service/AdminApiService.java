@@ -209,6 +209,70 @@ public class AdminApiService {
                 new TypeReference<EchoSnapshotDetailDto>() {});
     }
 
+    // ===== Аналіз спільнот: якість виявлення, структура, ролі =====
+
+    /** Структура спільнот: розмір, щільність, провідність, теми, лідери, «мости», матриця підписок. */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record CommunityStructure(String algorithm, int users, int communities, int singletons, double modularity,
+                                     int disconnectedCommunities, double weightedConductance,
+                                     List<CommunityDetail> details, List<Person> bridges, Matrix matrix) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record CommunityDetail(long community, int size, int internalFollows, int externalFollows,
+                                  double density, double conductance, List<String> topTags,
+                                  SeedCommunity seedCommunity, List<Person> leaders, List<Person> bridges) {
+    }
+
+    /** Спільнота генератора, з якої походить більшість учасників (для згенерованих даних). */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record SeedCommunity(int community, double share) {
+    }
+
+    /**
+     * Лідер (pageRank, followers) або «міст» (participation, links, communitiesReached);
+     * у «мостів» усієї мережі ще й community. Відсутні поля — null.
+     */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record Person(long userId, String username, Double pageRank, Integer followers, Double participation,
+                         Integer links, Integer communitiesReached, Long community) {
+    }
+
+    /** labels — номери спільнот (останній може бути «інші»); follows[i][j] — підписки з i до j. */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record Matrix(List<String> labels, List<List<Integer>> follows) {
+    }
+
+    /** Порівняння знайдених спільнот зі справжніми спільнотами генератора. */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record CommunityQuality(int users, int trueCommunities, double trueModularity,
+                                   List<AlgorithmQuality> algorithms) {
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record AlgorithmQuality(String algorithm, int usersCompared, Double nmi, Double ari, Double purity,
+                                   Integer foundCommunities, Double modularity, Integer disconnectedCommunities,
+                                   String error) {
+    }
+
+    /** @param refresh спершу синхронізувати граф і заново знайти спільноти цим алгоритмом */
+    public CommunityStructure getCommunityStructure(boolean leiden, int top, boolean refresh)
+            throws IOException, InterruptedException, AdminApiException {
+        return read(apiClient.get("/api/graph/communities/structure?algorithm=" + (leiden ? "leiden" : "louvain")
+                        + "&top=" + top + "&refresh=" + refresh, LONG_OPERATION),
+                new TypeReference<CommunityStructure>() {});
+    }
+
+    /**
+     * NMI, ARI, чистота Louvain і Leiden. Сервер відповідає 409, якщо в мережі немає згенерованих
+     * користувачів (порівнювати нема з чим).
+     */
+    public CommunityQuality getCommunityQuality(boolean refresh)
+            throws IOException, InterruptedException, AdminApiException {
+        return read(apiClient.get("/api/graph/communities/quality?refresh=" + refresh, LONG_OPERATION),
+                new TypeReference<CommunityQuality>() {});
+    }
+
     // ===== Заявки «Забув пароль» =====
 
     /** @param onlyPending true — лише нові, false — усі (останні 200) */

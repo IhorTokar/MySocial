@@ -5,7 +5,8 @@
 Сценарій створює трьох демо-користувачів (Олена, Тарас, Ірина), розігрує між ними
 типову активність і показує, як на неї реагує система: сповіщення, стрічки «Для вас» /
 «Відстежувані», гарячі теми, «Кого почитати», пошук, заявка «Забули пароль?»,
-а від імені адміністратора — MMR-експеримент і знімок ехо-камер.
+а від імені адміністратора — MMR-експеримент, знімок ехо-камер, аналіз спільнот
+і те, чи замикає стрічка людей у їхніх спільнотах.
 Результати зберігаються в JSON (папка --out), з них charts.py будує графіки для звіту.
 
 Запуск (сервер має працювати):
@@ -256,6 +257,23 @@ class Demo:
                       f"лідер @{leader}  міст @{bridge}")
         self.ok("структура збережена")
 
+    def exposure(self):
+        self.step("Рекомендації × спільноти",
+                  "Чи тримає стрічка людей у їхніх спільнотах: частка постів зі своєї спільноти у видачі "
+                  "з 20 постів для 60 користувачів — за поточними вагами, кожною складовою окремо, з MMR "
+                  "і з розбавленням постами інших спільнот (частка 0.1–0.5).")
+        started = time.time()
+        report = self.admin.get("/api/graph/communities/exposure", timeout=LONG)
+        self.save("community-exposure.json", report)
+        self.info(f"· користувачів {report['usersEvaluated']}, спільнот {report['communities']}; частка своєї "
+                  f"спільноти навмання {report['randomOwnShare']:.2f}, серед кандидатів {report['candidateOwnShare']:.2f}")
+        for r in report["rankings"]:
+            lift = f"×{r['lift']:.1f}" if r.get("lift") else "—"
+            self.info(f"  {r['label']:<34} своя {r['ownShare']:.2f} ({lift})  ентропія {r['entropy']:.2f}  "
+                      f"ILD {r['diversity']:.2f}  тем {r['distinctTags']:.1f}  від підписок {r['followedShare']:.2f}  "
+                      f"релевантність {r['relevanceRetained']:.2f}  інтереси {r['interestMatch']:.2f}")
+        self.ok(f"готово за {time.time() - started:.0f} с")
+
     def experiments(self):
         self.step("Експеримент NDCG@10 (ваги рекомендацій)",
                   "Синтетичні користувачі з прихованими вподобаннями; порівняння методів ранжування. "
@@ -344,7 +362,7 @@ class Demo:
             return 1
         for func in (self.create_posts, self.social_activity, self.notifications, self.feeds,
                      self.discovery, self.search, self.forgot_password, self.mmr, self.echo,
-                     self.communities):
+                     self.communities, self.exposure):
             self.run_step(func)
         if self.args.experiments:
             self.run_step(self.experiments)

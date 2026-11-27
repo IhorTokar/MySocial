@@ -44,7 +44,10 @@ public class AdminWeightsController {
 
     private final AdminApiService api = new AdminApiService(new ApiClient());
 
-    /** Рядки редактора: 0–4 — основні ваги (сума = 1), 5 — бонус за підписку, 6 — λ для MMR. */
+    /**
+     * Рядки редактора: 0–4 — основні ваги (сума = 1), 5 — бонус за підписку, 6 — λ для MMR,
+     * 7 — частка постів з інших спільнот.
+     */
     private final List<WeightRow> rows = new ArrayList<>();
     private RecommendationWeightsDto loaded;
     private boolean busy;
@@ -59,6 +62,8 @@ public class AdminWeightsController {
         rows.add(new WeightRow("Бонус за підписку", "Додається, якщо автор у підписках; у суму не входить", 5));
         rows.add(new WeightRow("Різноманітність, MMR λ",
                 "1 — порядок лише за оцінкою; менше — схожі пости розводяться; у суму не входить", 6));
+        rows.add(new WeightRow("Пости інших спільнот",
+                "Частка стрічки з чужих спільнот Louvain: 0 — вимкнено, до 0.5; у суму не входить", 7, 0.5));
 
         setupHistoryTable();
         reload();
@@ -70,7 +75,7 @@ public class AdminWeightsController {
     private void handleSave() {
         WeightsUpdateRequestDto request = new WeightsUpdateRequestDto(
                 rows.get(0).get(), rows.get(1).get(), rows.get(2).get(), rows.get(3).get(), rows.get(4).get(),
-                rows.get(5).get(), rows.get(6).get(), blankToNull(commentField.getText()));
+                rows.get(5).get(), rows.get(6).get(), rows.get(7).get(), blankToNull(commentField.getText()));
 
         runAsync("Збереження...", () -> {
             RecommendationWeightsDto saved = api.updateWeights(request);
@@ -161,6 +166,7 @@ public class AdminWeightsController {
         rows.get(4).set(w.recency());
         rows.get(5).set(w.followedBonus());
         rows.get(6).set(w.mmrLambda());
+        rows.get(7).set(w.outsideShare());
         updateState();
     }
 
@@ -176,6 +182,7 @@ public class AdminWeightsController {
                 TableColumns.<RecommendationWeightsDto>text("R", 55, w -> AdminFormat.weight(w.recency())),
                 TableColumns.<RecommendationWeightsDto>text("Бонус", 60, w -> AdminFormat.weight(w.followedBonus())),
                 TableColumns.<RecommendationWeightsDto>text("λ", 55, w -> AdminFormat.weight(w.mmrLambda())),
+                TableColumns.<RecommendationWeightsDto>text("Інші сп.", 65, w -> AdminFormat.weight(w.outsideShare())),
                 TableColumns.<RecommendationWeightsDto>text("Коментар", 200, w -> AdminFormat.orDash(w.comment()))));
         historyTable.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
         historyTable.setPlaceholder(new Label("Змін ще не було — діють значення з application.yml"));
@@ -212,7 +219,8 @@ public class AdminWeightsController {
 
     private boolean isDirty() {
         double[] original = {loaded.popularity(), loaded.itemCf(), loaded.graphSim(),
-                loaded.semantic(), loaded.recency(), loaded.followedBonus(), loaded.mmrLambda()};
+                loaded.semantic(), loaded.recency(), loaded.followedBonus(), loaded.mmrLambda(),
+                loaded.outsideShare()};
         for (int i = 0; i < original.length; i++) {
             if (Math.abs(rows.get(i).get() - original[i]) > 1e-9) {
                 return true;
@@ -279,14 +287,21 @@ public class AdminWeightsController {
         return Math.round(value * 1000.0) / 1000.0;
     }
 
-    // ===== Рядок редактора: назва, повзунок 0..1, поле з точним значенням =====
+    // ===== Рядок редактора: назва, повзунок 0..max, поле з точним значенням =====
 
     private final class WeightRow {
-        private final Slider slider = new Slider(0, 1, 0);
+        private final Slider slider;
         private final TextField field = new TextField();
+        private final double max;
         private boolean syncing;
 
         WeightRow(String title, String hint, int rowIndex) {
+            this(title, hint, rowIndex, 1.0);
+        }
+
+        WeightRow(String title, String hint, int rowIndex, double max) {
+            this.max = max;
+            this.slider = new Slider(0, max, 0);
             Label titleLabel = new Label(title);
             Label hintLabel = new Label(hint);
             hintLabel.getStyleClass().add("secondary-label");
@@ -316,11 +331,11 @@ public class AdminWeightsController {
             weightsGrid.addRow(rowIndex, nameBox, slider, field);
         }
 
-        /** Значення з поля вводу (кома теж приймається), обмежене діапазоном 0..1. */
+        /** Значення з поля вводу (кома теж приймається), обмежене діапазоном 0..max. */
         private void applyField() {
             try {
                 double value = Double.parseDouble(field.getText().trim().replace(',', '.'));
-                set(Math.max(0, Math.min(1, value)));
+                set(Math.max(0, Math.min(max, value)));
             } catch (NumberFormatException e) {
                 field.setText(AdminFormat.weight(get()));
             }

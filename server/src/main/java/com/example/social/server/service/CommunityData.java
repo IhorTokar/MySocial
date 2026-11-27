@@ -7,8 +7,10 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Дані з PostgreSQL для аналізу спільнот: підписки, логіни, теги постів, справжні спільноти генератора. */
@@ -54,6 +56,34 @@ public class CommunityData {
                     .merge(row.substring(bar + 1), 1, Integer::sum);
         }
         return result;
+    }
+
+    /** userId → теги постів, які він вподобав (скільки разів). */
+    public Map<Long, Map<String, Integer>> likedTagsByUser() {
+        Map<Long, Map<String, Integer>> result = new HashMap<>();
+        for (String row : jdbc.queryForList("SELECT pl.user_id || '|' || t.name FROM post_likes pl "
+                + "JOIN post_tags pt ON pt.post_id = pl.post_id JOIN tags t ON t.tag_id = pt.tag_id", String.class)) {
+            int bar = row.indexOf('|');
+            result.computeIfAbsent(Long.parseLong(row.substring(0, bar)), k -> new HashMap<>())
+                    .merge(row.substring(bar + 1), 1, Integer::sum);
+        }
+        return result;
+    }
+
+    /** userId → кількість його постів. */
+    public Map<Long, Integer> postsByAuthor() {
+        Map<Long, Integer> result = new HashMap<>();
+        for (String row : jdbc.queryForList(
+                "SELECT user_id || '|' || count(*) FROM posts GROUP BY user_id", String.class)) {
+            String[] p = row.split("\\|");
+            result.put(Long.parseLong(p[0]), Integer.parseInt(p[1]));
+        }
+        return result;
+    }
+
+    /** Хто вподобав хоча б один пост — у них є персональні сигнали для стрічки. */
+    public Set<Long> likers() {
+        return new HashSet<>(jdbc.queryForList("SELECT DISTINCT user_id FROM post_likes", Long.class));
     }
 
     /**

@@ -62,6 +62,11 @@ public class ApiClient {
         return send("GET", path, null, true, DEFAULT_TIMEOUT);
     }
 
+    /** GET для запитів, що перераховують граф і спільноти: можуть тривати понад 15 секунд. */
+    public ApiResponse get(String path, Duration timeout) throws IOException, InterruptedException {
+        return send("GET", path, null, true, timeout);
+    }
+
     public ApiResponse delete(String path) throws IOException, InterruptedException {
         return send("DELETE", path, null, true, DEFAULT_TIMEOUT);
     }

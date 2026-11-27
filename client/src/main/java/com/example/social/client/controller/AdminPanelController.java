@@ -12,6 +12,7 @@ public class AdminPanelController {
     @FXML private Tab graphTab;
     @FXML private Tab auditTab;
     @FXML private Tab echoTab;
+    @FXML private Tab communitiesTab;
     @FXML private Tab passwordRequestsTab;
 
     /** Контролери вкладених FXML: ім'я поля = fx:id включення + "Controller". */
@@ -21,6 +22,7 @@ public class AdminPanelController {
     @FXML private AdminGraphController graphController;
     @FXML private AdminAuditController auditController;
     @FXML private AdminEchoHistoryController echoHistoryController;
+    @FXML private AdminCommunitiesController communitiesController;
     @FXML private AdminPasswordRequestsController passwordRequestsController;
 
     private MainShellController shell;
@@ -37,11 +39,17 @@ public class AdminPanelController {
         // «Керувати автором» на вкладці «Контент» відкриває користувача на сусідній вкладці
         contentController.setOnOpenUser(this::openUser);
         graphController.setOnOpenUser(this::openUser);
+        communitiesController.setOnOpenUser(this::openUser);
 
         // Граф завантажується й розкладається лише коли вкладку вперше відкрили
         graphTab.selectedProperty().addListener((obs, wasSelected, selected) -> {
             if (selected) {
                 graphController.onShown();
+            }
+        });
+        communitiesTab.selectedProperty().addListener((obs, wasSelected, selected) -> {
+            if (selected) {
+                communitiesController.onShown();
             }
         });
         echoTab.selectedProperty().addListener((obs, wasSelected, selected) -> {

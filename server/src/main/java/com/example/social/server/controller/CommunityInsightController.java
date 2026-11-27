@@ -1,6 +1,7 @@
 package com.example.social.server.controller;
 
 import com.example.social.server.exception.BadRequestException;
+import com.example.social.server.service.CommunityExposureService;
 import com.example.social.server.service.CommunityQualityService;
 import com.example.social.server.service.CommunityStructureService;
 import org.springframework.http.ResponseEntity;
@@ -14,19 +15,22 @@ import java.util.Map;
 
 /**
  * Аналіз спільнот поза ехо-камерами (лише для адміністратора: /api/graph/** і /api/dev/**):
- * якість виявлення на відомих спільнотах генератора, структура спільнот, лідери, «мости»
- * й зв'язки між спільнотами.
+ * якість виявлення на відомих спільнотах генератора, структура спільнот, лідери, «мости»,
+ * зв'язки між спільнотами і те, наскільки стрічка рекомендацій тримає людей у їхніх спільнотах.
  */
 @RestController
 public class CommunityInsightController {
 
     private final CommunityQualityService qualityService;
     private final CommunityStructureService structureService;
+    private final CommunityExposureService exposureService;
 
     public CommunityInsightController(CommunityQualityService qualityService,
-                                      CommunityStructureService structureService) {
+                                      CommunityStructureService structureService,
+                                      CommunityExposureService exposureService) {
         this.qualityService = qualityService;
         this.structureService = structureService;
+        this.exposureService = exposureService;
     }
 
     /** NMI, ARI, чистота Louvain і Leiden на основній згенерованій мережі. */
@@ -49,6 +53,27 @@ public class CommunityInsightController {
             throw new BadRequestException("top: від 1 до 30");
         }
         return ResponseEntity.ok(structureService.structure(algorithm.equals("leiden"), top, refresh));
+    }
+
+    /**
+     * Рекомендації × спільноти: частка постів зі своєї спільноти у видачі з k постів (порівняно з випадковою),
+     * ентропія спільнот, теми, ILD, збережена релевантність і збіг з інтересами — для поточних і стандартних ваг,
+     * кожної складової окремо, MMR при різних λ і розбавлення постами інших спільнот при різних частках.
+     * Дані не змінюються; на 60 користувачах — до хвилини.
+     * Приклад: GET /api/graph/communities/exposure?users=60&k=20&lambdas=1,0.8,0.6,0.4,0.2&outsideShares=0.1,0.2,0.3
+     */
+    @GetMapping("/api/graph/communities/exposure")
+    public ResponseEntity<Map<String, Object>> exposure(
+            @RequestParam(name = "algorithm", defaultValue = "louvain") String algorithm,
+            @RequestParam(name = "users", defaultValue = "60") int users,
+            @RequestParam(name = "k", defaultValue = "20") int k,
+            @RequestParam(name = "lambdas", defaultValue = "1,0.8,0.6,0.4,0.2") List<Double> lambdas,
+            @RequestParam(name = "outsideShares", defaultValue = "0.1,0.2,0.3,0.4,0.5") List<Double> outsideShares,
+            @RequestParam(name = "seed", defaultValue = "7") long seed) {
+        if (!algorithm.equals("louvain") && !algorithm.equals("leiden")) {
+            throw new BadRequestException("algorithm: louvain або leiden");
+        }
+        return ResponseEntity.ok(exposureService.experiment(algorithm.equals("leiden"), users, k, lambdas, outsideShares, seed));
     }
 
     /**

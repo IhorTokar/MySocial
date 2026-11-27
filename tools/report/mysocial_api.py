@@ -45,8 +45,8 @@ class Api:
                 message = raw
             raise ApiError(e.code, message) from None
 
-    def get(self, path, **params):
-        return self.request("GET", path, params=params or None)
+    def get(self, path, timeout=None, **params):
+        return self.request("GET", path, params=params or None, timeout=timeout)
 
     def post(self, path, body=None, timeout=None, **params):
         return self.request("POST", path, body=body, params=params or None, timeout=timeout)

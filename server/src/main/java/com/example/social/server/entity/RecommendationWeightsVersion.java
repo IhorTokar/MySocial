@@ -35,6 +35,10 @@ public class RecommendationWeightsVersion {
     @Column(name = "mmr_lambda", nullable = false)
     private double mmrLambda;
 
+    /** Частка постів з інших спільнот у стрічці: 0 — вимкнено, до 0.5. */
+    @Column(name = "outside_share", nullable = false)
+    private double outsideShare;
+
     @Column(length = 255)
     private String comment;
 
@@ -50,7 +54,7 @@ public class RecommendationWeightsVersion {
 
     public RecommendationWeightsVersion(double popularity, double itemCf, double graphSim,
                                         double semantic, double recency, double followedBonus,
-                                        double mmrLambda, String comment, User createdBy) {
+                                        double mmrLambda, double outsideShare, String comment, User createdBy) {
         this.popularity = popularity;
         this.itemCf = itemCf;
         this.graphSim = graphSim;
@@ -58,6 +62,7 @@ public class RecommendationWeightsVersion {
         this.recency = recency;
         this.followedBonus = followedBonus;
         this.mmrLambda = mmrLambda;
+        this.outsideShare = outsideShare;
         this.comment = comment;
         this.createdBy = createdBy;
     }
@@ -73,4 +78,5 @@ public class RecommendationWeightsVersion {
     public User getCreatedBy() { return createdBy; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public double getMmrLambda() { return mmrLambda; }
+    public double getOutsideShare() { return outsideShare; }
 }
